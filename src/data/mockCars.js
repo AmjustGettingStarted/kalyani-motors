@@ -1,54 +1,76 @@
+import fronxHero from '../app/images/fronx/Fronx_HeroBanner.png';
+import fronx_blue from '../app/images/fronx/Fronx_HB_blue.png'
+import fronx_white from '../app/images/fronx/Fronx_HB_white.png'
+import fronx_red from '../app/images/fronx/Fronx_HB_red.png'
+import fronxTopView from '../app/images/fronx/Fronx_TopView.png';
+import fronxEx1 from '../app/images/fronx/Fronx_Ex1.png';
+import fronxEx2 from '../app/images/fronx/Fronx_Ex2.png'
+import fronxIn1 from '../app/images/fronx/Fronx_In1.png';
+import fronxIn2 from '../app/images/fronx/Fronx_In2.png';
+import fronxVideo from '../components/videos/Fronx_fold_desktop.mp4';
+
 export const mockCars = [
   {
-    id: 'car-swift',
-    slug: 'swift',
-    name: 'Swift 2024',
-    tagline: 'The Epic New Generation',
-    channel: 'Arena',
-    bodyType: 'Hatchback',
-    startingPrice: 649000,
-    priceRange: '₹ 6.49 - 9.64 Lakh*',
-    mileage: '25.75 km/l',
-    engine: '1197 cc, Z-Series 1.2L 3-Cyl',
-    maxPower: '81.58 PS @ 5700 rpm',
-    maxTorque: '111.7 Nm @ 4300 rpm',
+    id: 'car-fronx',
+    slug: 'fronx',
+    name: 'Fronx',
+    tagline: 'Shape of New',
+    channel: 'Nexa',
+    bodyType: 'SUV',
+    startingPrice: 751500,
+    priceRange: '₹ 7.51 - 13.04 Lakh*',
+    mileage: '22.89 km/l',
+    engine: '1.0L Turbo Boosterjet / 1.2L DualJet',
+    maxPower: '100.06 PS (Turbo) / 89.73 PS',
+    maxTorque: '147.6 Nm (Turbo)',
     fuelTypes: ['Petrol', 'CNG'],
     transmissionTypes: ['Manual', 'Automatic'],
     seatingCapacity: 5,
-    bootSpace: '265 Litres',
-    groundClearance: '163 mm',
+    bootSpace: '308 Litres',
+    groundClearance: '190 mm',
     fuelTank: '37 Litres',
-    heroImage: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80',
-    ],
+    heroImage: fronx_blue,
+    topViewImage: fronxTopView,
+    videoSrc: fronxVideo,
+    gallery: {
+      exterior: [
+        fronxHero,
+        fronxEx1,
+        fronxEx2,
+      ],
+      interior: [
+        fronxIn1,
+        fronxIn2,
+      ],
+    },
     colors: [
-      { name: 'Luster Blue', hex: '#164e63' },
-      { name: 'Sizzling Red', hex: '#991b1b' },
-      { name: 'Novel Orange', hex: '#c2410c' },
-      { name: 'Splendid Silver', hex: '#94a3b8' },
-      { name: 'Pearl Arctic White', hex: '#f8fafc' },
+      { name: 'Daring Blue', 
+        hex: '#0f172a' ,
+        images: fronx_blue,
+      },
+      { name: 'Lucent Red', 
+        hex: '#DC143C', 
+        image: fronx_red,
+      },
+      { name: 'Splendid White', hex: '#ffff', image: fronx_white},
     ],
     keyFeatures: [
-      '6 Airbags as standard equipment across all variants',
-      '9-inch SmartPlay Pro+ touchscreen with Wireless Android Auto & Apple CarPlay',
-      'Wireless Phone Charger & Type-C fast charging ports',
-      'All-new aerodynamic silhouette with floating roofline design',
-      'Advanced ESP with Hill Hold Assist',
+      '1.0L K-Series Turbo Boosterjet direct-injection engine',
+      'Aerodynamic coupe roofline with geometric precision styling',
+      'Paddle shifters on 6-Speed Automatic transmission',
+      'Wireless charging dock and heads-up cockpit display',
+      'Multi-reflector LED headlamps with crystal block DRLs',
     ],
     variants: [
-      { name: 'LXi 1.2L 5MT', fuel: 'Petrol', transmission: 'Manual', price: 649000, keyFeature: '6 Airbags, ESP, Halogen Projector Headlamps' },
-      { name: 'VXi 1.2L 5MT', fuel: 'Petrol', transmission: 'Manual', price: 729500, keyFeature: 'Audio system, Steering audio controls, Central locking' },
-      { name: 'VXi 1.2L AGS', fuel: 'Petrol', transmission: 'Automatic', price: 779500, keyFeature: 'Auto Gear Shift, Hill Hold Assist, Electrically adjustable ORVMs' },
-      { name: 'ZXi 1.2L 5MT', fuel: 'Petrol', transmission: 'Manual', price: 829000, keyFeature: 'LED Headlamps, 15" Alloy wheels, Auto AC, Wireless charger' },
-      { name: 'ZXi+ 1.2L AGS', fuel: 'Petrol', transmission: 'Automatic', price: 964500, keyFeature: '9" Touchscreen, Cruise control, Rear camera, Dual-tone' },
-      { name: 'VXi (O) CNG 5MT', fuel: 'CNG', transmission: 'Manual', price: 819500, keyFeature: 'Factory-fitted S-CNG technology, Dual inter-dependent ECUs' },
+      { name: 'Sigma 1.2L 5MT', fuel: 'Petrol', transmission: 'Manual', price: 751500, keyFeature: 'Dual Airbags, ESP, Automatic climate control, Hill hold' },
+      { name: 'Delta 1.2L AGS', fuel: 'Petrol', transmission: 'Automatic', price: 887500, keyFeature: '7" Touchscreen, Steering audio controls, Electric ORVM' },
+      { name: 'Zeta 1.0L Turbo 6AT', fuel: 'Petrol', transmission: 'Automatic', price: 1196000, keyFeature: 'Turbo Boosterjet, Paddle shifters, 6 Airbags, LED headlamps' },
+      { name: 'Alpha 1.0L Turbo 6AT', fuel: 'Petrol', transmission: 'Automatic', price: 1304000, keyFeature: '360 View Camera, HUD, Dual-tone 16" precision alloys' },
+      { name: 'Sigma S-CNG 5MT', fuel: 'CNG', transmission: 'Manual', price: 846500, keyFeature: '28.51 km/kg mileage, Dual fuel injection ECU' },
     ],
-    isFeatured: true,
-    rating: 4.8,
-    reviewsCount: 1420,
+    isFeatured: true, // Set to true as it is your main demo car
+    rating: 4.6,
+    reviewsCount: 890,
   },
   {
     id: 'car-brezza',
@@ -70,10 +92,13 @@ export const mockCars = [
     groundClearance: '198 mm',
     fuelTank: '48 Litres',
     heroImage: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80',
-    ],
+    gallery: {
+      exterior: [
+        'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80',
+      ],
+      interior: [],
+    },
     colors: [
       { name: 'Brave Khaki', hex: '#71717a' },
       { name: 'Magma Grey', hex: '#475569' },
@@ -120,10 +145,13 @@ export const mockCars = [
     groundClearance: '208 mm',
     fuelTank: '45 Litres',
     heroImage: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80',
-    ],
+    gallery: {
+      exterior: [
+        'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80',
+      ],
+      interior: [],
+    },
     colors: [
       { name: 'Nexa Blue', hex: '#1e3a8a' },
       { name: 'Grandeur Grey', hex: '#334155' },
@@ -170,9 +198,12 @@ export const mockCars = [
     groundClearance: '170 mm',
     fuelTank: '37 Litres',
     heroImage: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1000&q=80',
-    ],
+    gallery: {
+      exterior: [
+        'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1000&q=80',
+      ],
+      interior: [],
+    },
     colors: [
       { name: 'Celestial Blue', hex: '#1d4ed8' },
       { name: 'Grandeur Grey', hex: '#4b5563' },
@@ -217,9 +248,12 @@ export const mockCars = [
     groundClearance: '210 mm',
     fuelTank: '40 Litres',
     heroImage: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1000&q=80',
-    ],
+    gallery: {
+      exterior: [
+        'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1000&q=80',
+      ],
+      interior: [],
+    },
     colors: [
       { name: 'Kinetic Yellow', hex: '#ca8a04' },
       { name: 'Sizzling Red', hex: '#b91c1c' },
@@ -245,53 +279,6 @@ export const mockCars = [
     reviewsCount: 740,
   },
   {
-    id: 'car-fronx',
-    slug: 'fronx',
-    name: 'Fronx',
-    tagline: 'Shape of New',
-    channel: 'Nexa',
-    bodyType: 'SUV',
-    startingPrice: 751500,
-    priceRange: '₹ 7.51 - 13.04 Lakh*',
-    mileage: '22.89 km/l',
-    engine: '1.0L Turbo Boosterjet / 1.2L DualJet',
-    maxPower: '100.06 PS (Turbo) / 89.73 PS',
-    maxTorque: '147.6 Nm (Turbo)',
-    fuelTypes: ['Petrol', 'CNG'],
-    transmissionTypes: ['Manual', 'Automatic'],
-    seatingCapacity: 5,
-    bootSpace: '308 Litres',
-    groundClearance: '190 mm',
-    fuelTank: '37 Litres',
-    heroImage: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80',
-    ],
-    colors: [
-      { name: 'Lucent Orange', hex: '#ea580c' },
-      { name: 'Bluish Black', hex: '#0f172a' },
-      { name: 'Earthen Brown', hex: '#7c2d12' },
-      { name: 'Splendid Silver', hex: '#9ca3af' },
-    ],
-    keyFeatures: [
-      '1.0L K-Series Turbo Boosterjet direct-injection engine',
-      'Aerodynamic coupe roofline with geometric precision styling',
-      'Paddle shifters on 6-Speed Automatic transmission',
-      'Wireless charging dock and heads-up cockpit display',
-      'Multi-reflector LED headlamps with crystal block DRLs',
-    ],
-    variants: [
-      { name: 'Sigma 1.2L 5MT', fuel: 'Petrol', transmission: 'Manual', price: 751500, keyFeature: 'Dual Airbags, ESP, Automatic climate control, Hill hold' },
-      { name: 'Delta 1.2L AGS', fuel: 'Petrol', transmission: 'Automatic', price: 887500, keyFeature: '7" Touchscreen, Steering audio controls, Electric ORVM' },
-      { name: 'Zeta 1.0L Turbo 6AT', fuel: 'Petrol', transmission: 'Automatic', price: 1196000, keyFeature: 'Turbo Boosterjet, Paddle shifters, 6 Airbags, LED headlamps' },
-      { name: 'Alpha 1.0L Turbo 6AT', fuel: 'Petrol', transmission: 'Automatic', price: 1304000, keyFeature: '360 View Camera, HUD, Dual-tone 16" precision alloys' },
-      { name: 'Sigma S-CNG 5MT', fuel: 'CNG', transmission: 'Manual', price: 846500, keyFeature: '28.51 km/kg mileage, Dual fuel injection ECU' },
-    ],
-    isFeatured: false,
-    rating: 4.6,
-    reviewsCount: 890,
-  },
-  {
     id: 'car-ertiga',
     slug: 'ertiga',
     name: 'Ertiga',
@@ -311,9 +298,12 @@ export const mockCars = [
     groundClearance: '180 mm',
     fuelTank: '45 Litres',
     heroImage: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=1000&q=80',
-    ],
+    gallery: {
+      exterior: [
+        'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=1000&q=80',
+      ],
+      interior: [],
+    },
     colors: [
       { name: 'Magma Grey', hex: '#475569' },
       { name: 'Pearl Metallic Oxford Blue', hex: '#1e3a8a' },
@@ -358,9 +348,12 @@ export const mockCars = [
     groundClearance: '163 mm',
     fuelTank: '37 Litres',
     heroImage: 'https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1000&q=80',
-    ],
+    gallery: {
+      exterior: [
+        'https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1000&q=80',
+      ],
+      interior: [],
+    },
     colors: [
       { name: 'Alluring Blue', hex: '#0284c7' },
       { name: 'Gallant Red', hex: '#991b1b' },
