@@ -1,0 +1,482 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useKalyani } from '../../../context/KalyaniContext';
+import CarCard from '../../../components/widgets/CarCard';
+import CitySelector from '../../../components/widgets/CitySelector';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  Clock,
+  Sparkles,
+  Users,
+  Building,
+  ChevronDown,
+  ArrowRight,
+  Wrench,
+  Percent,
+} from 'lucide-react';
+
+export default function HomePage() {
+  const { banners, cars, locations, selectedCity, openTestDrive, faqs } = useKalyani();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedBodyType, setSelectedBodyType] = useState('All');
+  const [expandedFaq, setExpandedFaq] = useState(null);
+
+  // Auto rotate hero carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % banners.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [banners.length]);
+
+  const activeBanner = banners[currentSlide] || banners[0];
+
+  const bodyTypes = ['All', 'SUV', 'Hatchback', 'Sedan', 'MPV'];
+
+  const filteredFeaturedCars = cars
+    .filter((c) => c.isFeatured)
+    .filter((c) => (selectedBodyType === 'All' ? true : c.bodyType === selectedBodyType));
+
+  return (
+    <div className="space-y-16 pb-16">
+      {/* 1. Hero Banner Carousel */}
+      <section className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[540px] md:min-h-[620px] flex items-center">
+        {/* Background Image with Gradient Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={activeBanner.image}
+            alt={activeBanner.title}
+            className="w-full h-full object-cover object-center scale-105 transition-transform duration-1000 ease-out"
+          />
+          <div className={`absolute inset-0 bg-gradient-to-r ${activeBanner.accentColor}`}></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/40"></div>
+        </div>
+
+        {/* Carousel Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 py-16 w-full">
+          <div className="max-w-2xl space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Badges */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-3 py-1 text-xs font-black uppercase tracking-wider rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30">
+                {activeBanner.channel}
+              </span>
+              <span className="px-3 py-1 text-xs font-bold rounded-full bg-white/15 backdrop-blur-md text-slate-100 border border-white/20">
+                {activeBanner.tag}
+              </span>
+              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5" />
+                {activeBanner.badge}
+              </span>
+            </div>
+
+            {/* Title & Subtitle */}
+            <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl tracking-tight text-white leading-tight">
+              {activeBanner.title}
+            </h1>
+
+            <p className="text-sm sm:text-lg text-slate-200 font-medium leading-relaxed">
+              {activeBanner.description}
+            </p>
+
+            {/* Price & Offer Highlight */}
+            <div className="pt-2 flex flex-wrap items-center gap-4">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl">
+                <span className="text-[11px] uppercase tracking-wider text-slate-300 font-bold block">
+                  Ex-Showroom Price
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-white font-display">
+                  {activeBanner.priceText}
+                </span>
+              </div>
+
+              {activeBanner.offer && (
+                <div className="bg-red-600/20 border border-red-500/40 px-4 py-2.5 rounded-2xl flex items-center gap-2">
+                  <Percent className="w-4 h-4 text-red-400" />
+                  <span className="text-xs sm:text-sm font-bold text-red-200">{activeBanner.offer}</span>
+                </div>
+              )}
+            </div>
+
+            {/* CTAs */}
+            <div className="pt-4 flex flex-wrap items-center gap-3">
+              <Link
+                to={activeBanner.ctaLink}
+                className="px-6 py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-xl shadow-red-600/30 transition-all transform active:scale-95 inline-flex items-center gap-2"
+              >
+                <span>{activeBanner.ctaText}</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => openTestDrive(cars.find((c) => c.slug === activeBanner.slug))}
+                className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold text-sm border border-white/25 transition-all"
+              >
+                Book Free Test Drive
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Carousel Navigation Arrows */}
+        <div className="absolute bottom-6 right-6 z-20 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)}
+            className="p-2.5 rounded-xl bg-black/40 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 transition-colors"
+            aria-label="Previous Slide"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-black/40 backdrop-blur-md rounded-xl border border-white/20 text-xs font-mono text-white">
+            <span>0{currentSlide + 1}</span>
+            <span className="text-slate-500">/</span>
+            <span>0{banners.length}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
+            className="p-2.5 rounded-xl bg-black/40 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 transition-colors"
+            aria-label="Next Slide"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </section>
+
+      {/* 2. Quick City & Service Quick Actions Strip */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 -mt-8 relative z-20">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+          {/* Active City indicator */}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-800 flex items-center justify-center border border-blue-100 shrink-0">
+              <Building className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-semibold">Active Region</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="font-display font-extrabold text-slate-900 text-base">{selectedCity} Hub</span>
+                <CitySelector variant="header" />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Book Service Action */}
+          <div className="flex items-center gap-3 border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 shrink-0">
+              <Wrench className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-semibold">Authorized Service</p>
+              <Link to="/service" className="font-display font-bold text-slate-900 text-sm hover:text-red-600 flex items-center gap-1">
+                Schedule Periodic Maintenance <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Dealership Outlets count */}
+          <div className="flex items-center justify-between border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4">
+            <div>
+              <p className="text-xs text-slate-500 font-semibold">Nearest Touchpoints</p>
+              <p className="font-display font-bold text-slate-900 text-sm">
+                {locations.length} Outlets in {selectedCity}
+              </p>
+            </div>
+            <Link
+              to="/outlets"
+              className="px-4 py-2 bg-slate-100 hover:bg-blue-800 hover:text-white rounded-xl text-xs font-bold text-slate-700 transition-colors"
+            >
+              Locate Branch
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Featured Car Showcase with Filter Pills */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-wider mb-2">
+              <Sparkles className="w-3.5 h-3.5" /> Popular Lineup
+            </div>
+            <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 tracking-tight">
+              Featured Maruti Suzuki Models
+            </h2>
+            <p className="text-slate-500 text-sm mt-1">
+              Explore the latest top-selling Arena & Nexa vehicles available in {selectedCity} with best festive prices.
+            </p>
+          </div>
+
+          {/* Body Type Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+            {bodyTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setSelectedBodyType(type)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  selectedBodyType === type
+                    ? 'bg-blue-800 text-white shadow-md shadow-blue-800/20'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                {type === 'All' ? 'All Types' : type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Cars Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {filteredFeaturedCars.map((car) => (
+            <CarCard key={car.id} car={car} />
+          ))}
+        </div>
+
+        {/* View all cars banner CTA */}
+        <div className="mt-10 text-center">
+          <Link
+            to="/cars"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-blue-900 text-white font-bold text-sm rounded-2xl shadow-lg transition-colors"
+          >
+            <span>Explore All Maruti Models & Variants</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
+
+      {/* 4. Arena vs Nexa Channel Experience Strip */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Arena Box */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-900 via-blue-950 to-slate-950 p-8 text-white shadow-xl flex flex-col justify-between min-h-[300px]">
+            <div className="relative z-10">
+              <span className="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase tracking-wider rounded-full inline-block mb-3">
+                Maruti Suzuki Arena
+              </span>
+              <h3 className="font-display font-black text-2xl sm:text-3xl text-white mb-2">
+                India's Most Trusted Family Cars
+              </h3>
+              <p className="text-slate-300 text-xs sm:text-sm max-w-md leading-relaxed">
+                Featuring Swift, Brezza, Ertiga, and Dzire. Modern design, class-leading mileage, and connected safety for everyone.
+              </p>
+            </div>
+            <div className="relative z-10 pt-6">
+              <Link
+                to="/cars?channel=Arena"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-blue-950 hover:bg-blue-50 rounded-xl text-xs font-bold transition-all shadow-md"
+              >
+                <span>View Arena Lineup</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Nexa Box */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-zinc-900 to-black p-8 text-white shadow-xl flex flex-col justify-between min-h-[300px] border border-slate-800">
+            <div className="relative z-10">
+              <span className="px-3 py-1 bg-white text-slate-950 text-xs font-black uppercase tracking-wider rounded-full inline-block mb-3">
+                Nexa Experience
+              </span>
+              <h3 className="font-display font-black text-2xl sm:text-3xl text-white mb-2">
+                Create. Inspire. Luxury Redefined.
+              </h3>
+              <p className="text-slate-300 text-xs sm:text-sm max-w-md leading-relaxed">
+                Discover Grand Vitara Strong Hybrid, Baleno, Jimny 4x4, and Fronx Turbo. Exclusive hospitality and automotive luxury.
+              </p>
+            </div>
+            <div className="relative z-10 pt-6">
+              <Link
+                to="/cars?channel=Nexa"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl text-xs font-bold transition-all shadow-md"
+              >
+                <span>Discover Nexa Collection</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Why Choose Kalyani Motors (Trust Badges & Milestones) */}
+      <section className="bg-slate-100 py-16 px-4 sm:px-8 border-y border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">Legacy of Excellence</span>
+            <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 tracking-tight mt-1">
+              Why 20+ Lakh Families Choose Kalyani Motors
+            </h2>
+            <p className="text-slate-600 text-sm mt-2">
+              For over 18 years, Kalyani Motors has set the gold standard in automotive retail, transparent financing, and authorized Maruti Suzuki care across South India.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <div className="w-14 h-14 bg-blue-50 text-blue-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100">
+                <Users className="w-7 h-7" />
+              </div>
+              <h4 className="font-display font-black text-2xl text-slate-900">20+ Lakh</h4>
+              <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">Satisfied Customers</p>
+              <p className="text-xs text-slate-600 mt-2">
+                Delivering dreams and creating smiles across Karnataka, Telangana, and Tamil Nadu.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-100">
+                <Building className="w-7 h-7" />
+              </div>
+              <h4 className="font-display font-black text-2xl text-slate-900">100+ Outlets</h4>
+              <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">Showrooms & Workshops</p>
+              <p className="text-xs text-slate-600 mt-2">
+                State-of-the-art facilities located conveniently across all major tech hubs & highways.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-100">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <h4 className="font-display font-black text-2xl text-slate-900">4.8 / 5.0</h4>
+              <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">Google Customer Rating</p>
+              <p className="text-xs text-slate-600 mt-2">
+                Over 50,000 verified reviews praising prompt service, polite staff, and genuine advisory.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-100">
+                <Clock className="w-7 h-7" />
+              </div>
+              <h4 className="font-display font-black text-2xl text-slate-900">60-Min Express</h4>
+              <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">Quick Service Bays</p>
+              <p className="text-xs text-slate-600 mt-2">
+                Twin-technician synchronized servicing with zero delay while you relax in executive lounge.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. City Outlets Spotlight */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <span className="text-xs font-bold tracking-widest text-red-600 uppercase">Nearest Branches</span>
+            <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 tracking-tight mt-1">
+              Kalyani Motors in {selectedCity}
+            </h2>
+            <p className="text-slate-500 text-sm mt-0.5">
+              Visit our state-of-the-art showrooms, authorized service centers, and True Value hubs.
+            </p>
+          </div>
+
+          <Link
+            to="/outlets"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-800 hover:text-blue-900 hover:underline"
+          >
+            <span>View All {selectedCity} Branches</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {locations.slice(0, 3).map((loc) => (
+            <div
+              key={loc.id}
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                    {loc.type}
+                  </span>
+                  {loc.isFlagship && (
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                      FLAGSHIP
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="font-display font-bold text-base text-slate-900 leading-snug">{loc.name}</h3>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">{loc.address}</p>
+                <p className="text-[11px] text-blue-700 font-semibold mt-1">Landmark: {loc.landmark}</p>
+
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {loc.facilities.slice(0, 3).map((fac) => (
+                    <span key={fac} className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-100">
+                      {fac}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <a
+                  href={`tel:${loc.phone.replace(/\s+/g, '')}`}
+                  className="text-xs font-bold text-red-600 hover:underline"
+                >
+                  {loc.phone}
+                </a>
+                <a
+                  href={loc.mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold text-blue-800 hover:underline"
+                >
+                  Directions →
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 7. Common Customer FAQs Accordion */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-8">
+        <div className="text-center mb-8">
+          <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">Have Questions?</span>
+          <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 tracking-tight mt-1">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-slate-500 text-sm mt-1">
+            Everything you need to know about buying, test drives, and maintaining your Maruti Suzuki car.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {faqs.map((faq, index) => {
+            const isOpen = expandedFaq === index;
+            return (
+              <div
+                key={faq.id}
+                className="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
+              >
+                <button
+                  type="button"
+                  onClick={() => setExpandedFaq(isOpen ? null : index)}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left font-display font-bold text-slate-900 hover:text-blue-800 transition-colors"
+                >
+                  <span className="text-sm sm:text-base pr-4">{faq.question}</span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180 text-blue-800' : ''
+                    }`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
+                    <p>{faq.answer}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
