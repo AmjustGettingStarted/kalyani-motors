@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useKalyani } from '../../context/KalyaniContext';
 import { Search, X, ArrowRight, Car, Wrench } from 'lucide-react';
 
-export default function SearchBar({ placeholder = 'Search Swift, Grand Vitara, periodic service...', className = '' }) {
+export default function SearchBar({
+  placeholder = 'Search Swift, Grand Vitara, periodic service...',
+  className = '',
+  isScrolled = false,
+}) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const { cars, services } = useKalyani();
@@ -24,25 +28,32 @@ export default function SearchBar({ placeholder = 'Search Swift, Grand Vitara, p
   const trimmed = query.trim().toLowerCase();
 
   const matchedCars = trimmed
-    ? cars.filter(
-        (c) =>
-          c.name.toLowerCase().includes(trimmed) ||
-          c.tagline.toLowerCase().includes(trimmed) ||
-          c.channel.toLowerCase().includes(trimmed) ||
-          c.bodyType.toLowerCase().includes(trimmed) ||
-          c.fuelTypes.some((f) => f.toLowerCase().includes(trimmed))
-      )
+    ? (cars || []).filter(
+      (c) =>
+        c.name?.toLowerCase().includes(trimmed) ||
+        c.tagline?.toLowerCase().includes(trimmed) ||
+        c.channel?.toLowerCase().includes(trimmed) ||
+        c.bodyType?.toLowerCase().includes(trimmed) ||
+        c.fuelTypes?.some((f) => f.toLowerCase().includes(trimmed))
+    )
     : [];
+
+  const periodicList = services?.periodicMaintenance || [];
+  const packagesList = services?.specializedPackages || [];
 
   const matchedServices = trimmed
     ? [
-        ...services.periodicMaintenance.filter(
-          (s) => s.interval.toLowerCase().includes(trimmed) || s.description.toLowerCase().includes(trimmed)
-        ),
-        ...services.specializedPackages.filter(
-          (s) => s.title.toLowerCase().includes(trimmed) || s.subtitle.toLowerCase().includes(trimmed)
-        ),
-      ]
+      ...periodicList.filter(
+        (s) =>
+          s.interval?.toLowerCase().includes(trimmed) ||
+          s.description?.toLowerCase().includes(trimmed)
+      ),
+      ...packagesList.filter(
+        (s) =>
+          s.title?.toLowerCase().includes(trimmed) ||
+          s.subtitle?.toLowerCase().includes(trimmed)
+      ),
+    ]
     : [];
 
   const hasResults = matchedCars.length > 0 || matchedServices.length > 0;
@@ -73,7 +84,10 @@ export default function SearchBar({ placeholder = 'Search Swift, Grand Vitara, p
     <div className={`relative ${className}`} ref={containerRef}>
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative flex items-center">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+          <Search
+            className={`w-4 h-4 absolute left-3.5 pointer-events-none transition-colors ${isScrolled ? 'text-slate-500' : 'text-white/80'
+              }`}
+          />
           <input
             type="text"
             value={query}
@@ -83,13 +97,17 @@ export default function SearchBar({ placeholder = 'Search Swift, Grand Vitara, p
             }}
             onFocus={() => setIsOpen(true)}
             placeholder={placeholder}
-            className="w-full pl-10 pr-9 py-2.5 text-sm bg-slate-100/90 hover:bg-slate-100 focus:bg-white border border-transparent focus:border-blue-500 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 placeholder-slate-400 transition-all shadow-inner"
+            className={`w-full pl-10 pr-9 py-2 text-xs rounded-full transition-all duration-200 outline-none ${isScrolled
+                ? 'bg-slate-100 text-slate-900 placeholder:text-slate-500 border border-slate-300 focus:bg-white focus:border-slate-400'
+                : 'bg-transparent text-white placeholder:text-white/70 border border-white/40 hover:border-white/70 focus:border-white focus:ring-1 focus:ring-white/40'
+              }`}
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="absolute right-3 text-slate-400 hover:text-slate-600 p-0.5"
+              className={`absolute right-3 p-0.5 transition-colors ${isScrolled ? 'text-slate-400 hover:text-slate-600' : 'text-white/70 hover:text-white'
+                }`}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -130,7 +148,7 @@ export default function SearchBar({ placeholder = 'Search Swift, Grand Vitara, p
                       >
                         <div className="flex items-center gap-3">
                           <img
-                            src={car.heroImage}
+                            src={car.heroImage || car.image}
                             alt={car.name}
                             className="w-12 h-8 object-cover rounded-md border border-slate-100"
                           />
@@ -141,7 +159,9 @@ export default function SearchBar({ placeholder = 'Search Swift, Grand Vitara, p
                                 {car.channel}
                               </span>
                             </div>
-                            <div className="text-[11px] text-slate-500">{car.priceRange} • {car.mileage}</div>
+                            <div className="text-[11px] text-slate-500">
+                              {car.priceRange || car.price} {car.mileage ? `• ${car.mileage}` : ''}
+                            </div>
                           </div>
                         </div>
                         <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-blue-700 group-hover:translate-x-0.5 transition-all" />
@@ -169,7 +189,9 @@ export default function SearchBar({ placeholder = 'Search Swift, Grand Vitara, p
                           <div className="text-xs font-semibold text-slate-900 group-hover:text-red-700">
                             {s.title || s.interval}
                           </div>
-                          <div className="text-[11px] text-slate-500 line-clamp-1">{s.subtitle || s.description}</div>
+                          <div className="text-[11px] text-slate-500 line-clamp-1">
+                            {s.subtitle || s.description}
+                          </div>
                         </div>
                         <span className="text-[11px] font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
                           Book
