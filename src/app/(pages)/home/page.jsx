@@ -16,6 +16,7 @@ import {
   Wrench,
   Percent,
 } from 'lucide-react';
+import HeroVideo from '../../../components/widgets/HeroVideo';
 
 export default function HomePage() {
   const { banners, cars, locations, selectedCity, openTestDrive, faqs } = useKalyani();
@@ -42,109 +43,7 @@ export default function HomePage() {
   return (
     <div className="space-y-16 pb-16">
       {/* 1. Hero Banner Carousel */}
-      <section className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[540px] md:min-h-[620px] flex items-center">
-        {/* Background Image with Gradient Overlay */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={activeBanner.image}
-            alt={activeBanner.title}
-            className="w-full h-full object-cover object-center scale-105 transition-transform duration-1000 ease-out"
-          />
-          <div className={`absolute inset-0 bg-gradient-to-r ${activeBanner.accentColor}`}></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/40"></div>
-        </div>
-
-        {/* Carousel Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 py-16 w-full">
-          <div className="max-w-2xl space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Badges */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 text-xs font-black uppercase tracking-wider rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30">
-                {activeBanner.channel}
-              </span>
-              <span className="px-3 py-1 text-xs font-bold rounded-full bg-white/15 backdrop-blur-md text-slate-100 border border-white/20">
-                {activeBanner.tag}
-              </span>
-              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                {activeBanner.badge}
-              </span>
-            </div>
-
-            {/* Title & Subtitle */}
-            <h1 className="font-display font-black text-3xl sm:text-5xl lg:text-6xl tracking-tight text-white leading-tight">
-              {activeBanner.title}
-            </h1>
-
-            <p className="text-sm sm:text-lg text-slate-200 font-medium leading-relaxed">
-              {activeBanner.description}
-            </p>
-
-            {/* Price & Offer Highlight */}
-            <div className="pt-2 flex flex-wrap items-center gap-4">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl">
-                <span className="text-[11px] uppercase tracking-wider text-slate-300 font-bold block">
-                  Ex-Showroom Price
-                </span>
-                <span className="text-xl sm:text-2xl font-black text-white font-display">
-                  {activeBanner.priceText}
-                </span>
-              </div>
-
-              {activeBanner.offer && (
-                <div className="bg-red-600/20 border border-red-500/40 px-4 py-2.5 rounded-2xl flex items-center gap-2">
-                  <Percent className="w-4 h-4 text-red-400" />
-                  <span className="text-xs sm:text-sm font-bold text-red-200">{activeBanner.offer}</span>
-                </div>
-              )}
-            </div>
-
-            {/* CTAs */}
-            <div className="pt-4 flex flex-wrap items-center gap-3">
-              <Link
-                to={activeBanner.ctaLink}
-                className="px-6 py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-xl shadow-red-600/30 transition-all transform active:scale-95 inline-flex items-center gap-2"
-              >
-                <span>{activeBanner.ctaText}</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => openTestDrive(cars.find((c) => c.slug === activeBanner.slug))}
-                className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold text-sm border border-white/25 transition-all"
-              >
-                Book Free Test Drive
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Carousel Navigation Arrows */}
-        <div className="absolute bottom-6 right-6 z-20 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)}
-            className="p-2.5 rounded-xl bg-black/40 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 transition-colors"
-            aria-label="Previous Slide"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-black/40 backdrop-blur-md rounded-xl border border-white/20 text-xs font-mono text-white">
-            <span>0{currentSlide + 1}</span>
-            <span className="text-slate-500">/</span>
-            <span>0{banners.length}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
-            className="p-2.5 rounded-xl bg-black/40 hover:bg-black/70 backdrop-blur-md text-white border border-white/20 transition-colors"
-            aria-label="Next Slide"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      </section>
+      <HeroVideo />
 
       {/* 2. Quick City & Service Quick Actions Strip */}
       <section className="max-w-7xl mx-auto px-4 sm:px-8 -mt-8 relative z-20">
@@ -216,11 +115,10 @@ export default function HomePage() {
                 key={type}
                 type="button"
                 onClick={() => setSelectedBodyType(type)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                  selectedBodyType === type
-                    ? 'bg-blue-800 text-white shadow-md shadow-blue-800/20'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                }`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${selectedBodyType === type
+                  ? 'bg-blue-800 text-white shadow-md shadow-blue-800/20'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
               >
                 {type === 'All' ? 'All Types' : type}
               </button>
@@ -462,9 +360,8 @@ export default function HomePage() {
                 >
                   <span className="text-sm sm:text-base pr-4">{faq.question}</span>
                   <ChevronDown
-                    className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-blue-800' : ''
-                    }`}
+                    className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-800' : ''
+                      }`}
                   />
                 </button>
                 {isOpen && (
