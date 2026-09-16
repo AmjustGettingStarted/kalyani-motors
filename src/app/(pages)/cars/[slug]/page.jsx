@@ -4,17 +4,13 @@ import { useKalyani } from '../../../../context/KalyaniContext';
 import { formatINR } from '../../../../lib/utils';
 import CarCard from '../../../../components/widgets/CarCard';
 import {
-  Star,
   Gauge,
   Fuel,
-  Zap,
-  ShieldCheck,
   Calendar,
   CheckCircle,
   Calculator,
   ChevronRight,
   Sparkles,
-  Award,
 } from 'lucide-react';
 
 const CarDetailPage = () => {
@@ -37,7 +33,10 @@ const CarDetailPage = () => {
   const [loanTenureYears, setLoanTenureYears] = useState(5);
   const [interestRate, setInterestRate] = useState(8.5);
 
-  // CLEANED UP: Directly accessing the clean data structure
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
   useEffect(() => {
     if (car) {
       const initialImg = car.gallery?.exterior?.[0] || car.heroImage || '';
@@ -78,10 +77,12 @@ const CarDetailPage = () => {
   const otherCars = cars.filter((c) => c.id !== car.id).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans p-4 sm:p-6">
+    <>
+    <div className='max-w-7xl mx-auto px-4 sm:px-8 py-6'></div>
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans p-8">
       
       {/* Navigation & Breadcrumbs */}
-      <div className="flex items-center justify-between mb-6">
+      {/* <div className="flex items-center justify-between mb-6">
         <button onClick={() => navigate(-1)} className="flex items-center text-sm font-medium hover:text-gray-600">
           <span className="mr-2">←</span> Back
         </button>
@@ -92,7 +93,7 @@ const CarDetailPage = () => {
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
           <span className="text-slate-900 font-bold">{car.name}</span>
         </nav>
-      </div>
+      </div> */}
 
       {/* 1. HERO / DISPLAY COMPONENT */}
       <section className="relative w-full h-auto min-h-[550px] mb-16 border rounded-2xl overflow-hidden group">
@@ -466,8 +467,8 @@ const CarDetailPage = () => {
           </>
         )}
       </section>
-
     </div>
+    </>
   );
 };
 
