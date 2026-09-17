@@ -31,9 +31,9 @@ export default function OutletsPage() {
     if (branchSearch.trim()) {
       const q = branchSearch.toLowerCase().trim();
       return (
-        loc.name.toLowerCase().includes(q) ||
-        loc.address.toLowerCase().includes(q) ||
-        loc.landmark.toLowerCase().includes(q)
+        loc.name?.toLowerCase().includes(q) ||
+        loc.address?.toLowerCase().includes(q) ||
+        loc.landmark?.toLowerCase().includes(q)
       );
     }
     return true;
@@ -153,9 +153,11 @@ export default function OutletsPage() {
                     <MapPin className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                     <span>{loc.address}</span>
                   </p>
-                  <p className="text-[11px] text-blue-700 font-semibold ml-6 mt-1">
-                    Landmark: {loc.landmark}
-                  </p>
+                  {loc.landmark && (
+                    <p className="text-[11px] text-blue-700 font-semibold ml-6 mt-1">
+                      Landmark: {loc.landmark}
+                    </p>
+                  )}
                 </div>
 
                 {/* Hours */}
@@ -165,22 +167,24 @@ export default function OutletsPage() {
                 </div>
 
                 {/* Facilities Pills */}
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block mb-1.5">
-                    Facilities Available:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {loc.facilities.map((f) => (
-                      <span
-                        key={f}
-                        className="text-[10px] font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md flex items-center gap-1"
-                      >
-                        <CheckCircle className="w-2.5 h-2.5 text-emerald-600" />
-                        {f}
-                      </span>
-                    ))}
+                {loc.facilities?.length > 0 && (
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block mb-1.5">
+                      Facilities Available:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {loc.facilities.map((f) => (
+                        <span
+                          key={f}
+                          className="text-[10px] font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md flex items-center gap-1"
+                        >
+                          <CheckCircle className="w-2.5 h-2.5 text-emerald-600" />
+                          {f}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Action Buttons */}
