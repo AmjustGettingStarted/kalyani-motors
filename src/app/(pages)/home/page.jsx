@@ -301,19 +301,15 @@ export default function HomePage() {
 
                 <h3 className="font-display font-bold text-base text-slate-900 leading-snug">{loc.name}</h3>
                 <p className="text-xs text-slate-500 mt-2 leading-relaxed">{loc.address}</p>
-                {loc.landmark && (
-                  <p className="text-[11px] text-blue-700 font-semibold mt-1">Landmark: {loc.landmark}</p>
-                )}
+                <p className="text-[11px] text-blue-700 font-semibold mt-1">Landmark: {loc.landmark}</p>
 
-                {loc.facilities?.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {loc.facilities?.slice(0, 3).map((fac) => (
-                      <span key={fac} className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-100">
-                        {fac}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {loc.facilities.slice(0, 3).map((fac) => (
+                    <span key={fac} className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-100">
+                      {fac}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">

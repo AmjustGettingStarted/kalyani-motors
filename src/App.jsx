@@ -1,15 +1,12 @@
-import React from "react";
-import { RouterProvider } from "react-router-dom";
-import { router } from "./app/routes";
-import { KalyaniProvider } from "./context/KalyaniContext";
-import { HeaderProvider } from "./context/HeaderContext";
+import React from 'react';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './app/routes';
+import { KalyaniProvider } from './context/KalyaniContext';
 
 export default function App() {
   return (
     <KalyaniProvider>
-      <HeaderProvider>
-        <RouterProvider router={router} />
-      </HeaderProvider>
+      <RouterProvider router={router} />
     </KalyaniProvider>
   );
 }
