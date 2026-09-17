@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useKalyani } from '../../context/KalyaniContext';
+import { Button } from '../ui/button';
 
 // Stagger animation container config
 const containerVariants = {
@@ -90,13 +91,13 @@ export default function HeroVideo() {
                             <ArrowRight className="w-4 h-4" />
                         </Link>
 
-                        <button
-                            type="button"
+                        <Button
+                            variant="primary"
                             onClick={() => openTestDrive()}
-                            className="px-7 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold text-sm border border-white/25 transition-all transform hover:-translate-y-0.5 active:scale-95"
+                            className="px-7 py-3.5 rounded-xl bg-transparent hover:bg-white/20 backdrop-blur-md text-white font-bold text-sm border border-white/25 transition-all transform hover:-translate-y-0.5 active:scale-95"
                         >
-                            Book Priority Test Drive
-                        </button>
+                            Enquire
+                        </Button>
                     </motion.div>
                 </motion.div>
             </div>

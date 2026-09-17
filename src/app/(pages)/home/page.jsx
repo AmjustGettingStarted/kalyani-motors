@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useKalyani } from '../../../context/KalyaniContext';
 import CarCard from '../../../components/widgets/CarCard';
 import CitySelector from '../../../components/widgets/CitySelector';
 import {
-  ChevronLeft,
-  ChevronRight,
   ShieldCheck,
   Clock,
   Sparkles,
@@ -14,25 +12,13 @@ import {
   ChevronDown,
   ArrowRight,
   Wrench,
-  Percent,
 } from 'lucide-react';
 import HeroVideo from '../../../components/widgets/HeroVideo';
 
 export default function HomePage() {
-  const { banners, cars, locations, selectedCity, openTestDrive, faqs } = useKalyani();
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const { cars, locations, selectedCity, faqs } = useKalyani();
   const [selectedBodyType, setSelectedBodyType] = useState('All');
   const [expandedFaq, setExpandedFaq] = useState(null);
-
-  // Auto rotate hero carousel
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % banners.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [banners.length]);
-
-  const activeBanner = banners[currentSlide] || banners[0];
 
   const bodyTypes = ['All', 'SUV', 'Hatchback', 'Sedan', 'MPV'];
 
@@ -44,54 +30,6 @@ export default function HomePage() {
     <div className="space-y-16 pb-16">
       {/* 1. Hero Banner Carousel */}
       <HeroVideo />
-
-      {/* 2. Quick City & Service Quick Actions Strip */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8 -mt-8 relative z-20">
-        <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          {/* Active City indicator */}
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-800 flex items-center justify-center border border-blue-100 shrink-0">
-              <Building className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 font-semibold">Active Region</p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="font-display font-extrabold text-slate-900 text-base">{selectedCity} Hub</span>
-                <CitySelector variant="header" />
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Book Service Action */}
-          <div className="flex items-center gap-3 border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4">
-            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 shrink-0">
-              <Wrench className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 font-semibold">Authorized Service</p>
-              <Link to="/service" className="font-display font-bold text-slate-900 text-sm hover:text-red-600 flex items-center gap-1">
-                Schedule Periodic Maintenance <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Dealership Outlets count */}
-          <div className="flex items-center justify-between border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4">
-            <div>
-              <p className="text-xs text-slate-500 font-semibold">Nearest Touchpoints</p>
-              <p className="font-display font-bold text-slate-900 text-sm">
-                {locations.length} Outlets in {selectedCity}
-              </p>
-            </div>
-            <Link
-              to="/outlets"
-              className="px-4 py-2 bg-slate-100 hover:bg-blue-800 hover:text-white rounded-xl text-xs font-bold text-slate-700 transition-colors"
-            >
-              Locate Branch
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* 3. Featured Car Showcase with Filter Pills */}
       <section className="max-w-7xl mx-auto px-4 sm:px-8">
@@ -301,19 +239,15 @@ export default function HomePage() {
 
                 <h3 className="font-display font-bold text-base text-slate-900 leading-snug">{loc.name}</h3>
                 <p className="text-xs text-slate-500 mt-2 leading-relaxed">{loc.address}</p>
-                {loc.landmark && (
-                  <p className="text-[11px] text-blue-700 font-semibold mt-1">Landmark: {loc.landmark}</p>
-                )}
+                <p className="text-[11px] text-blue-700 font-semibold mt-1">Landmark: {loc.landmark}</p>
 
-                {loc.facilities?.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {loc.facilities?.slice(0, 3).map((fac) => (
-                      <span key={fac} className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-100">
-                        {fac}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {loc.facilities.slice(0, 3).map((fac) => (
+                    <span key={fac} className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-100">
+                      {fac}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
