@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useKalyani } from '../../context/KalyaniContext';
 import CitySelector from '../widgets/CitySelector';
 import SearchBar from './SearchBar';
 import { ArrowLeftRight, Menu, X } from 'lucide-react';
@@ -11,7 +10,6 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollY = useRef(0);
-  const { openTestDrive } = useKalyani();
 
   const navLinks = [
     { name: 'Home', path: '/' },
