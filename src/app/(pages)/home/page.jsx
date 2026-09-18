@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useKalyani } from '../../../context/KalyaniContext';
-import FeaturedCarsSection from '../../../components/home/FeaturedCarsSection';
-import HeroVideo from '../../../components/home/HeroVideo';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useKalyani } from "../../../context/KalyaniContext";
+import FeaturedCarsSection from "../../../components/home/FeaturedCarsSection";
+import HeroVideo from "../../../components/home/HeroVideo";
 import {
   ShieldCheck,
   Clock,
@@ -10,9 +10,9 @@ import {
   Building,
   ChevronDown,
   ArrowRight,
-} from 'lucide-react';
-import ChannelExperienceSection from '../../../components/home/ArenavsNexaCTA';
-import WhyChooseKalyaniSection from '../../../components/home/WhyChoseUs';
+} from "lucide-react";
+import ChannelExperienceSection from "../../../components/home/ArenavsNexaCTA";
+import WhyChooseKalyaniSection from "../../../components/home/WhyChoseUs";
 
 export default function HomePage() {
   const { cars, locations, selectedCity, faqs } = useKalyani();
@@ -59,7 +59,6 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {locations?.slice(0, 3).map((loc) => (
-          {locations?.slice(0, 3).map((loc) => (
             <div
               key={loc.id}
               className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
@@ -88,7 +87,10 @@ export default function HomePage() {
 
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {loc.facilities?.slice(0, 3).map((fac) => (
-                    <span key={fac} className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-100">
+                    <span
+                      key={fac}
+                      className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-100"
+                    >
                       {fac}
                     </span>
                   ))}
