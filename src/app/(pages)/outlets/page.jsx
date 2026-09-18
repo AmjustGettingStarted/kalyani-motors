@@ -67,11 +67,10 @@ export default function OutletsPage() {
                 key={city}
                 type="button"
                 onClick={() => setSelectedCity(city)}
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all whitespace-nowrap ${
-                  isSelected
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all whitespace-nowrap ${isSelected
                     ? 'bg-blue-800 text-white shadow-md shadow-blue-800/20'
                     : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
-                }`}
+                  }`}
               >
                 <MapPin className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : 'text-slate-400'}`} />
                 <span>{city}</span>
@@ -103,11 +102,10 @@ export default function OutletsPage() {
             key={cat.id}
             type="button"
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-              activeCategory === cat.id
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeCategory === cat.id
                 ? 'bg-slate-900 text-white shadow-sm'
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+              }`}
           >
             {cat.label}
           </button>
@@ -126,13 +124,12 @@ export default function OutletsPage() {
                 {/* Type Badge & Flagship */}
                 <div className="flex items-center justify-between">
                   <span
-                    className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${
-                      loc.category === 'nexa'
+                    className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${loc.category === 'nexa'
                         ? 'bg-slate-900 text-white'
                         : loc.category === 'service'
-                        ? 'bg-red-50 text-red-700 border border-red-200'
-                        : 'bg-blue-50 text-blue-800 border border-blue-200'
-                    }`}
+                          ? 'bg-red-50 text-red-700 border border-red-200'
+                          : 'bg-blue-50 text-blue-800 border border-blue-200'
+                      }`}
                   >
                     {loc.type}
                   </span>
@@ -170,7 +167,7 @@ export default function OutletsPage() {
                     Facilities Available:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {loc.facilities.map((f) => (
+                    {loc.facilities?.map((f) => (
                       <span
                         key={f}
                         className="text-[10px] font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md flex items-center gap-1"
