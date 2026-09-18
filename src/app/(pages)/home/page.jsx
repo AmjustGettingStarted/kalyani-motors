@@ -1,201 +1,36 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useKalyani } from '../../../context/KalyaniContext';
-import CarCard from '../../../components/widgets/CarCard';
-import CitySelector from '../../../components/widgets/CitySelector';
+import FeaturedCarsSection from '../../../components/home/FeaturedCarsSection';
+import HeroVideo from '../../../components/home/HeroVideo';
 import {
   ShieldCheck,
   Clock,
-  Sparkles,
   Users,
   Building,
   ChevronDown,
   ArrowRight,
-  Wrench,
 } from 'lucide-react';
-import HeroVideo from '../../../components/widgets/HeroVideo';
+import ChannelExperienceSection from '../../../components/home/ArenavsNexaCTA';
+import WhyChooseKalyaniSection from '../../../components/home/WhyChoseUs';
 
 export default function HomePage() {
   const { cars, locations, selectedCity, faqs } = useKalyani();
-  const [selectedBodyType, setSelectedBodyType] = useState('All');
   const [expandedFaq, setExpandedFaq] = useState(null);
-
-  const bodyTypes = ['All', 'SUV', 'Hatchback', 'Sedan', 'MPV'];
-
-  const filteredFeaturedCars = cars
-    .filter((c) => c.isFeatured)
-    .filter((c) => (selectedBodyType === 'All' ? true : c.bodyType === selectedBodyType));
 
   return (
     <div className="space-y-16 pb-16">
       {/* 1. Hero Banner Carousel */}
       <HeroVideo />
 
-      {/* 3. Featured Car Showcase with Filter Pills */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-wider mb-2">
-              <Sparkles className="w-3.5 h-3.5" /> Popular Lineup
-            </div>
-            <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 tracking-tight">
-              Featured Maruti Suzuki Models
-            </h2>
-            <p className="text-slate-500 text-sm mt-1">
-              Explore the latest top-selling Arena & Nexa vehicles available in {selectedCity} with best festive prices.
-            </p>
-          </div>
-
-          {/* Body Type Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
-            {bodyTypes.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setSelectedBodyType(type)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${selectedBodyType === type
-                  ? 'bg-blue-800 text-white shadow-md shadow-blue-800/20'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                  }`}
-              >
-                {type === 'All' ? 'All Types' : type}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Cars Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredFeaturedCars.map((car) => (
-            <CarCard key={car.id} car={car} />
-          ))}
-        </div>
-
-        {/* View all cars banner CTA */}
-        <div className="mt-10 text-center">
-          <Link
-            to="/cars"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-blue-900 text-white font-bold text-sm rounded-2xl shadow-lg transition-colors"
-          >
-            <span>Explore All Maruti Models & Variants</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
+      {/* 3. Featured Car Showcase with Filter Pills & Responsive Carousel */}
+      <FeaturedCarsSection cars={cars} selectedCity={selectedCity} />
 
       {/* 4. Arena vs Nexa Channel Experience Strip */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Arena Box */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-900 via-blue-950 to-slate-950 p-8 text-white shadow-xl flex flex-col justify-between min-h-[300px]">
-            <div className="relative z-10">
-              <span className="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase tracking-wider rounded-full inline-block mb-3">
-                Maruti Suzuki Arena
-              </span>
-              <h3 className="font-display font-black text-2xl sm:text-3xl text-white mb-2">
-                India's Most Trusted Family Cars
-              </h3>
-              <p className="text-slate-300 text-xs sm:text-sm max-w-md leading-relaxed">
-                Featuring Swift, Brezza, Ertiga, and Dzire. Modern design, class-leading mileage, and connected safety for everyone.
-              </p>
-            </div>
-            <div className="relative z-10 pt-6">
-              <Link
-                to="/cars?channel=Arena"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-blue-950 hover:bg-blue-50 rounded-xl text-xs font-bold transition-all shadow-md"
-              >
-                <span>View Arena Lineup</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Nexa Box */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-zinc-900 to-black p-8 text-white shadow-xl flex flex-col justify-between min-h-[300px] border border-slate-800">
-            <div className="relative z-10">
-              <span className="px-3 py-1 bg-white text-slate-950 text-xs font-black uppercase tracking-wider rounded-full inline-block mb-3">
-                Nexa Experience
-              </span>
-              <h3 className="font-display font-black text-2xl sm:text-3xl text-white mb-2">
-                Create. Inspire. Luxury Redefined.
-              </h3>
-              <p className="text-slate-300 text-xs sm:text-sm max-w-md leading-relaxed">
-                Discover Grand Vitara Strong Hybrid, Baleno, Jimny 4x4, and Fronx Turbo. Exclusive hospitality and automotive luxury.
-              </p>
-            </div>
-            <div className="relative z-10 pt-6">
-              <Link
-                to="/cars?channel=Nexa"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl text-xs font-bold transition-all shadow-md"
-              >
-                <span>Discover Nexa Collection</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ChannelExperienceSection />
 
       {/* 5. Why Choose Kalyani Motors (Trust Badges & Milestones) */}
-      <section className="bg-slate-100 py-16 px-4 sm:px-8 border-y border-slate-200">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">Legacy of Excellence</span>
-            <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 tracking-tight mt-1">
-              Why 20+ Lakh Families Choose Kalyani Motors
-            </h2>
-            <p className="text-slate-600 text-sm mt-2">
-              For over 18 years, Kalyani Motors has set the gold standard in automotive retail, transparent financing, and authorized Maruti Suzuki care across South India.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
-              <div className="w-14 h-14 bg-blue-50 text-blue-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100">
-                <Users className="w-7 h-7" />
-              </div>
-              <h4 className="font-display font-black text-2xl text-slate-900">20+ Lakh</h4>
-              <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">Satisfied Customers</p>
-              <p className="text-xs text-slate-600 mt-2">
-                Delivering dreams and creating smiles across Karnataka, Telangana, and Tamil Nadu.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
-              <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-100">
-                <Building className="w-7 h-7" />
-              </div>
-              <h4 className="font-display font-black text-2xl text-slate-900">100+ Outlets</h4>
-              <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">Showrooms & Workshops</p>
-              <p className="text-xs text-slate-600 mt-2">
-                State-of-the-art facilities located conveniently across all major tech hubs & highways.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
-              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-                <ShieldCheck className="w-7 h-7" />
-              </div>
-              <h4 className="font-display font-black text-2xl text-slate-900">4.8 / 5.0</h4>
-              <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">Google Customer Rating</p>
-              <p className="text-xs text-slate-600 mt-2">
-                Over 50,000 verified reviews praising prompt service, polite staff, and genuine advisory.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
-              <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-100">
-                <Clock className="w-7 h-7" />
-              </div>
-              <h4 className="font-display font-black text-2xl text-slate-900">60-Min Express</h4>
-              <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">Quick Service Bays</p>
-              <p className="text-xs text-slate-600 mt-2">
-                Twin-technician synchronized servicing with zero delay while you relax in executive lounge.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <WhyChooseKalyaniSection />
 
       {/* 6. City Outlets Spotlight */}
       <section className="max-w-7xl mx-auto px-4 sm:px-8">
@@ -220,7 +55,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {locations.slice(0, 3).map((loc) => (
+          {locations?.slice(0, 3).map((loc) => (
             <div
               key={loc.id}
               className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
@@ -242,7 +77,7 @@ export default function HomePage() {
                 <p className="text-[11px] text-blue-700 font-semibold mt-1">Landmark: {loc.landmark}</p>
 
                 <div className="mt-4 flex flex-wrap gap-1.5">
-                  {loc.facilities.slice(0, 3).map((fac) => (
+                  {loc.facilities?.slice(0, 3).map((fac) => (
                     <span key={fac} className="text-[10px] bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-100">
                       {fac}
                     </span>

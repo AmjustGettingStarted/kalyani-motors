@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useKalyani } from '../../context/KalyaniContext';
 import { Fuel, Gauge, ArrowRight, Star, ShieldCheck } from 'lucide-react';
 
@@ -11,15 +12,18 @@ export default function CarCard({ car }) {
   const isNexa = car.channel === 'Nexa';
 
   return (
-    <div className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-car-card hover:shadow-car-hover transition-all duration-300 flex flex-col overflow-hidden">
+    <motion.div
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-car-card hover:shadow-car-hover transition-shadow duration-300 flex flex-col overflow-hidden h-[450px] will-change-transform"
+    >
       {/* Top badges bar */}
       <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
         <span
-          className={`px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider rounded-full shadow-sm ${
-            isNexa
-              ? 'bg-slate-900 text-white border border-slate-700'
-              : 'bg-blue-800 text-white border border-blue-700'
-          }`}
+          className={`px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider rounded-full shadow-sm ${isNexa
+            ? 'bg-slate-900 text-white border border-slate-700'
+            : 'bg-blue-800 text-white border border-blue-700'
+            }`}
         >
           {car.channel}
         </span>
@@ -30,14 +34,17 @@ export default function CarCard({ car }) {
       </div>
 
       {/* Image container */}
-      <Link to={`/cars/${car.slug}`} className="block relative aspect-[16/10] overflow-hidden bg-slate-100">
+      <Link
+        to={`/cars/${car.slug}`}
+        className="block relative aspect-[16/10] overflow-hidden bg-slate-100"
+      >
         <img
           src={car.heroImage}
           alt={car.name}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </Link>
 
       {/* Content */}
@@ -56,7 +63,10 @@ export default function CarCard({ car }) {
           </div>
 
           {/* Model Name & Tagline */}
-          <Link to={`/cars/${car.slug}`} className="block group-hover:text-blue-700 transition-colors">
+          <Link
+            to={`/cars/${car.slug}`}
+            className="block group-hover:text-blue-700 transition-colors"
+          >
             <h3 className="font-display font-extrabold text-lg text-slate-900 leading-snug">
               {car.name}
             </h3>
@@ -71,14 +81,19 @@ export default function CarCard({ car }) {
             </div>
             <div className="flex items-center gap-1.5 truncate">
               <Fuel className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span className="truncate font-medium">{car.fuelTypes.join(', ')}</span>
+              <span className="truncate font-medium">
+                {car.fuelTypes?.join(', ')}
+              </span>
             </div>
           </div>
 
           {/* Transmission types */}
           <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {car.transmissionTypes.map((t) => (
-              <span key={t} className="text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">
+            {car.transmissionTypes?.map((t) => (
+              <span
+                key={t}
+                className="text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"
+              >
                 {t}
               </span>
             ))}
@@ -88,24 +103,28 @@ export default function CarCard({ car }) {
         {/* Price & Action Row */}
         <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2">
           <div>
-            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Ex-Showroom</span>
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
+              Ex-Showroom
+            </span>
             <div className="font-display font-black text-base text-slate-900">
-              {car.priceRange.split('-')[0].trim()}
+              {car.priceRange?.split('-')[0].trim()}
               <span className="text-xs font-normal text-slate-500"> onw.</span>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => openTestDrive(car)}
-              className="px-3 py-2 text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 rounded-xl transition-all border border-red-200"
-            >
-              Test Drive
-            </button>
+            {openTestDrive && (
+              <button
+                type="button"
+                onClick={() => openTestDrive(car)}
+                className="px-3 py-2 text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 rounded-xl transition-all border border-red-200"
+              >
+                Test Drive
+              </button>
+            )}
             <Link
               to={`/cars/${car.slug}`}
-              className="p-2 text-xs font-semibold text-white bg-blue-800 hover:bg-blue-900 rounded-xl transition-colors inline-flex items-center justify-center shadow-sm"
+              className="p-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors inline-flex items-center justify-center shadow-sm"
               title="View Model Details"
             >
               <ArrowRight className="w-4 h-4" />
@@ -113,6 +132,6 @@ export default function CarCard({ car }) {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
