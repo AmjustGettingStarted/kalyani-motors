@@ -7,7 +7,7 @@ import CarCard from '../widgets/CarCard';
 const FILTER_CATEGORIES = ['All Types', 'SUV', 'Hatchback', 'Sedan', 'MUV'];
 
 export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengaluru' }) {
-  const [selectedBodyType, setSelectedBodyType] = useState('SUV');
+  const [selectedBodyType, setSelectedBodyType] = useState('All Types');
   const scrollContainerRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);

@@ -33,7 +33,7 @@ const KALYANI_ITEMS = [
         stat: '100+ Outlets',
         badge: 'Showrooms & Workshops',
         quote:
-            'State-of-the-art facilities located conveniently across all major tech corridors, cities, and highways.',
+            'State-of-the-art facilities located conveniently across all major tech hubs, cities, and highways.',
         author: '100+ Locations',
         role: 'Karnataka & Beyond',
         icon: Building,
@@ -49,7 +49,7 @@ const KALYANI_ITEMS = [
         stat: '4.8 / 5.0',
         badge: 'Google Customer Rating',
         quote:
-            'Over 50,000 verified reviews praising prompt service, polite staff, and genuine customer advisory.',
+            'Over 50,000 verified reviews praising prompt service, polite staff, and genuine advisory.',
         author: '50,000+ Reviews',
         role: 'Verified Google Rating',
         icon: ShieldCheck,
@@ -65,9 +65,9 @@ const KALYANI_ITEMS = [
         stat: '60-Min Express',
         badge: 'Quick Service Bays',
         quote:
-            'Twin-technician synchronized periodic maintenance with zero delay while you relax in executive lounges.',
-        author: '60-Min Service',
-        role: 'Authorized Quick Service',
+            'Twin-technician synchronized servicing with zero delay while you relax in executive lounge.',
+        author: '60-Min Express Bay',
+        role: 'Authorized Maruti Care',
         icon: Clock,
         iconColor: 'bg-amber-50 text-amber-600 border-amber-100',
         defaultImage:
@@ -192,17 +192,27 @@ export default function WhyChooseKalyaniSection({
     const activeDimensions = {
         desktop: { width: 780, height: 440 },
         tablet: { width: 560, height: 420 },
-        mobile: { width: Math.min(340, viewportWidth - 48), height: 460 },
+        mobile: { width: Math.min(340, viewportWidth - 48), height: 470 },
     }[tier];
 
     return (
-        <section className="bg-slate-50 py-16 px-4 sm:px-8 border-y border-slate-200 overflow-hidden">
+        <motion.section
+            initial={{ opacity: 0, y: 35 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.12 }}
+            transition={{
+                duration: 0.65,
+                ease: [0.21, 0.47, 0.32, 0.98],
+            }}
+            className="bg-slate-50 py-16 px-4 sm:px-8 border-y border-slate-200 overflow-hidden will-change-transform"
+        >
             <div className="max-w-7xl mx-auto flex flex-col items-center">
-                {/* Header */}
+                {/* Header Section */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
                     className="text-center max-w-3xl mx-auto mb-10"
                 >
                     <span className="text-xs font-bold tracking-widest text-blue-800 uppercase block mb-1">
@@ -211,16 +221,24 @@ export default function WhyChooseKalyaniSection({
                     <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 tracking-tight">
                         Why 20+ Lakh Families Choose Kalyani Motors
                     </h2>
-                    <p className="text-slate-600 text-sm mt-2">
-                        For over 18 years, Kalyani Motors has set the gold standard in automotive retail, transparent financing, and authorized Maruti Suzuki care across South India[cite: 7].
+                    <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+                        For over 18 years, Kalyani Motors has set the gold standard in automotive retail, transparent financing, and authorized Maruti Suzuki care across South India.
                     </p>
                 </motion.div>
 
-                {/* Carousel Region */}
-                <div
+                {/* Interactive Expandable Carousel */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.15 }}
+                    transition={{
+                        duration: 0.6,
+                        delay: 0.1,
+                        ease: [0.21, 0.47, 0.32, 0.98],
+                    }}
                     ref={containerRef}
                     role="region"
-                    aria-label="Kalyani Motors Milestones"
+                    aria-label="Kalyani Motors Milestones Carousel"
                     tabIndex={0}
                     onKeyDown={handleKeyDown}
                     onMouseEnter={() => setIsHovered(true)}
@@ -341,7 +359,7 @@ export default function WhyChooseKalyaniSection({
                                     };
                                 }
 
-                                // Desktop Tier
+                                // Desktop Layout
                                 switch (offset) {
                                     case 0:
                                         return {
@@ -419,10 +437,10 @@ export default function WhyChooseKalyaniSection({
                                         top: '50%',
                                         willChange: 'transform',
                                     }}
-                                    className={`rounded-3xl bg-white text-slate-900 border border-slate-200/80 shadow-[0_12px_36px_rgba(15,23,42,0.08)] overflow-visible ${!isActive ? 'cursor-pointer hover:border-slate-300' : ''
+                                    className={`rounded-3xl bg-white text-slate-900 border border-slate-200 shadow-[0_12px_36px_rgba(15,23,42,0.08)] overflow-visible ${!isActive ? 'cursor-pointer hover:border-slate-300' : ''
                                         }`}
                                 >
-                                    {/* Left SVG Notch */}
+                                    {/* Left Peeking Connector Notch */}
                                     {offset === -1 && (
                                         <div
                                             aria-hidden="true"
@@ -444,7 +462,7 @@ export default function WhyChooseKalyaniSection({
                                         </div>
                                     )}
 
-                                    {/* Right SVG Notch */}
+                                    {/* Right Peeking Connector Notch */}
                                     {offset === 1 && (
                                         <div
                                             aria-hidden="true"
@@ -467,7 +485,7 @@ export default function WhyChooseKalyaniSection({
                                     )}
 
                                     <div className="w-full h-full overflow-hidden relative rounded-[inherit]">
-                                        {/* Inactive Peeking Thumbnail Preview */}
+                                        {/* Inactive Thumbnail Preview */}
                                         <motion.div
                                             initial={false}
                                             animate={{ opacity: isActive ? 0 : 1 }}
@@ -485,7 +503,7 @@ export default function WhyChooseKalyaniSection({
                                             </div>
                                         </motion.div>
 
-                                        {/* Active Expanded Card Content */}
+                                        {/* Active Expanded Card Presentation */}
                                         <div
                                             className="absolute"
                                             style={{
@@ -506,7 +524,7 @@ export default function WhyChooseKalyaniSection({
                                                 className={`w-full h-full flex flex-col md:flex-row p-6 sm:p-8 gap-6 ${!isActive ? 'pointer-events-none' : ''
                                                     }`}
                                             >
-                                                {/* Text & Stats Details */}
+                                                {/* Text & Metrics Details */}
                                                 <div className="flex-1 min-w-0 flex flex-col justify-between text-left py-1">
                                                     <div>
                                                         <div className="flex items-center gap-2.5 mb-4">
@@ -544,7 +562,7 @@ export default function WhyChooseKalyaniSection({
                                                     </div>
                                                 </div>
 
-                                                {/* Image Panel */}
+                                                {/* Visual Asset Panel */}
                                                 <div className="relative shrink-0 overflow-hidden rounded-2xl bg-slate-100 w-full md:w-[46%] h-[180px] md:h-full">
                                                     <img
                                                         src={item.selectedImage}
@@ -561,10 +579,10 @@ export default function WhyChooseKalyaniSection({
                         })}
                     </div>
 
-                    {/* Bottom Progress Tabs */}
+                    {/* Auto-advancing Pill Navigation Indicators */}
                     <div
                         role="tablist"
-                        aria-label="Milestone navigation"
+                        aria-label="Milestone navigation tabs"
                         className="flex items-center gap-2 mt-8"
                     >
                         {items.map((item, idx) => {
@@ -576,8 +594,10 @@ export default function WhyChooseKalyaniSection({
                                     role="tab"
                                     onClick={() => handleSelectTab(idx)}
                                     aria-selected={isSelected}
-                                    aria-label={`Milestone ${idx + 1}: ${item.stat}`}
-                                    className={`h-2 rounded-full overflow-hidden p-0 cursor-pointer transition-all duration-300 outline-none ${isSelected ? 'w-20 bg-slate-200' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
+                                    aria-label={`Milestone tab ${idx + 1}: ${item.stat}`}
+                                    className={`h-2 rounded-full overflow-hidden p-0 cursor-pointer transition-all duration-300 outline-none ${isSelected
+                                            ? 'w-20 bg-slate-200'
+                                            : 'w-2.5 bg-slate-300 hover:bg-slate-400'
                                         }`}
                                 >
                                     {isSelected && (
@@ -593,8 +613,8 @@ export default function WhyChooseKalyaniSection({
                             );
                         })}
                     </div>
-                </div>
+                </motion.div>
             </div>
-        </section>
+        </motion.section>
     );
 }
