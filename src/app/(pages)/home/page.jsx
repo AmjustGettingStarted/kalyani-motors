@@ -36,12 +36,15 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
-            <span className="text-xs font-bold tracking-widest text-red-600 uppercase">Nearest Branches</span>
+            <span className="text-xs font-bold tracking-widest text-red-600 uppercase">
+              Nearest Branches
+            </span>
             <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 tracking-tight mt-1">
               Kalyani Motors in {selectedCity}
             </h2>
             <p className="text-slate-500 text-sm mt-0.5">
-              Visit our state-of-the-art showrooms, authorized service centers, and True Value hubs.
+              Visit our state-of-the-art showrooms, authorized service centers,
+              and True Value hubs.
             </p>
           </div>
 
@@ -55,6 +58,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {locations?.slice(0, 3).map((loc) => (
           {locations?.slice(0, 3).map((loc) => (
             <div
               key={loc.id}
@@ -72,9 +76,15 @@ export default function HomePage() {
                   )}
                 </div>
 
-                <h3 className="font-display font-bold text-base text-slate-900 leading-snug">{loc.name}</h3>
-                <p className="text-xs text-slate-500 mt-2 leading-relaxed">{loc.address}</p>
-                <p className="text-[11px] text-blue-700 font-semibold mt-1">Landmark: {loc.landmark}</p>
+                <h3 className="font-display font-bold text-base text-slate-900 leading-snug">
+                  {loc.name}
+                </h3>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                  {loc.address}
+                </p>
+                <p className="text-[11px] text-blue-700 font-semibold mt-1">
+                  Landmark: {loc.landmark}
+                </p>
 
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {loc.facilities?.slice(0, 3).map((fac) => (
@@ -87,7 +97,7 @@ export default function HomePage() {
 
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
                 <a
-                  href={`tel:${loc.phone.replace(/\s+/g, '')}`}
+                  href={`tel:${loc.phone.replace(/\s+/g, "")}`}
                   className="text-xs font-bold text-red-600 hover:underline"
                 >
                   {loc.phone}
@@ -109,12 +119,15 @@ export default function HomePage() {
       {/* 7. Common Customer FAQs Accordion */}
       <section className="max-w-4xl mx-auto px-4 sm:px-8">
         <div className="text-center mb-8">
-          <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">Have Questions?</span>
+          <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">
+            Have Questions?
+          </span>
           <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 tracking-tight mt-1">
             Frequently Asked Questions
           </h2>
           <p className="text-slate-500 text-sm mt-1">
-            Everything you need to know about buying, test drives, and maintaining your Maruti Suzuki car.
+            Everything you need to know about buying, test drives, and
+            maintaining your Maruti Suzuki car.
           </p>
         </div>
 
@@ -131,10 +144,13 @@ export default function HomePage() {
                   onClick={() => setExpandedFaq(isOpen ? null : index)}
                   className="w-full px-6 py-4 flex items-center justify-between text-left font-display font-bold text-slate-900 hover:text-blue-800 transition-colors"
                 >
-                  <span className="text-sm sm:text-base pr-4">{faq.question}</span>
+                  <span className="text-sm sm:text-base pr-4">
+                    {faq.question}
+                  </span>
                   <ChevronDown
-                    className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-800' : ''
-                      }`}
+                    className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${
+                      isOpen ? "rotate-180 text-blue-800" : ""
+                    }`}
                   />
                 </button>
                 {isOpen && (

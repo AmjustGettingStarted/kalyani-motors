@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useKalyani } from '../../../context/KalyaniContext';
+import React, { useState } from "react";
+import { useKalyani } from "../../../context/KalyaniContext";
 import {
   MapPin,
   Phone,
@@ -9,25 +9,27 @@ import {
   Building,
   Wrench,
   Search,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function OutletsPage() {
-  const { cities, selectedCity, setSelectedCity, allLocations, openTestDrive } = useKalyani();
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [branchSearch, setBranchSearch] = useState('');
+  const { cities, selectedCity, setSelectedCity, allLocations, openTestDrive } =
+    useKalyani();
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [branchSearch, setBranchSearch] = useState("");
 
   const currentCityLocations = allLocations[selectedCity.toLowerCase()] || [];
 
   const categories = [
-    { id: 'all', label: 'All Touchpoints' },
-    { id: 'arena', label: 'Arena Showrooms' },
-    { id: 'nexa', label: 'Nexa Showrooms' },
-    { id: 'service', label: 'Service Workshops' },
-    { id: 'true-value', label: 'True Value (Used)' },
+    { id: "all", label: "All Touchpoints" },
+    { id: "arena", label: "Arena Showrooms" },
+    { id: "nexa", label: "Nexa Showrooms" },
+    { id: "service", label: "Service Workshops" },
+    { id: "true-value", label: "True Value (Used)" },
   ];
 
   const filteredLocations = currentCityLocations.filter((loc) => {
-    if (activeCategory !== 'all' && loc.category !== activeCategory) return false;
+    if (activeCategory !== "all" && loc.category !== activeCategory)
+      return false;
     if (branchSearch.trim()) {
       const q = branchSearch.toLowerCase().trim();
       return (
@@ -51,7 +53,8 @@ export default function OutletsPage() {
             Kalyani Motors Dealerships & Service Hubs
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-            Locate your nearest authorized Maruti Suzuki Arena, Nexa showroom, certified service workshop, or True Value outlet in {selectedCity}.
+            Locate your nearest authorized Maruti Suzuki Arena, Nexa showroom,
+            certified service workshop, or True Value outlet in {selectedCity}.
           </p>
         </div>
       </div>
@@ -68,13 +71,17 @@ export default function OutletsPage() {
                 type="button"
                 onClick={() => setSelectedCity(city)}
                 className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all whitespace-nowrap ${isSelected
-                    ? 'bg-blue-800 text-white shadow-md shadow-blue-800/20'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-blue-800 text-white shadow-md shadow-blue-800/20'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
                   }`}
               >
-                <MapPin className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : 'text-slate-400'}`} />
+                <MapPin
+                  className={`w-3.5 h-3.5 ${isSelected ? "text-amber-400" : "text-slate-400"}`}
+                />
                 <span>{city}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-blue-900 text-blue-200' : 'bg-slate-200 text-slate-600'}`}>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? "bg-blue-900 text-blue-200" : "bg-slate-200 text-slate-600"}`}
+                >
                   {count}
                 </span>
               </button>
@@ -103,8 +110,8 @@ export default function OutletsPage() {
             type="button"
             onClick={() => setActiveCategory(cat.id)}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeCategory === cat.id
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
           >
             {cat.label}
@@ -125,10 +132,10 @@ export default function OutletsPage() {
                 <div className="flex items-center justify-between">
                   <span
                     className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${loc.category === 'nexa'
-                        ? 'bg-slate-900 text-white'
-                        : loc.category === 'service'
-                          ? 'bg-red-50 text-red-700 border border-red-200'
-                          : 'bg-blue-50 text-blue-800 border border-blue-200'
+                      ? 'bg-slate-900 text-white'
+                      : loc.category === 'service'
+                        ? 'bg-red-50 text-red-700 border border-red-200'
+                        : 'bg-blue-50 text-blue-800 border border-blue-200'
                       }`}
                   >
                     {loc.type}
@@ -183,9 +190,11 @@ export default function OutletsPage() {
               {/* Action Buttons */}
               <div className="mt-6 pt-4 border-t border-slate-100 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-semibold">Sales Desk:</span>
+                  <span className="text-slate-400 font-semibold">
+                    Sales Desk:
+                  </span>
                   <a
-                    href={`tel:${loc.phone.replace(/\s+/g, '')}`}
+                    href={`tel:${loc.phone.replace(/\s+/g, "")}`}
                     className="font-bold text-red-600 hover:underline flex items-center gap-1"
                   >
                     <Phone className="w-3.5 h-3.5" />
@@ -195,9 +204,11 @@ export default function OutletsPage() {
 
                 {loc.servicePhone && loc.servicePhone !== loc.phone && (
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-semibold">Service Desk:</span>
+                    <span className="text-slate-400 font-semibold">
+                      Service Desk:
+                    </span>
                     <a
-                      href={`tel:${loc.servicePhone.replace(/\s+/g, '')}`}
+                      href={`tel:${loc.servicePhone.replace(/\s+/g, "")}`}
                       className="font-bold text-blue-800 hover:underline flex items-center gap-1"
                     >
                       <Wrench className="w-3.5 h-3.5" />
@@ -234,15 +245,18 @@ export default function OutletsPage() {
           <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
             <Building className="w-8 h-8" />
           </div>
-          <h3 className="font-display font-bold text-lg text-slate-900">No outlets found</h3>
+          <h3 className="font-display font-bold text-lg text-slate-900">
+            No outlets found
+          </h3>
           <p className="text-xs text-slate-500">
-            No touchpoints found matching your search term. Clear the search or choose another city tab.
+            No touchpoints found matching your search term. Clear the search or
+            choose another city tab.
           </p>
           <button
             type="button"
             onClick={() => {
-              setBranchSearch('');
-              setActiveCategory('all');
+              setBranchSearch("");
+              setActiveCategory("all");
             }}
             className="px-6 py-2.5 bg-blue-800 text-white rounded-xl text-xs font-bold hover:bg-blue-900 transition-colors"
           >

@@ -60,8 +60,6 @@ export default function AnimatedOutlets() {
     return true;
   });
 
-  const isOdd = filteredOutlets.lenght % 2 !== 0;
-
   const handleSelectTab = (tab) => {
     setActiveTab(tab.name);
     setActiveSubType(tab.subOptions ? tab.subOptions[0] : null);
@@ -95,8 +93,9 @@ export default function AnimatedOutlets() {
           </div>
           {/* Mobile View */}
           <div
-            className={`md:hidden sticky z-40 flex justify-start transition-all duration-300 pt-8 ${isHidden ? "top-0" : "top-24"
-              }`}
+            className={`md:hidden sticky z-40 flex justify-start transition-all duration-300 pt-8 ${
+              isHidden ? "top-0" : "top-24"
+            }`}
           >
             <MobileFilterDropdown
               activeTab={activeTab}
@@ -125,7 +124,7 @@ export default function AnimatedOutlets() {
             <div className="md:hidden absolute left-4 top-0 bottom-0 w-px border-l-2 border-dashed border-slate-300 z-0" />
 
             {/* Sticky car marker riding the road */}
-            <div className="hidden md:flex sticky top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#f8fafc] items-center justify-center z-10 text-slate-500">
+            <div className="hidden md:flex sticky top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#f8fafc] items-center justify-center z-10 text-slate-500">
               <Car className="w-5 h-5" />
             </div>
 
@@ -169,9 +168,7 @@ export default function AnimatedOutlets() {
                       </div>
 
                       {/* RIGHT HALF */}
-                      <div
-                        className={`flex flex-col gap-14 ${isOdd ? "" : "pb-32"}`}
-                      >
+                      <div className="flex flex-col gap-14">
                         {filteredOutlets
                           .filter((_, index) => index % 2 === 0)
                           .map((outlet, index) => (
@@ -224,8 +221,9 @@ function MobileFilterDropdown({
         <span className="truncate">{currentLabel}</span>
 
         <ChevronDown
-          className={`w-4 h-4 shrink-0 text-slate-500 transition-transform duration-300 ${open ? "rotate-180" : ""
-            }`}
+          className={`w-4 h-4 shrink-0 text-slate-500 transition-transform duration-300 ${
+            open ? "rotate-180" : ""
+          }`}
         />
       </button>
 
@@ -269,10 +267,11 @@ function MobileFilterDropdown({
                         onSelectTab(tab);
                         setOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm transition-colors ${isActive
-                        ? "bg-slate-800 text-white"
-                        : "text-slate-600 hover:bg-slate-50"
-                        }`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm transition-colors ${
+                        isActive
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-600 hover:bg-slate-50"
+                      }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" />
 
@@ -302,10 +301,11 @@ function MobileFilterDropdown({
                             onSelectSub(tab, option);
                             setOpen(false);
                           }}
-                          className={`w-full flex items-center px-4 py-2.5 pl-11 rounded-xl text-left text-sm transition-colors ${isActive
-                            ? "bg-slate-100 text-slate-900 font-semibold"
-                            : "text-slate-600 hover:bg-slate-50"
-                            }`}
+                          className={`w-full flex items-center px-4 py-2.5 pl-11 rounded-xl text-left text-sm transition-colors ${
+                            isActive
+                              ? "bg-slate-100 text-slate-900 font-semibold"
+                              : "text-slate-600 hover:bg-slate-50"
+                          }`}
                         >
                           {option}
                         </button>
@@ -326,6 +326,20 @@ function TabButton({ tab, isActive, activeSubType, onSelectTab, onSelectSub }) {
   const [open, setOpen] = useState(false);
   const Icon = tab.icon || Car;
   const hasSub = !!tab.subOptions;
+  const [displayLabel, setDisplayLabel] = useState(tab.name);
+
+  useEffect(() => {
+    if (!isActive || !hasSub || !activeSubType) {
+      setDisplayLabel(tab.name);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setDisplayLabel((prev) => (prev === tab.name ? activeSubType : tab.name));
+    }, 8000);
+
+    return () => clearTimeout(interval);
+  }, [isActive, hasSub, activeSubType, tab.name]);
 
   return (
     <div
@@ -338,7 +352,7 @@ function TabButton({ tab, isActive, activeSubType, onSelectTab, onSelectSub }) {
           onSelectTab(tab);
           if (hasSub) setOpen((o) => !o);
         }}
-        className="relative flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold"
+        className={`relative flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold ${hasSub ? "w-[120px]" : ""}`}
       >
         {isActive && (
           <motion.div
@@ -353,21 +367,30 @@ function TabButton({ tab, isActive, activeSubType, onSelectTab, onSelectSub }) {
         )}
 
         <Icon
-          className={`relative z-10 w-4 h-4 ${isActive ? "text-white" : "text-slate-500"
-            }`}
+          className={`relative z-10 w-4 h-4 ${
+            isActive ? "text-white" : "text-slate-500"
+          }`}
         />
-
-        <span
-          className={`relative z-10 ${isActive ? "text-white" : "text-slate-600"
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={displayLabel}
+            className={`relative z-10 ${
+              isActive ? "text-white" : "text-slate-600"
             }`}
-        >
-          {tab.name}
-        </span>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {displayLabel}
+          </motion.span>
+        </AnimatePresence>
 
         {hasSub && (
           <ChevronDown
-            className={`relative z-10 w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""
-              } ${isActive ? "text-white" : "text-slate-400"}`}
+            className={`relative z-10 w-3.5 h-3.5 transition-transform duration-200 ${
+              open ? "rotate-180" : ""
+            } ${isActive ? "text-white" : "text-slate-400"}`}
           />
         )}
       </button>
@@ -389,12 +412,14 @@ function TabButton({ tab, isActive, activeSubType, onSelectTab, onSelectSub }) {
                   key={option}
                   onClick={() => {
                     onSelectSub(tab, option);
+                    setDisplayLabel(option);
                     setOpen(false);
                   }}
-                  className={`w-full flex items-center gap-2.5 text-left px-4 py-2.5 text-sm transition-colors ${isSubActive
-                    ? "bg-slate-50 text-slate-900 font-semibold"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    }`}
+                  className={`w-full flex items-center gap-2.5 text-left px-4 py-2.5 text-sm transition-colors ${
+                    isSubActive
+                      ? "bg-slate-50 text-slate-900 font-semibold"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
                 >
                   <SubIcon
                     className={`w-4 h-4 ${isSubActive ? "text-slate-700" : "text-slate-400"}`}
@@ -442,8 +467,9 @@ function OutletCard({ outlet, index, side }) {
     >
       {/* Connector dot back to the road (desktop only) */}
       <div
-        className={`block absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 border-[#f8fafc] bg-slate-700 z-10 shadow-sm ${isLeft ? "-right-[41px]" : "-left-[41px]"
-          }`}
+        className={`block absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 border-[#f8fafc] bg-slate-700 z-10 shadow-sm ${
+          isLeft ? "-right-[41px]" : "-left-[41px]"
+        }`}
       />
       {/* Card Container */}
       <div className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex flex-col gap-4 hover:shadow-lg transition-shadow duration-300">
