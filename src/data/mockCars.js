@@ -10,8 +10,6 @@ import fronxIn2 from '../app/images/fronx/gallery/Fronx_In2.png';
 import fronxVideo from '../components/videos/Fronx_fold_desktop.mp4';
 
 export const mockCars = [
-
-  // ==========================================
   {
     id: 'car-fronx',
     slug: 'fronx',
@@ -130,9 +128,7 @@ export const mockCars = [
     reviewsCount: 1850,
   },
 
-  // ==========================================
   // Hatchback (3 Cars: Baleno, Swift, Ignis)
-  // ==========================================
   {
     id: 'car-baleno',
     slug: 'baleno',
@@ -233,9 +229,7 @@ export const mockCars = [
     reviewsCount: 650,
   },
 
-  // ==========================================
   // Sedan (3 Cars: Dzire, Ciaz, Tour S)
-  // ==========================================
   {
     id: 'car-dzire',
     slug: 'dzire',
@@ -336,9 +330,7 @@ export const mockCars = [
     reviewsCount: 1300,
   },
 
-  // ==========================================
   // MUV (3 Cars: Ertiga, XL6, Invicto)
-  // ==========================================
   {
     id: 'car-ertiga',
     slug: 'ertiga',

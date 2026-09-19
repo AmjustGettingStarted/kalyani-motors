@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import ChannelExperienceSection from "../../../components/home/ArenavsNexaCTA";
 import WhyChooseKalyaniSection from "../../../components/home/WhyChoseUs";
+import FaqSection from "../../../components/home/FAQsection";
 
 export default function HomePage() {
   const { cars, locations, selectedCity, faqs } = useKalyani();
@@ -119,52 +120,7 @@ export default function HomePage() {
       </section>
 
       {/* 7. Common Customer FAQs Accordion */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-8">
-        <div className="text-center mb-8">
-          <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">
-            Have Questions?
-          </span>
-          <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 tracking-tight mt-1">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-slate-500 text-sm mt-1">
-            Everything you need to know about buying, test drives, and
-            maintaining your Maruti Suzuki car.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {faqs.map((faq, index) => {
-            const isOpen = expandedFaq === index;
-            return (
-              <div
-                key={faq.id}
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-              >
-                <button
-                  type="button"
-                  onClick={() => setExpandedFaq(isOpen ? null : index)}
-                  className="w-full px-6 py-4 flex items-center justify-between text-left font-display font-bold text-slate-900 hover:text-blue-800 transition-colors"
-                >
-                  <span className="text-sm sm:text-base pr-4">
-                    {faq.question}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${
-                      isOpen ? "rotate-180 text-blue-800" : ""
-                    }`}
-                  />
-                </button>
-                {isOpen && (
-                  <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
-                    <p>{faq.answer}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      <FaqSection />
     </div>
   );
 }
