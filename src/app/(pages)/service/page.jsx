@@ -45,16 +45,41 @@ export default function ServicePage() {
     offset: ["start start", "end start"],
   });
 
-  /*
-   * Hero image movement
-   *
-   * The images begin spread around the heading.
-   * As the user scrolls they rotate inward,
-   * scale down and finish as a deck.
-   */
-
   const heroImages = services?.heroImages || [];
   const serviceCategories = services?.serviceCategories || [];
+
+  useEffect(() => {
+    if (!serviceCategories.length) return;
+    const observers = [];
+    serviceCategories.forEach((service) => {
+      const el = serviceRefs.current[service.id];
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setActiveService(service.id);
+          }
+        },
+        {
+          // Triggers when the section crosses the middle of the screen
+          rootMargin: "-40% 0px -40% 0px",
+          threshold: 0,
+        },
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+    return () => {
+      observers.forEach((obs) => obs.disconnect());
+    };
+  }, [serviceCategories]);
+  const scrollToService = (id) => {
+    serviceRefs.current[id]?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    setActiveService(id);
+  };
 
   const positions = [
     {
@@ -94,14 +119,14 @@ export default function ServicePage() {
     },
   ];
 
-  const scrollToService = (id) => {
-    serviceRefs.current[id]?.scrollIntoView({
-      behaviour: "smooth",
-      block: "start",
-    });
+  // const scrollToService = (id) => {
+  //   serviceRefs.current[id]?.scrollIntoView({
+  //     behaviour: "smooth",
+  //     block: "start",
+  //   });
 
-    setActiveService(id);
-  };
+  //   setActiveService(id);
+  // };
 
   useEffect(() => {
     const section = serviceSectionRef.current;
@@ -141,12 +166,10 @@ export default function ServicePage() {
   };
 
   return (
-    <main className="bg-[#f5f5f3] text-slate-950 overflow-hidden">
-      {/* =========================================================
-          HERO
-      ========================================================== */}
+    <main className="bg-[#f5f5f3] text-slate-950">
+      {/* HERO */}
 
-      <section ref={heroRef} className="relative h-[190vh]">
+      <section ref={heroRef} className="relative overflow-hidden">
         <div className="sticky top-0 h-screen overflow-hidden">
           {/* subtle background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#edf7ff] via-[#f7fbff] to-[#eaf4ff]" />
@@ -256,20 +279,17 @@ export default function ServicePage() {
         </div>
       </section>
 
-      <ServiceNavigation
-        service={serviceCategories}
-        activeService={activeService}
-        onSelect={scrollToService}
-      />
-
-      {/* =========================================================
-          SERVICES SECTION
-      ========================================================== */}
+      {/* SERVICES SECTION*/}
 
       <section
         ref={serviceSectionRef}
-        className="relative bg-[#f4f9ff] text-[#071936]"
+        className="relative bg-[#f4f9ff] text-[#071936] "
       >
+        <ServiceNavigation
+          services={serviceCategories}
+          activeService={activeService}
+          onSelect={scrollToService}
+        />
         {serviceCategories.map((service, index) => (
           <ServiceSection
             key={service.id}
@@ -280,43 +300,50 @@ export default function ServicePage() {
             }}
           />
         ))}
-
-        {/* second navigation copy */}
-
-        <div className="py-10">
-          <ServiceNavigation
-            services={serviceCategories}
-            activeService={activeService}
-            onSelect={scrollToService}
-            sticky={isServiceNavSticky}
-          />
-        </div>
-
+        <div className="pb-20 md:pb-20" />
         {/* BOOKING SECTION WILL GO HERE */}
       </section>
     </main>
   );
 }
 
-/* =============================================================
-   TOGGLE
-============================================================= */
+/* TOGGLE */
 
-function ServiceNavigation({
-  services,
-  activeService,
-  onSelect,
-  sticky = false,
-}) {
+// function ServiceNavigation({
+//   services,
+//   activeService,
+//   onSelect,
+//   sticky = false,
+// }) {
+//   return (
+//     <div className="sticky top-[calc(100vh-6rem)] z-40 flex justify-center px-4 py-3 pointer-events-none">
+//       <nav className="flex max-w-full overflow-x-auto items-center gap-1 rounded-full border border-white bg-white/95 p-2 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl">
+//         {services?.map((service) => {
+//           const isActive = activeService === service.id;
+
+//           return (
+//             <button
+//               key={service.id}
+//               onClick={() => onSelect(service.id)}
+//               className={`shrink-0 rounded-full px-4 py-3 text-[10px] font-bold transition-all md:px-5 md:text-xs ${
+//                 isActive
+//                   ? "bg-blue-700 text-white shadow-md"
+//                   : "text-slate-700 hover:bg-blue-50"
+//               }`}
+//             >
+//               {service.shortTitle}
+//             </button>
+//           );
+//         })}
+//       </nav>
+//     </div>
+//   );
+// }
+
+function ServiceNavigation({ services, activeService, onSelect }) {
   return (
-    <div
-      className={
-        sticky
-          ? "fixed bottom-5 left-0 right-0 z-50 flex justify-center px-4"
-          : "relative z-40 flex justify-center px-4 py-5"
-      }
-    >
-      <nav className="flex max-w-full overflow-x-auto items-center gap-1 rounded-full border border-white bg-white/95 p-2 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl">
+    <div className="sticky top-[calc(100vh-6rem)] z-40 flex justify-center px-4 py-3 pointer-events-none">
+      <nav className="pointer-events-auto flex max-w-full overflow-x-auto items-center gap-1 rounded-full border border-white/80 bg-white/95 p-1.5 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl">
         {services?.map((service) => {
           const isActive = activeService === service.id;
 
@@ -324,13 +351,23 @@ function ServiceNavigation({
             <button
               key={service.id}
               onClick={() => onSelect(service.id)}
-              className={`shrink-0 rounded-full px-4 py-3 text-[10px] font-bold transition-all md:px-5 md:text-xs ${
-                isActive
-                  ? "bg-blue-700 text-white shadow-md"
-                  : "text-slate-700 hover:bg-blue-50"
+              className={`relative shrink-0 rounded-full px-4 py-2.5 text-[10px] font-bold transition-colors md:px-5 md:text-xs cursor-pointer ${
+                isActive ? "text-white" : "text-slate-700 hover:text-blue-700"
               }`}
             >
-              {service.shortTitle}
+              {/* Sliding Background Pill */}
+              {isActive && (
+                <motion.div
+                  layoutId="activeServiceNavBg"
+                  className="absolute inset-0 rounded-full bg-blue-700 shadow-md -z-10"
+                  transition={{
+                    type: "spring",
+                    stiffness: 450,
+                    damping: 35,
+                  }}
+                />
+              )}
+              <span className="relative z-10">{service.shortTitle}</span>
             </button>
           );
         })}
@@ -339,9 +376,7 @@ function ServiceNavigation({
   );
 }
 
-/* =============================================================
-   SERVICE CARD
-============================================================= */
+/* SERVICE CARD */
 
 function ServiceSection({ service, index, sectionRef }) {
   const isReversed = index % 2 === 1;
@@ -351,16 +386,6 @@ function ServiceSection({ service, index, sectionRef }) {
       ref={sectionRef}
       className="relative min-h-[650px] overflow-hidden md:min-h-[760px]"
     >
-      {/* giant background number */}
-
-      <div
-        className={`absolute top-8 z-0 text-[140px] font-black leading-none text-blue-100/80 md:top-12 md:text-[220px] ${
-          isReversed ? "right-6" : "left-6"
-        }`}
-      >
-        {service.number}
-      </div>
-
       {/* image */}
 
       <div
@@ -385,12 +410,8 @@ function ServiceSection({ service, index, sectionRef }) {
 
       {/* content */}
 
-      <div className="relative z-10 mx-auto flex min-h-[650px] max-w-7xl items-center px-6 md:min-h-[760px] md:px-12 lg:px-20">
-        <div className={`w-full md:w-[48%] ${isReversed ? "ml-auto" : ""}`}>
-          <span className="text-sm font-bold text-blue-700">
-            {service.number} / 07
-          </span>
-
+      <div className="relative z-10 mx-auto flex min-h-[650px] items-center px-6 md:min-h-[760px] md:px-12 lg:px-16 bg-white/30">
+        <div className={`w-full md:w-[30%] ${isReversed ? "ml-auto" : ""}`}>
           <h2 className="mt-4 max-w-xl font-display text-5xl font-black leading-[0.9] tracking-[-0.05em] text-[#071936] md:text-6xl lg:text-7xl">
             {service.title}
           </h2>
@@ -399,7 +420,7 @@ function ServiceSection({ service, index, sectionRef }) {
             {service.subtitle}
           </p>
 
-          <p className="mt-5 max-w-md text-sm leading-relaxed text-slate-600 md:text-base">
+          <p className="mt-5 text-sm leading-relaxed text-slate-600 md:text-base">
             {service.description}
           </p>
 
@@ -412,9 +433,7 @@ function ServiceSection({ service, index, sectionRef }) {
     </section>
   );
 }
-/* =============================================================
-   FORM FIELD
-============================================================= */
+/* FORM FIELD */
 
 function Field({ label, children }) {
   return (
