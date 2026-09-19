@@ -14,8 +14,8 @@ export default function CarCard({ car }) {
   return (
     <motion.div
       whileHover={{ y: -5 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-car-card hover:shadow-car-hover transition-shadow duration-300 flex flex-col overflow-hidden h-[450px] will-change-transform"
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-car-card hover:shadow-car-hover transition-[transform,box-shadow] duration-250 flex flex-col overflow-hidden h-[450px] transform-gpu will-change-transform"
     >
       {/* Top badges bar */}
       <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
@@ -28,7 +28,7 @@ export default function CarCard({ car }) {
           {car.channel}
         </span>
 
-        <span className="px-2.5 py-1 text-[11px] font-semibold bg-white/90 backdrop-blur-sm text-slate-700 rounded-full border border-slate-200 shadow-sm">
+        <span className="px-2.5 py-1 text-[11px] font-semibold bg-white text-slate-700 rounded-full border border-slate-200/80 shadow-sm">
           {car.bodyType}
         </span>
       </div>
@@ -41,10 +41,10 @@ export default function CarCard({ car }) {
         <img
           src={car.heroImage}
           alt={car.name}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out transform-gpu will-change-transform"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       </Link>
 
       {/* Content */}
@@ -117,14 +117,14 @@ export default function CarCard({ car }) {
               <button
                 type="button"
                 onClick={() => openTestDrive(car)}
-                className="px-3 py-2 text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 rounded-xl transition-all border border-red-200"
+                className="px-3 py-2 text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 rounded-xl transition-colors duration-200 border border-red-200"
               >
                 Test Drive
               </button>
             )}
             <Link
               to={`/cars/${car.slug}`}
-              className="p-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors inline-flex items-center justify-center shadow-sm"
+              className="p-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors duration-200 inline-flex items-center justify-center shadow-sm"
               title="View Model Details"
             >
               <ArrowRight className="w-4 h-4" />

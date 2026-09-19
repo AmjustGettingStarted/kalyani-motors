@@ -30,28 +30,39 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
     const container = scrollContainerRef.current;
     if (!container) return;
     const { scrollLeft, scrollWidth, clientWidth } = container;
-    setCanScrollLeft(scrollLeft > 4);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+    const newCanLeft = scrollLeft > 4;
+    const newCanRight = scrollLeft + clientWidth < scrollWidth - 4;
+    setCanScrollLeft((prev) => (prev !== newCanLeft ? newCanLeft : prev));
+    setCanScrollRight((prev) => (prev !== newCanRight ? newCanRight : prev));
   }, []);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateScrollButtons();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
     updateScrollButtons();
-    const rafId = requestAnimationFrame(updateScrollButtons);
     const timer1 = setTimeout(updateScrollButtons, 100);
     const timer2 = setTimeout(updateScrollButtons, 350);
 
-    container.addEventListener('scroll', updateScrollButtons, { passive: true });
-    window.addEventListener('resize', updateScrollButtons);
+    container.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
 
     return () => {
-      cancelAnimationFrame(rafId);
       clearTimeout(timer1);
       clearTimeout(timer2);
-      container.removeEventListener('scroll', updateScrollButtons);
-      window.removeEventListener('resize', updateScrollButtons);
+      container.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
     };
   }, [updateScrollButtons, selectedBodyType, filteredCars.length]);
 
@@ -73,18 +84,18 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
   };
 
   // Container styling:
-  // Mobile (<640px) & Tablets (<1024px): Always single horizontal scroll row with CSS snap
-  // Desktop (>=1024px): Grid if <= 3 cars, single-row carousel container if > 3 cars
+  // Mobile (<640px) & Tablets (<1024px): Single horizontal scroll row with CSS snap
+  // Desktop (>=1024px): Grid if <= 3 cars, single-row carousel without rigid mandatory snap to prevent vertical scroll trap
   const containerClasses = isCarouselDesktop
-    ? 'flex items-stretch overflow-x-auto snap-x snap-mandatory scrollbar-none gap-6 pt-2 pb-6 px-1'
-    : 'flex items-stretch overflow-x-auto snap-x snap-mandatory scrollbar-none gap-6 pt-2 pb-6 px-1 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:pb-0 lg:pt-0 lg:px-0';
+    ? 'flex items-stretch overflow-x-auto overscroll-x-contain touch-pan-y snap-x snap-mandatory md:snap-none scrollbar-none gap-6 pt-2 pb-6 px-1'
+    : 'flex items-stretch overflow-x-auto overscroll-x-contain touch-pan-y snap-x snap-mandatory md:snap-none scrollbar-none gap-6 pt-2 pb-6 px-1 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:pb-0 lg:pt-0 lg:px-0';
 
   // Card wrapper styling:
   // Mobile: w-[85vw], Tablet: sm:w-[350px] shrink-0 snap-start
-  // Desktop: lg:w-[380px] shrink-0 snap-start (if carousel) or lg:w-auto lg:shrink (if grid)
+  // Desktop: lg:w-[380px] shrink-0 (if carousel) or lg:w-auto lg:shrink (if grid)
   const cardWrapperClasses = isCarouselDesktop
-    ? 'w-[85vw] sm:w-[350px] lg:w-[380px] shrink-0 snap-start flex flex-col'
-    : 'w-[85vw] sm:w-[350px] shrink-0 snap-start lg:w-auto lg:shrink flex flex-col';
+    ? 'w-[85vw] sm:w-[350px] lg:w-[380px] shrink-0 snap-start md:snap-align-none flex flex-col'
+    : 'w-[85vw] sm:w-[350px] shrink-0 snap-start md:snap-align-none lg:w-auto lg:shrink flex flex-col';
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-8 py-10">
@@ -92,7 +103,7 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ once: true, amount: 0.1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8"
       >
@@ -142,30 +153,28 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
             onClick={() => handleScroll('left')}
             disabled={!canScrollLeft}
             aria-label="Previous cars"
-            className="hidden lg:flex absolute -left-4 xl:-left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white/95 backdrop-blur-md shadow-xl border border-slate-200/80 items-center justify-center text-slate-800 hover:text-blue-600 hover:bg-white hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:text-slate-800 transition-all duration-200 cursor-pointer shadow-slate-300/60"
+            className="hidden lg:flex absolute -left-4 xl:-left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white shadow-lg hover:shadow-xl border border-slate-200 items-center justify-center text-slate-800 hover:text-blue-600 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:text-slate-800 transition-all duration-200 cursor-pointer"
           >
             <ChevronLeft className="w-6 h-6 stroke-[2.25]" />
           </button>
         )}
 
-        {/* Scrollable Container */}
-        <motion.div
+        {/* Scrollable Container - Isolated from vertical scroll hijacking */}
+        <div
           ref={scrollContainerRef}
-          data-lenis-prevent
-          layout
+          style={{ overscrollBehaviorX: 'contain', touchAction: 'pan-y' }}
           className={containerClasses}
         >
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence>
             {filteredCars.map((car, index) => (
               <motion.div
                 key={car.id}
-                layout
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
+                viewport={{ once: true, amount: 0.1 }}
                 transition={{
-                  duration: 0.5,
-                  delay: (index % 3) * 0.1,
+                  duration: 0.45,
+                  delay: (index % 3) * 0.08,
                   ease: [0.21, 0.47, 0.32, 0.98],
                 }}
                 exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
@@ -175,7 +184,7 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
               </motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </div>
 
         {/* Right Navigation Arrow */}
         {filteredCars.length > 3 && (
@@ -184,7 +193,7 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
             onClick={() => handleScroll('right')}
             disabled={!canScrollRight}
             aria-label="Next cars"
-            className="hidden lg:flex absolute -right-4 xl:-right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white/95 backdrop-blur-md shadow-xl border border-slate-200/80 items-center justify-center text-slate-800 hover:text-blue-600 hover:bg-white hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:text-slate-800 transition-all duration-200 cursor-pointer shadow-slate-300/60"
+            className="hidden lg:flex absolute -right-4 xl:-right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white shadow-lg hover:shadow-xl border border-slate-200 items-center justify-center text-slate-800 hover:text-blue-600 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:text-slate-800 transition-all duration-200 cursor-pointer"
           >
             <ChevronRight className="w-6 h-6 stroke-[2.25]" />
           </button>
@@ -195,7 +204,7 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
+        viewport={{ once: true, amount: 0.1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
         className="mt-6 text-center"
       >

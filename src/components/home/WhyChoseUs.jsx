@@ -596,8 +596,8 @@ export default function WhyChooseKalyaniSection({
                                     aria-selected={isSelected}
                                     aria-label={`Milestone tab ${idx + 1}: ${item.stat}`}
                                     className={`h-2 rounded-full overflow-hidden p-0 cursor-pointer transition-all duration-300 outline-none ${isSelected
-                                            ? 'w-20 bg-slate-200'
-                                            : 'w-2.5 bg-slate-300 hover:bg-slate-400'
+                                        ? 'w-20 bg-slate-200'
+                                        : 'w-2.5 bg-slate-300 hover:bg-slate-400'
                                         }`}
                                 >
                                     {isSelected && (
