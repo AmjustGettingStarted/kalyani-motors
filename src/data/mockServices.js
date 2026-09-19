@@ -1,102 +1,188 @@
 export const mockServices = {
   heroImages: [
     {
-      id: "hero-1",
+      id: "maintenance",
+      title: "Maintenance",
       image:
-        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1400&q=85",
-      alt: "Car on road",
+        "https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&w=1200&q=85",
     },
     {
-      id: "hero-2",
+      id: "ac",
+      title: "AC Service",
       image:
-        "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=85",
-      alt: "Luxury car",
+        "https://images.unsplash.com/photo-1610647752706-3bb12232b3ab?auto=format&fit=crop&w=1200&q=85",
     },
     {
-      id: "hero-3",
+      id: "battery",
+      title: "Battery",
       image:
-        "https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1400&q=85",
-      alt: "Car front",
+        "https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&w=1200&q=85",
     },
     {
-      id: "hero-4",
+      id: "car-care",
+      title: "Car Care",
       image:
-        "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1400&q=85",
-      alt: "Red car",
+        "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?auto=format&fit=crop&w=1200&q=85",
     },
     {
-      id: "hero-5",
+      id: "tyres",
+      title: "Tyres",
       image:
-        "https://images.unsplash.com/photo-1504215680853-026ed2a45def?auto=format&fit=crop&w=1400&q=85",
-      alt: "Car driving",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=85",
     },
     {
-      id: "hero-6",
+      id: "accessories",
+      title: "Accessories",
       image:
-        "https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&fit=crop&w=1400&q=85",
-      alt: "Car exterior",
+        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85",
     },
     {
-      id: "hero-7",
+      id: "body-repair",
+      title: "Body Repair",
       image:
-        "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1400&q=85",
-      alt: "Car detail",
+        "https://images.unsplash.com/photo-1489824904134-891ab64532f1?auto=format&fit=crop&w=1200&q=85",
     },
   ],
 
-  services: [
+  serviceCategories: [
     {
-      id: "service-periodic",
-      title: "Periodic Service",
-      shortTitle: "Periodic",
-      category: "Maintenance",
-      image:
-        "https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&w=1200&q=85",
+      id: "maintenance",
+      number: "01",
+      title: "Maintenance Services",
+      shortTitle: "Maintenance",
+      subtitle: "Keep your car running at its best.",
       description:
-        "Keep your vehicle performing at its best with manufacturer-recommended periodic maintenance.",
-      points: [
-        "Engine oil & filter replacement",
-        "Brake inspection",
-        "Tyre & wheel inspection",
-        "Battery health check",
-        "Complete vehicle diagnostics",
-      ],
+        "Regular maintenance ensures better performance, higher mileage and a longer life for your car.",
+      image:
+        "https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&w=1800&q=90",
     },
+
     {
-      id: "service-express",
-      title: "Express Service",
-      shortTitle: "Express",
-      category: "Maintenance",
-      image:
-        "https://images.unsplash.com/photo-1632823471565-1ecdf5c58f4b?auto=format&fit=crop&w=1200&q=85",
+      id: "ac",
+      number: "02",
+      title: "AC Service & Repair",
+      shortTitle: "AC Service",
+      subtitle: "Stay Cool, Always.",
       description:
-        "Routine maintenance completed through a dedicated multi-technician service bay.",
-      points: [
-        "Dedicated service bay",
-        "Multiple technicians",
-        "Live service updates",
-        "Priority workflow",
-        "Reduced waiting time",
-      ],
+        "Get your AC inspected, cleaned and serviced by our experts for a cooler and more comfortable drive.",
+      image:
+        "https://images.unsplash.com/photo-1610647752706-3bb12232b3ab?auto=format&fit=crop&w=1800&q=90",
     },
+
     {
-      id: "service-doorstep",
-      title: "Doorstep Service",
-      shortTitle: "Doorstep",
-      category: "Convenience",
-      image:
-        "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1200&q=85",
+      id: "battery",
+      number: "03",
+      title: "Battery",
+      shortTitle: "Battery",
+      subtitle: "Reliable Power for Every Start.",
       description:
-        "Professional vehicle care brought directly to your home or workplace.",
-      points: [
-        "Home or office service",
-        "Certified technicians",
-        "Convenient scheduling",
-        "Routine maintenance",
-        "Minimal travel required",
-      ],
+        "Battery inspection and replacement support to keep every journey dependable.",
+      image:
+        "https://images.unsplash.com/photo-1592833159155-c62df1b65634?auto=format&fit=crop&w=1800&q=90",
+    },
+
+    {
+      id: "car-care",
+      number: "04",
+      title: "Car Care",
+      shortTitle: "Car Care",
+      subtitle: "A Cleaner Car, A Happier You.",
+      description:
+        "Professional exterior and interior care designed to keep your car looking fresh.",
+      image:
+        "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?auto=format&fit=crop&w=1800&q=90",
+    },
+
+    {
+      id: "tyres",
+      number: "05",
+      title: "Tyres",
+      shortTitle: "Tyres",
+      subtitle: "Grip the Road with Confidence.",
+      description:
+        "Tyre inspection and support for safer handling, better grip and smoother drives.",
+      image:
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1800&q=90",
+    },
+
+    {
+      id: "accessories",
+      number: "06",
+      title: "Accessories",
+      shortTitle: "Accessories",
+      subtitle: "Personalise Your Drive.",
+      description:
+        "Make your vehicle more comfortable, convenient and personal with genuine accessories.",
+      image:
+        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1800&q=90",
+    },
+
+    {
+      id: "body-repair",
+      number: "07",
+      title: "Body Repair",
+      shortTitle: "Body Repair",
+      subtitle: "Restore the Beauty Within.",
+      description:
+        "Professional accident repair and body restoration using trained technicians and quality parts.",
+      image:
+        "https://images.unsplash.com/photo-1489824904134-891ab64532f1?auto=format&fit=crop&w=1800&q=90",
     },
   ],
+
+  // services: [
+  //   {
+  //     id: "service-periodic",
+  //     title: "Periodic Service",
+  //     shortTitle: "Periodic",
+  //     category: "Maintenance",
+  //     image:
+  //       "https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&w=1200&q=85",
+  //     description:
+  //       "Keep your vehicle performing at its best with manufacturer-recommended periodic maintenance.",
+  //     points: [
+  //       "Engine oil & filter replacement",
+  //       "Brake inspection",
+  //       "Tyre & wheel inspection",
+  //       "Battery health check",
+  //       "Complete vehicle diagnostics",
+  //     ],
+  //   },
+  //   {
+  //     id: "service-express",
+  //     title: "Express Service",
+  //     shortTitle: "Express",
+  //     category: "Maintenance",
+  //     image:
+  //       "https://images.unsplash.com/photo-1632823471565-1ecdf5c58f4b?auto=format&fit=crop&w=1200&q=85",
+  //     description:
+  //       "Routine maintenance completed through a dedicated multi-technician service bay.",
+  //     points: [
+  //       "Dedicated service bay",
+  //       "Multiple technicians",
+  //       "Live service updates",
+  //       "Priority workflow",
+  //       "Reduced waiting time",
+  //     ],
+  //   },
+  //   {
+  //     id: "service-doorstep",
+  //     title: "Doorstep Service",
+  //     shortTitle: "Doorstep",
+  //     category: "Convenience",
+  //     image:
+  //       "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1200&q=85",
+  //     description:
+  //       "Professional vehicle care brought directly to your home or workplace.",
+  //     points: [
+  //       "Home or office service",
+  //       "Certified technicians",
+  //       "Convenient scheduling",
+  //       "Routine maintenance",
+  //       "Minimal travel required",
+  //     ],
+  //   },
+  // ],
 
   care: [
     {

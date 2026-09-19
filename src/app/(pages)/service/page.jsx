@@ -17,9 +17,10 @@ export default function ServicePage() {
   const { selectedCity, locations, cars, services } = useKalyani();
 
   const heroRef = useRef(null);
-  const serviceRef = useRef(null);
-
-  const [activeTab, setActiveTab] = useState("services");
+  const serviceSectionRef = useRef(null);
+  const serviceRefs = useRef({});
+  const [activeService, setActiveService] = useState("maintenance");
+  const [isServiceNavSticky, setIsServiceNavSticky] = useState(false);
 
   const [bookingForm, setBookingForm] = useState({
     carModel: "Swift",
@@ -53,6 +54,7 @@ export default function ServicePage() {
    */
 
   const heroImages = services?.heroImages || [];
+  const serviceCategories = services?.serviceCategories || [];
 
   const positions = [
     {
@@ -92,6 +94,33 @@ export default function ServicePage() {
     },
   ];
 
+  const scrollToService = (id) => {
+    serviceRefs.current[id]?.scrollIntoView({
+      behaviour: "smooth",
+      block: "start",
+    });
+
+    setActiveService(id);
+  };
+
+  useEffect(() => {
+    const section = serviceSectionRef.current;
+
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsServiceNavSticky(entry.isIntersecting);
+      },
+      {
+        threshold: 0.05,
+      },
+    );
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -120,8 +149,7 @@ export default function ServicePage() {
       <section ref={heroRef} className="relative h-[190vh]">
         <div className="sticky top-0 h-screen overflow-hidden">
           {/* subtle background */}
-          <div className="absolute inset-0 bg-[#f5f5f3]" />
-
+          <div className="absolute inset-0 bg-gradient-to-b from-[#edf7ff] via-[#f7fbff] to-[#eaf4ff]" />
           {/* small top label */}
           <div className="absolute top-8 left-6 md:left-12 z-40">
             <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
@@ -197,7 +225,7 @@ export default function ServicePage() {
               y: useTransform(scrollYProgress, [0.65, 1], ["80px", "0px"]),
             }}
           >
-            {heroImages.slice(0, 5).map((item, index) => (
+            {heroImages.map((item, index) => (
               <img
                 key={`deck-${item.id}`}
                 src={item.image}
@@ -228,244 +256,43 @@ export default function ServicePage() {
         </div>
       </section>
 
+      <ServiceNavigation
+        service={serviceCategories}
+        activeService={activeService}
+        onSelect={scrollToService}
+      />
+
       {/* =========================================================
           SERVICES SECTION
       ========================================================== */}
 
-      <section ref={serviceRef} className="relative bg-[#101827] text-white">
-        {/* top heading + toggle */}
+      <section
+        ref={serviceSectionRef}
+        className="relative bg-[#f4f9ff] text-[#071936]"
+      >
+        {serviceCategories.map((service, index) => (
+          <ServiceSection
+            key={service.id}
+            service={service}
+            index={index}
+            sectionRef={(element) => {
+              serviceRefs.current[service.id] = element;
+            }}
+          />
+        ))}
 
-        <div className="max-w-7xl mx-auto px-5 md:px-10 pt-24 pb-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
-            <div className="max-w-2xl">
-              <span className="text-[10px] uppercase tracking-[0.3em] text-red-500 font-bold">
-                Complete vehicle care
-              </span>
+        {/* second navigation copy */}
 
-              <h2 className="font-display font-black text-5xl md:text-7xl tracking-[-0.05em] leading-[0.9] mt-4">
-                Service.
-                <br />
-                Care.
-                <br />
-                <span className="text-slate-500">Your choice.</span>
-              </h2>
-            </div>
-
-            {/* TOGGLE */}
-
-            <ServiceToggle activeTab={activeTab} setActiveTab={setActiveTab} />
-          </div>
+        <div className="py-10">
+          <ServiceNavigation
+            services={serviceCategories}
+            activeService={activeService}
+            onSelect={scrollToService}
+            sticky={isServiceNavSticky}
+          />
         </div>
 
-        {/* =====================================================
-            SERVICE CARDS
-        ====================================================== */}
-
-        <div className="max-w-7xl mx-auto px-5 md:px-10 pb-32">
-          <div className="space-y-6">
-            {(activeTab === "services"
-              ? services?.services
-              : services?.care
-            )?.map((item, index) => (
-              <ServiceCard key={item.id} item={item} index={index} />
-            ))}
-          </div>
-        </div>
-
-        {/* =====================================================
-            BOOKING
-        ====================================================== */}
-
-        <section
-          id="book-service"
-          className="max-w-5xl mx-auto px-5 md:px-10 pb-32"
-        >
-          <div className="bg-white text-slate-900 rounded-[2rem] p-6 md:p-10">
-            <div className="mb-8">
-              <span className="text-[10px] uppercase tracking-[0.3em] text-red-600 font-bold">
-                Book your visit
-              </span>
-
-              <h3 className="font-display font-black text-3xl md:text-5xl tracking-tight mt-3">
-                Let&apos;s take care of it.
-              </h3>
-            </div>
-
-            {successInfo ? (
-              <div className="py-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-5">
-                  <Check className="w-7 h-7" />
-                </div>
-
-                <h3 className="font-bold text-xl">
-                  Service appointment confirmed
-                </h3>
-
-                <p className="text-sm text-slate-500 mt-2">
-                  Appointment ID: <strong>{successInfo.appointmentId}</strong>
-                </p>
-              </div>
-            ) : (
-              <form
-                onSubmit={handleSubmit}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              >
-                <Field label="Car Model">
-                  <select
-                    value={bookingForm.carModel}
-                    onChange={(e) =>
-                      setBookingForm({
-                        ...bookingForm,
-                        carModel: e.target.value,
-                      })
-                    }
-                    className="input"
-                  >
-                    {cars.map((car) => (
-                      <option key={car.slug} value={car.name}>
-                        {car.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                <Field label="Registration Number">
-                  <input
-                    required
-                    value={bookingForm.regNumber}
-                    onChange={(e) =>
-                      setBookingForm({
-                        ...bookingForm,
-                        regNumber: e.target.value,
-                      })
-                    }
-                    placeholder="KA 05 MN 1234"
-                    className="input uppercase"
-                  />
-                </Field>
-
-                <Field label="Service Type">
-                  <select
-                    value={bookingForm.serviceType}
-                    onChange={(e) =>
-                      setBookingForm({
-                        ...bookingForm,
-                        serviceType: e.target.value,
-                      })
-                    }
-                    className="input"
-                  >
-                    <option>1,000 km / 1st Free Service</option>
-                    <option>5,000 km / 2nd Free Service</option>
-                    <option>10,000 km / 1 Year Periodic Service</option>
-                    <option>20,000 km / 2 Year Major Maintenance</option>
-                    <option>60-Minute Express Service</option>
-                    <option>General Checkup & Diagnostics</option>
-                    <option>Accidental Body Repair & Paint</option>
-                  </select>
-                </Field>
-
-                <Field label="Workshop">
-                  <select
-                    value={bookingForm.workshopId}
-                    onChange={(e) =>
-                      setBookingForm({
-                        ...bookingForm,
-                        workshopId: e.target.value,
-                      })
-                    }
-                    className="input"
-                  >
-                    {locations.map((location) => (
-                      <option key={location.id} value={location.id}>
-                        {location.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                <Field label="Date">
-                  <input
-                    type="date"
-                    required
-                    value={bookingForm.date}
-                    onChange={(e) =>
-                      setBookingForm({
-                        ...bookingForm,
-                        date: e.target.value,
-                      })
-                    }
-                    className="input"
-                  />
-                </Field>
-
-                <Field label="Time">
-                  <select
-                    value={bookingForm.timeSlot}
-                    onChange={(e) =>
-                      setBookingForm({
-                        ...bookingForm,
-                        timeSlot: e.target.value,
-                      })
-                    }
-                    className="input"
-                  >
-                    <option>Morning (08:30 AM - 11:30 AM)</option>
-                    <option>Afternoon (11:30 AM - 02:30 PM)</option>
-                    <option>Evening (02:30 PM - 05:30 PM)</option>
-                  </select>
-                </Field>
-
-                <Field label="Your Name">
-                  <input
-                    required
-                    value={bookingForm.fullName}
-                    onChange={(e) =>
-                      setBookingForm({
-                        ...bookingForm,
-                        fullName: e.target.value,
-                      })
-                    }
-                    className="input"
-                  />
-                </Field>
-
-                <Field label="Mobile">
-                  <input
-                    required
-                    pattern="[0-9]{10}"
-                    value={bookingForm.phone}
-                    onChange={(e) =>
-                      setBookingForm({
-                        ...bookingForm,
-                        phone: e.target.value,
-                      })
-                    }
-                    className="input"
-                  />
-                </Field>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="md:col-span-2 mt-3 bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl font-bold transition-colors"
-                >
-                  {isSubmitting ? "Booking..." : "Confirm Service Booking"}
-                </button>
-              </form>
-            )}
-          </div>
-        </section>
-
-        {/* =====================================================
-            BOTTOM TOGGLE
-        ====================================================== */}
-
-        <div className="sticky bottom-5 z-50 flex justify-center px-4 pointer-events-none">
-          <div className="pointer-events-auto">
-            <ServiceToggle activeTab={activeTab} setActiveTab={setActiveTab} />
-          </div>
-        </div>
+        {/* BOOKING SECTION WILL GO HERE */}
       </section>
     </main>
   );
@@ -475,30 +302,39 @@ export default function ServicePage() {
    TOGGLE
 ============================================================= */
 
-function ServiceToggle({ activeTab, setActiveTab }) {
+function ServiceNavigation({
+  services,
+  activeService,
+  onSelect,
+  sticky = false,
+}) {
   return (
-    <div className="inline-flex items-center p-1.5 bg-white/10 backdrop-blur-xl border border-white/15 rounded-full">
-      <button
-        onClick={() => setActiveTab("services")}
-        className={`px-6 md:px-8 py-3 rounded-full text-xs md:text-sm font-bold transition-all ${
-          activeTab === "services"
-            ? "bg-white text-slate-950 shadow-lg"
-            : "text-white/60 hover:text-white"
-        }`}
-      >
-        Services
-      </button>
+    <div
+      className={
+        sticky
+          ? "fixed bottom-5 left-0 right-0 z-50 flex justify-center px-4"
+          : "relative z-40 flex justify-center px-4 py-5"
+      }
+    >
+      <nav className="flex max-w-full overflow-x-auto items-center gap-1 rounded-full border border-white bg-white/95 p-2 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl">
+        {services?.map((service) => {
+          const isActive = activeService === service.id;
 
-      <button
-        onClick={() => setActiveTab("care")}
-        className={`px-6 md:px-8 py-3 rounded-full text-xs md:text-sm font-bold transition-all ${
-          activeTab === "care"
-            ? "bg-red-600 text-white shadow-lg"
-            : "text-white/60 hover:text-white"
-        }`}
-      >
-        Care
-      </button>
+          return (
+            <button
+              key={service.id}
+              onClick={() => onSelect(service.id)}
+              className={`shrink-0 rounded-full px-4 py-3 text-[10px] font-bold transition-all md:px-5 md:text-xs ${
+                isActive
+                  ? "bg-blue-700 text-white shadow-md"
+                  : "text-slate-700 hover:bg-blue-50"
+              }`}
+            >
+              {service.shortTitle}
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
@@ -507,78 +343,75 @@ function ServiceToggle({ activeTab, setActiveTab }) {
    SERVICE CARD
 ============================================================= */
 
-function ServiceCard({ item, index }) {
+function ServiceSection({ service, index, sectionRef }) {
+  const isReversed = index % 2 === 1;
+
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 60 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{
-        duration: 0.7,
-        delay: index * 0.08,
-      }}
-      className="group grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] min-h-[500px] rounded-[2rem] overflow-hidden bg-[#172235] border border-white/10"
+    <section
+      ref={sectionRef}
+      className="relative min-h-[650px] overflow-hidden md:min-h-[760px]"
     >
-      {/* IMAGE */}
+      {/* giant background number */}
 
-      <div className="relative min-h-[300px] lg:min-h-full overflow-hidden">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-        <div className="absolute left-6 bottom-6">
-          <span className="px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-[10px] uppercase tracking-widest font-bold">
-            {item.category}
-          </span>
-        </div>
+      <div
+        className={`absolute top-8 z-0 text-[140px] font-black leading-none text-blue-100/80 md:top-12 md:text-[220px] ${
+          isReversed ? "right-6" : "left-6"
+        }`}
+      >
+        {service.number}
       </div>
 
-      {/* CONTENT */}
+      {/* image */}
 
-      <div className="p-8 md:p-12 lg:p-14 flex flex-col justify-between">
-        <div>
-          <span className="text-xs text-red-500 font-bold">0{index + 1}</span>
+      <div
+        className={`absolute inset-y-0 w-full md:w-[72%] ${
+          isReversed ? "left-0" : "right-0"
+        }`}
+      >
+        <img
+          src={service.image}
+          alt={service.title}
+          className="h-full w-full object-cover"
+        />
 
-          <h3 className="font-display font-black text-4xl md:text-5xl tracking-tight mt-5">
-            {item.title}
-          </h3>
+        <div
+          className={`absolute inset-0 ${
+            isReversed
+              ? "bg-gradient-to-r from-[#f4f9ff] via-[#f4f9ff]/70 to-transparent"
+              : "bg-gradient-to-l from-[#f4f9ff] via-[#f4f9ff]/70 to-transparent"
+          }`}
+        />
+      </div>
 
-          <p className="text-slate-400 max-w-xl mt-5 leading-relaxed">
-            {item.description}
-          </p>
+      {/* content */}
 
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
-            {item.points.map((point) => (
-              <div key={point} className="flex gap-3 items-start">
-                <span className="w-5 h-5 rounded-full bg-red-600/15 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="w-3 h-3" />
-                </span>
-
-                <span className="text-sm text-slate-300">{point}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-12 flex items-center justify-between border-t border-white/10 pt-6">
-          <span className="text-xs text-slate-500 uppercase tracking-widest">
-            Kalyani Motors
+      <div className="relative z-10 mx-auto flex min-h-[650px] max-w-7xl items-center px-6 md:min-h-[760px] md:px-12 lg:px-20">
+        <div className={`w-full md:w-[48%] ${isReversed ? "ml-auto" : ""}`}>
+          <span className="text-sm font-bold text-blue-700">
+            {service.number} / 07
           </span>
 
-          <button className="flex items-center gap-2 text-sm font-bold hover:text-red-500 transition-colors">
-            Explore
-            <ArrowRight className="w-4 h-4" />
+          <h2 className="mt-4 max-w-xl font-display text-5xl font-black leading-[0.9] tracking-[-0.05em] text-[#071936] md:text-6xl lg:text-7xl">
+            {service.title}
+          </h2>
+
+          <p className="mt-4 text-base font-semibold text-blue-700 md:text-lg">
+            {service.subtitle}
+          </p>
+
+          <p className="mt-5 max-w-md text-sm leading-relaxed text-slate-600 md:text-base">
+            {service.description}
+          </p>
+
+          <button className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-800">
+            Know More
+            <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </div>
-    </motion.article>
+    </section>
   );
 }
-
 /* =============================================================
    FORM FIELD
 ============================================================= */
