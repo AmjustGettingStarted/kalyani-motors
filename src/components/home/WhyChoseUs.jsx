@@ -209,6 +209,7 @@ export default function WhyChooseKalyaniSection({
     >
       <div className="max-w-7xl mx-auto flex flex-col items-center">
         {/* Header Section */}
+        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -217,15 +218,17 @@ export default function WhyChooseKalyaniSection({
           className="text-center max-w-3xl mx-auto mb-10"
         >
           <span className="text-xs font-bold tracking-widest text-blue-800 uppercase block mb-1">
-            Legacy of Excellence
+            18+ Years of Trust
           </span>
+
           <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 tracking-tight">
-            Why 20+ Lakh Families Choose Kalyani Motors
+            78 Locations. 4 Cities. One Trusted Name.
           </h2>
+
           <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-            For over 18 years, Kalyani Motors has set the gold standard in
-            automotive retail, transparent financing, and authorized Maruti
-            Suzuki care across South India.
+            Founded in Bengaluru in 2006, Kalyani Motors has grown into a leading
+            Maruti Suzuki dealer network across Bengaluru, Mysuru, and Hyderabad,
+            delivering trusted vehicles, sales, service, and automotive care.
           </p>
         </motion.div>
 
@@ -440,9 +443,8 @@ export default function WhyChooseKalyaniSection({
                     top: "50%",
                     willChange: "transform",
                   }}
-                  className={`rounded-3xl bg-white text-slate-900 border border-slate-200 shadow-[0_12px_36px_rgba(15,23,42,0.08)] overflow-visible ${
-                    !isActive ? "cursor-pointer hover:border-slate-300" : ""
-                  }`}
+                  className={`rounded-3xl bg-white text-slate-900 border border-slate-200 shadow-[0_12px_36px_rgba(15,23,42,0.08)] overflow-visible ${!isActive ? "cursor-pointer hover:border-slate-300" : ""
+                    }`}
                 >
                   {/* Left Peeking Connector Notch */}
                   {offset === -1 && (
@@ -494,9 +496,8 @@ export default function WhyChooseKalyaniSection({
                       initial={false}
                       animate={{ opacity: isActive ? 0 : 1 }}
                       transition={{ duration: 0.2 }}
-                      className={`absolute inset-0 p-2 ${
-                        isActive ? "pointer-events-none" : ""
-                      }`}
+                      className={`absolute inset-0 p-2 ${isActive ? "pointer-events-none" : ""
+                        }`}
                     >
                       <div className="w-full h-full rounded-2xl overflow-hidden bg-slate-100 relative">
                         <img
@@ -526,9 +527,8 @@ export default function WhyChooseKalyaniSection({
                           x: isActive ? 0 : offset < 0 ? -600 : 600,
                         }}
                         transition={TRANSITION_SPRING}
-                        className={`w-full h-full flex flex-col md:flex-row p-6 sm:p-8 gap-6 ${
-                          !isActive ? "pointer-events-none" : ""
-                        }`}
+                        className={`w-full h-full flex flex-col md:flex-row p-6 sm:p-8 gap-6 ${!isActive ? "pointer-events-none" : ""
+                          }`}
                       >
                         {/* Text & Metrics Details */}
                         <div className="flex-1 min-w-0 flex flex-col justify-between text-left py-1">
@@ -601,11 +601,10 @@ export default function WhyChooseKalyaniSection({
                   onClick={() => handleSelectTab(idx)}
                   aria-selected={isSelected}
                   aria-label={`Milestone tab ${idx + 1}: ${item.stat}`}
-                  className={`h-2 rounded-full overflow-hidden p-0 cursor-pointer transition-all duration-300 outline-none ${
-                    isSelected
-                      ? "w-20 bg-slate-200"
-                      : "w-2.5 bg-slate-300 hover:bg-slate-400"
-                  }`}
+                  className={`h-2 rounded-full overflow-hidden p-0 cursor-pointer transition-all duration-300 outline-none ${isSelected
+                    ? "w-20 bg-slate-200"
+                    : "w-2.5 bg-slate-300 hover:bg-slate-400"
+                    }`}
                 >
                   {isSelected && (
                     <div
