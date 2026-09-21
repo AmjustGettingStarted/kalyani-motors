@@ -13,7 +13,6 @@ import {
   Wrench,
   MapPin,
   ChevronRight,
-  Sparkles,
   PhoneCall,
   ShieldCheck,
   Calendar,

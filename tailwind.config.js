@@ -19,7 +19,8 @@ module.exports = {
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        display: ['"Outfit"', 'sans-serif'],
+        display: ['"Clash Display"', '"ClashDisplay-Variable"', '"Outfit"', 'sans-serif'],
+        clash: ['"Clash Display"', '"ClashDisplay-Variable"', 'sans-serif'],
       },
       boxShadow: {
         'car-card': '0 4px 20px -2px rgba(11, 59, 130, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04)',
