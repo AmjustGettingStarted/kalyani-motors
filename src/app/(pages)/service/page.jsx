@@ -22,6 +22,7 @@ export default function ServicePage() {
   const serviceRefs = useRef({});
   const [activeService, setActiveService] = useState("maintenance");
   const [isServiceNavSticky, setIsServiceNavSticky] = useState(false);
+  const isProgrammaticScroll = useRef(false);
 
   const [bookingForm, setBookingForm] = useState({
     carModel: "Swift",
@@ -55,7 +56,7 @@ export default function ServicePage() {
       if (!el) return;
       const observer = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting) {
+          if (entry.isIntersecting && !isProgrammaticScroll.current) {
             setActiveService(service.id);
           }
         },
@@ -73,32 +74,29 @@ export default function ServicePage() {
     };
   }, [serviceCategories]);
   const scrollToService = (id) => {
+    isProgrammaticScroll.current = true;
+    setActiveService(id);
     serviceRefs.current[id]?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
-    setActiveService(id);
+    window.setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 1000);
   };
 
   const positions = [
     {
       x: "-38vw",
-      x: "-38vw",
       y: "-17vh",
-      rotate: 0,
       rotate: 0,
     },
     {
-      x: "-34vw",
       x: "-34vw",
       y: "16vh",
       rotate: 0,
-      rotate: 0,
     },
     {
-      x: "-14vw",
-      y: "-28vh",
-      rotate: 0,
       x: "-14vw",
       y: "-28vh",
       rotate: 0,
@@ -107,13 +105,8 @@ export default function ServicePage() {
       x: "0vw",
       y: "34vh",
       rotate: 0,
-      y: "34vh",
-      rotate: 0,
     },
     {
-      x: "14vw",
-      y: "-28vh",
-      rotate: 0,
       x: "14vw",
       y: "-28vh",
       rotate: 0,
@@ -122,15 +115,10 @@ export default function ServicePage() {
       x: "34vw",
       y: "16vh",
       rotate: 0,
-      x: "34vw",
-      y: "16vh",
-      rotate: 0,
     },
     {
-      x: "38vw",
       x: "38vw",
       y: "-13vh",
-      rotate: 0,
       rotate: 0,
     },
   ];
@@ -213,14 +201,12 @@ export default function ServicePage() {
                 Service & Care
               </motion.p> */}
               <motion.h1
-                className="font-display font-black tracking-[-0.06em] text-[clamp(3.5rem,8vw,8rem)] leading-[0.82]"
+                className="font-black tracking-[-0.06em] text-[clamp(3.5rem,8vw,8rem)] leading-[0.82]"
                 style={{
                   scale: useTransform(scrollYProgress, [0, 0.7], [1, 0.78]),
                 }}
               >
-                Care for
-                <br />
-                every journey
+                Care for every journey
               </motion.h1>
             </div>
           </motion.div>
@@ -358,15 +344,33 @@ function ServiceNavigation({ services, activeService, onSelect }) {
 function ServiceSection({ service, index, sectionRef }) {
   const isReversed = index % 2 === 1;
 
+  const localSectionRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: localSectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  const smokeX = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.8, 1],
+    isReversed
+      ? ["100%", "60%", "60%", "100%"]
+      : ["-100%", "-60%", "-60%", "-100%"],
+  );
+
   return (
     <section
-      ref={sectionRef}
-      className="relative min-h-[650px] overflow-hidden md:min-h-[760px]"
+      ref={(element) => {
+        localSectionRef.current = element;
+        sectionRef(element);
+      }}
+      className="relative min-h-screen overflow-hidden md:min-h-[760px]"
     >
       {/* image */}
 
       <div
-        className={`absolute inset-y-0 w-full md:w-[72%] ${
+        className={`absolute inset-y-0 w-full ${
           isReversed ? "left-0" : "right-0"
         }`}
       >
@@ -375,19 +379,21 @@ function ServiceSection({ service, index, sectionRef }) {
           alt={service.title}
           className="h-full w-full object-cover"
         />
-
-        <div
-          className={`absolute inset-0 ${
+        <motion.div
+          className={`pointer-events-none absolute inset-y-0 w-full z-[5] blur-3xl ${
             isReversed
-              ? "bg-gradient-to-r from-[#f4f9ff] via-[#f4f9ff]/70 to-transparent"
-              : "bg-gradient-to-l from-[#f4f9ff] via-[#f4f9ff]/70 to-transparent"
-          }`}
+              ? "right-0 bg-gradient-to-l from-white to-white"
+              : "left-0 bg-gradient-to-r from-white to-white"
+          }   `}
+          style={{
+            x: smokeX,
+          }}
         />
       </div>
 
       {/* content */}
 
-      <div className="relative z-10 mx-auto flex min-h-[650px] items-center px-6 md:min-h-[760px] md:px-12 lg:px-16 bg-white/30">
+      <div className="relative z-10 mx-auto flex h-screen items-center px-6 md:px-12 lg:px-16">
         <div className={`w-full md:w-[30%] ${isReversed ? "ml-auto" : ""}`}>
           <h2 className="mt-4 max-w-xl font-display text-5xl font-black leading-[0.9] tracking-[-0.05em] text-[#071936] md:text-6xl lg:text-7xl">
             {service.title}
@@ -476,6 +482,8 @@ function OrbitImage({ item, index, scrollYProgress, position }) {
     </motion.div>
   );
 }
+
+//  OLD CODE
 
 // import React, { useState } from 'react';
 // import { useKalyani } from '../../../context/KalyaniContext';
