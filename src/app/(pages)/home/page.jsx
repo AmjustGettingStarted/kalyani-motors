@@ -11,8 +11,7 @@ import WhyChooseKalyaniSection from "../../../components/home/WhyChoseUs";
 import FaqSection from "../../../components/home/FAQsection";
 
 export default function HomePage() {
-  const { cars, locations, selectedCity, faqs } = useKalyani();
-  const [expandedFaq, setExpandedFaq] = useState(null);
+  const { cars, locations, selectedCity } = useKalyani();
 
   return (
     <div className="space-y-16 pb-16">
