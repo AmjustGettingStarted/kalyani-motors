@@ -4,11 +4,6 @@ import { useKalyani } from "../../../context/KalyaniContext";
 import FeaturedCarsSection from "../../../components/home/FeaturedCarsSection";
 import HeroVideo from "../../../components/home/HeroVideo";
 import {
-  ShieldCheck,
-  Clock,
-  Users,
-  Building,
-  ChevronDown,
   ArrowRight,
 } from "lucide-react";
 import ChannelExperienceSection from "../../../components/home/ArenavsNexaCTA";
@@ -16,8 +11,7 @@ import WhyChooseKalyaniSection from "../../../components/home/WhyChoseUs";
 import FaqSection from "../../../components/home/FAQsection";
 
 export default function HomePage() {
-  const { cars, locations, selectedCity, faqs } = useKalyani();
-  const [expandedFaq, setExpandedFaq] = useState(null);
+  const { cars, locations, selectedCity } = useKalyani();
 
   return (
     <div className="space-y-16 pb-16">

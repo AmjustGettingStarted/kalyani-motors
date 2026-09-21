@@ -83,15 +83,22 @@ export default function ServicePage() {
   const positions = [
     {
       x: "-38vw",
+      x: "-38vw",
       y: "-17vh",
+      rotate: 0,
       rotate: 0,
     },
     {
       x: "-34vw",
+      x: "-34vw",
       y: "16vh",
+      rotate: 0,
       rotate: 0,
     },
     {
+      x: "-14vw",
+      y: "-28vh",
+      rotate: 0,
       x: "-14vw",
       y: "-28vh",
       rotate: 0,
@@ -100,8 +107,13 @@ export default function ServicePage() {
       x: "0vw",
       y: "34vh",
       rotate: 0,
+      y: "34vh",
+      rotate: 0,
     },
     {
+      x: "14vw",
+      y: "-28vh",
+      rotate: 0,
       x: "14vw",
       y: "-28vh",
       rotate: 0,
@@ -110,10 +122,15 @@ export default function ServicePage() {
       x: "34vw",
       y: "16vh",
       rotate: 0,
+      x: "34vw",
+      y: "16vh",
+      rotate: 0,
     },
     {
       x: "38vw",
+      x: "38vw",
       y: "-13vh",
+      rotate: 0,
       rotate: 0,
     },
   ];
@@ -174,6 +191,7 @@ export default function ServicePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#edf7ff] via-[#f7fbff] to-[#eaf4ff]" />
           {/* small top label */}
           <div className="absolute top-8 left-6 md:left-12 z-40" />
+          <div className="absolute top-8 left-6 md:left-12 z-40" />
 
           {/* center content */}
 
@@ -186,13 +204,14 @@ export default function ServicePage() {
             <div className="max-w-3xl px-6">
               {/* <motion.p
                 className="text-[10px] md:text-xs font-bold uppercase tracking-[0.35em] text-red-600 mb-2"
+              {/* <motion.p
+                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.35em] text-red-600 mb-2"
                 style={{
                   opacity: useTransform(scrollYProgress, [0, 0.25], [1, 0]),
                 }}
               >
                 Service & Care
               </motion.p> */}
-
               <motion.h1
                 className="font-display font-black tracking-[-0.06em] text-[clamp(3.5rem,8vw,8rem)] leading-[0.82]"
                 style={{
@@ -203,16 +222,6 @@ export default function ServicePage() {
                 <br />
                 every journey
               </motion.h1>
-
-              {/* <motion.p
-                className="max-w-lg mx-auto mt-8 text-sm md:text-base text-slate-500 leading-relaxed"
-                style={{
-                  opacity: useTransform(scrollYProgress, [0, 0.35], [1, 0]),
-                }}
-              >
-                From routine maintenance to complete protection, everything your
-                car needs is handled by trained professionals.
-              </motion.p> */}
             </div>
           </motion.div>
 
