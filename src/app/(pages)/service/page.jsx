@@ -1,5 +1,5 @@
 //src\app\(pages)\service\page.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowDown,
@@ -24,6 +24,8 @@ export default function ServicePage() {
   const [isServiceNavSticky, setIsServiceNavSticky] = useState(false);
   const isProgrammaticScroll = useRef(false);
 
+  const HERO_WORDS = ["SERVICE", "AND", "DRIVE"];
+
   const [bookingForm, setBookingForm] = useState({
     carModel: "Swift",
     regNumber: "",
@@ -38,6 +40,9 @@ export default function ServicePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const [bookingConsent, setBookingConsent] = useState(null);
 
   /* HERO SCROLL */
   const { scrollYProgress } = useScroll({
@@ -73,6 +78,7 @@ export default function ServicePage() {
       observers.forEach((obs) => obs.disconnect());
     };
   }, [serviceCategories]);
+
   const scrollToService = (id) => {
     isProgrammaticScroll.current = true;
     setActiveService(id);
@@ -123,15 +129,6 @@ export default function ServicePage() {
     },
   ];
 
-  // const scrollToService = (id) => {
-  //   serviceRefs.current[id]?.scrollIntoView({
-  //     behaviour: "smooth",
-  //     block: "start",
-  //   });
-
-  //   setActiveService(id);
-  // };
-
   useEffect(() => {
     const section = serviceSectionRef.current;
 
@@ -150,8 +147,26 @@ export default function ServicePage() {
     return () => observer.disconnect();
   }, []);
 
+  const openBooking = (service) => {
+    setSelectedService(service);
+    setBookingConsent(false);
+    setSuccessInfo(null);
+
+    setBookingForm((prev) => ({
+      ...prev,
+      serviceType: service.title,
+    }));
+
+    setIsBookingOpen(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!bookingConsent) {
+      alert("Please accept to continue");
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -200,14 +215,14 @@ export default function ServicePage() {
               >
                 Service & Care
               </motion.p> */}
-              <motion.h1
-                className="font-black tracking-[-0.06em] text-[clamp(3.5rem,8vw,8rem)] leading-[0.82]"
+              <motion.p
+                className="font-display font-black tracking-[0.12em] text-[clamp(3rem,7vw,5rem)] leading-[0.9]"
                 style={{
                   scale: useTransform(scrollYProgress, [0, 0.7], [1, 0.78]),
                 }}
               >
-                Care for every journey
-              </motion.h1>
+                SERVICE AND CARE
+              </motion.p>
             </div>
           </motion.div>
 
@@ -258,6 +273,7 @@ export default function ServicePage() {
             key={service.id}
             service={service}
             index={index}
+            onBook={openBooking}
             sectionRef={(element) => {
               serviceRefs.current[service.id] = element;
             }}
@@ -266,6 +282,175 @@ export default function ServicePage() {
         <div className="pb-20 md:pb-20" />
         {/* BOOKING SECTION WILL GO HERE */}
       </section>
+
+      {/* SERVICE BOOKING POPUP */}
+      {isBookingOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 30,
+              scale: 0.94,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            transition={{
+              duration: 0.35,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/70 bg-white shadow-2xl"
+          >
+            {/* top blue accent */}
+            <div className="h-1.5 w-full bg-blue-700" />
+
+            <div className="p-6 md:p-8">
+              {/* HEADER */}
+              <div className="mb-7">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-blue-700">
+                  Kalyani Motors
+                </p>
+
+                <h2 className="mt-2 font-display text-3xl font-black tracking-tight text-[#071936]">
+                  Book Your Service
+                </h2>
+
+                {selectedService && (
+                  <p className="mt-2 text-sm font-semibold text-slate-500">
+                    {selectedService.title}
+                  </p>
+                )}
+              </div>
+
+              {/* SUCCESS */}
+              {successInfo ? (
+                <div className="py-6 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 18,
+                    }}
+                    className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100"
+                  >
+                    <Check className="h-8 w-8 text-emerald-600" />
+                  </motion.div>
+
+                  <h3 className="font-display text-2xl font-black text-[#071936]">
+                    Service Request Received
+                  </h3>
+
+                  <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+                    Thank you, {bookingForm.fullName}. Our team will contact you
+                    shortly regarding your service request.
+                  </p>
+
+                  {successInfo?.appointmentId && (
+                    <p className="mt-4 text-xs font-bold text-blue-700">
+                      Appointment ID: {successInfo.appointmentId}
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsBookingOpen(false);
+                      setSuccessInfo(null);
+                    }}
+                    className="mt-6 rounded-full bg-blue-700 px-6 py-3 text-xs font-bold text-white transition hover:bg-blue-800"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* NAME */}
+                  <div>
+                    <label className="mb-2 block text-xs font-bold text-slate-700">
+                      Name
+                    </label>
+
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter your name"
+                      value={bookingForm.fullName}
+                      onChange={(e) =>
+                        setBookingForm({
+                          ...bookingForm,
+                          fullName: e.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:bg-white"
+                    />
+                  </div>
+
+                  {/* PHONE */}
+                  <div>
+                    <label className="mb-2 block text-xs font-bold text-slate-700">
+                      Phone Number
+                    </label>
+
+                    <input
+                      type="tel"
+                      required
+                      pattern="[0-9]{10}"
+                      placeholder="10-digit mobile number"
+                      value={bookingForm.phone}
+                      onChange={(e) =>
+                        setBookingForm({
+                          ...bookingForm,
+                          phone: e.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:bg-white"
+                    />
+                  </div>
+
+                  {/* CONSENT */}
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <input
+                      type="checkbox"
+                      checked={bookingConsent}
+                      onChange={(e) => setBookingConsent(e.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-blue-700"
+                    />
+
+                    <span className="text-[11px] leading-relaxed text-slate-600">
+                      Disclaimer: I authorize Kalyani Motors to send
+                      notifications via SMS, Kalyani Super App, WhatsApp, Email
+                      and RCS.
+                    </span>
+                  </label>
+
+                  {/* BUTTONS */}
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsBookingOpen(false)}
+                      className="rounded-full border border-slate-200 px-6 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
+                    >
+                      Close
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="rounded-full bg-blue-700 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-blue-700/20 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isSubmitting ? "Booking..." : "Book Service"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </main>
   );
 }
@@ -341,7 +526,7 @@ function ServiceNavigation({ services, activeService, onSelect }) {
 
 /* SERVICE CARD */
 
-function ServiceSection({ service, index, sectionRef }) {
+function ServiceSection({ service, index, sectionRef, onBook }) {
   const isReversed = index % 2 === 1;
 
   const localSectionRef = useRef(null);
@@ -407,8 +592,12 @@ function ServiceSection({ service, index, sectionRef }) {
             {service.description}
           </p>
 
-          <button className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-800">
-            Know More
+          <button
+            type="button"
+            onClick={() => onBook(service)}
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-800"
+          >
+            Book Your Service
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
