@@ -1,3 +1,4 @@
+//src\app\(pages)\service\page.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
@@ -37,9 +38,7 @@ export default function ServicePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null);
 
-  /*
-   * HERO SCROLL
-   */
+  /* HERO SCROLL */
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
@@ -83,39 +82,39 @@ export default function ServicePage() {
 
   const positions = [
     {
-      x: "-34vw",
+      x: "-38vw",
       y: "-17vh",
-      rotate: -18,
+      rotate: 0,
     },
     {
-      x: "-21vw",
+      x: "-34vw",
       y: "16vh",
-      rotate: -12,
+      rotate: 0,
     },
     {
-      x: "-8vw",
-      y: "-27vh",
-      rotate: -7,
+      x: "-14vw",
+      y: "-28vh",
+      rotate: 0,
     },
     {
       x: "0vw",
-      y: "27vh",
-      rotate: 4,
+      y: "34vh",
+      rotate: 0,
     },
     {
-      x: "9vw",
-      y: "-25vh",
-      rotate: 8,
-    },
-    {
-      x: "23vw",
-      y: "13vh",
-      rotate: 13,
+      x: "14vw",
+      y: "-28vh",
+      rotate: 0,
     },
     {
       x: "34vw",
+      y: "16vh",
+      rotate: 0,
+    },
+    {
+      x: "38vw",
       y: "-13vh",
-      rotate: 18,
+      rotate: 0,
     },
   ];
 
@@ -174,11 +173,7 @@ export default function ServicePage() {
           {/* subtle background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#edf7ff] via-[#f7fbff] to-[#eaf4ff]" />
           {/* small top label */}
-          <div className="absolute top-8 left-6 md:left-12 z-40">
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.28em] text-slate-500">
-              Kalyani Motors
-            </span>
-          </div>
+          <div className="absolute top-8 left-6 md:left-12 z-40" />
 
           {/* center content */}
 
@@ -189,14 +184,14 @@ export default function ServicePage() {
             }}
           >
             <div className="max-w-3xl px-6">
-              <motion.p
-                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.35em] text-red-600 mb-5"
+              {/* <motion.p
+                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.35em] text-red-600 mb-2"
                 style={{
                   opacity: useTransform(scrollYProgress, [0, 0.25], [1, 0]),
                 }}
               >
                 Service & Care
-              </motion.p>
+              </motion.p> */}
 
               <motion.h1
                 className="font-display font-black tracking-[-0.06em] text-[clamp(3.5rem,8vw,8rem)] leading-[0.82]"
@@ -206,10 +201,10 @@ export default function ServicePage() {
               >
                 Care for
                 <br />
-                every journey.
+                every journey
               </motion.h1>
 
-              <motion.p
+              {/* <motion.p
                 className="max-w-lg mx-auto mt-8 text-sm md:text-base text-slate-500 leading-relaxed"
                 style={{
                   opacity: useTransform(scrollYProgress, [0, 0.35], [1, 0]),
@@ -217,7 +212,7 @@ export default function ServicePage() {
               >
                 From routine maintenance to complete protection, everything your
                 car needs is handled by trained professionals.
-              </motion.p>
+              </motion.p> */}
             </div>
           </motion.div>
 
@@ -235,37 +230,10 @@ export default function ServicePage() {
             ))}
           </div>
 
-          {/* deck visual at bottom */}
-
-          <motion.div
-            className="absolute bottom-[7vh] left-1/2 -translate-x-1/2 z-10 flex items-end justify-center"
-            style={{
-              opacity: useTransform(
-                scrollYProgress,
-                [0.5, 0.75, 1],
-                [0, 0.2, 1],
-              ),
-              y: useTransform(scrollYProgress, [0.65, 1], ["80px", "0px"]),
-            }}
-          >
-            {heroImages.map((item, index) => (
-              <img
-                key={`deck-${item.id}`}
-                src={item.image}
-                alt=""
-                className="w-[90px] h-[65px] md:w-[150px] md:h-[95px] object-cover rounded-xl border-2 border-[#f5f5f3] shadow-xl -ml-5"
-                style={{
-                  transform: `rotate(${(index - 2) * 5}deg)`,
-                  zIndex: index,
-                }}
-              />
-            ))}
-          </motion.div>
-
           {/* scroll indicator */}
 
-          <motion.div
-            className="absolute bottom-7 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2"
+          {/* <motion.div
+            className="absolute bottom-7 right-1 -translate-x-1/2 z-40 flex flex-col items-center gap-2"
             style={{
               opacity: useTransform(scrollYProgress, [0, 0.12], [1, 0]),
             }}
@@ -275,7 +243,7 @@ export default function ServicePage() {
             </span>
 
             <ArrowDown className="w-4 h-4 text-red-600 animate-bounce" />
-          </motion.div>
+          </motion.div> */}
         </div>
       </section>
 
@@ -452,7 +420,7 @@ function Field({ label, children }) {
 function OrbitImage({ item, index, scrollYProgress, position }) {
   const x = useTransform(
     scrollYProgress,
-    [0, 0.7, 1],
+    [0, 0.5, 1],
     [
       position.x,
       `${parseFloat(position.x) * 0.25}vw`,
@@ -462,13 +430,13 @@ function OrbitImage({ item, index, scrollYProgress, position }) {
 
   const y = useTransform(
     scrollYProgress,
-    [0, 0.7, 1],
-    [position.y, `${parseFloat(position.y) * 0.2}vh`, `${(index % 2) * 0.5}vh`],
+    [0, 0.5, 1],
+    [position.y, `25vh`, "25vh"],
   );
 
   const rotate = useTransform(
     scrollYProgress,
-    [0, 0.7, 1],
+    [0, 0.5, 1],
     [position.rotate, position.rotate * 0.2, (index - 3) * 2],
   );
 
