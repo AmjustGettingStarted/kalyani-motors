@@ -1,16 +1,48 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft } from 'lucide-react';
 import CarCard from '../widgets/CarCard';
 
 const FILTER_CATEGORIES = ['All Types', 'SUV', 'Hatchback', 'Sedan', 'MUV'];
 
+// Animated swipe indicator that only renders when scroll overflow is active
+function ScrollIndicator({ label = 'swipe' }) {
+  return (
+    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 select-none py-1">
+      <motion.span
+        animate={{ x: [-2, 2, -2] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        className="inline-flex items-center text-blue-600"
+      >
+        <ArrowLeft className="w-3 h-3" />
+      </motion.span>
+      <span className="uppercase tracking-wider text-[10px]">{label}</span>
+      <motion.span
+        animate={{ x: [2, -2, 2] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        className="inline-flex items-center text-blue-600"
+      >
+        <ArrowRight className="w-3 h-3" />
+      </motion.span>
+    </div>
+  );
+}
+
 export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengaluru' }) {
   const [selectedBodyType, setSelectedBodyType] = useState('All Types');
+
+  // Refs
+  const pillsContainerRef = useRef(null);
   const scrollContainerRef = useRef(null);
+
+  // Desktop side arrows state
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Mobile-only active scroll indicators state
+  const [pillsScrollable, setPillsScrollable] = useState(false);
+  const [carsScrollable, setCarsScrollable] = useState(false);
 
   // Filter cars to featured list first, then by active body type category
   const featuredCars = cars.some((c) => c.isFeatured)
@@ -22,49 +54,61 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
     return car.bodyType?.toLowerCase() === selectedBodyType.toLowerCase();
   });
 
-  // Check if desktop should render as a carousel (> 3 cars) or 3-column grid (<= 3 cars)
   const isCarouselDesktop = filteredCars.length > 3;
 
-  // Scroll boundary evaluation for arrow buttons
-  const updateScrollButtons = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-    const newCanLeft = scrollLeft > 4;
-    const newCanRight = scrollLeft + clientWidth < scrollWidth - 4;
-    setCanScrollLeft((prev) => (prev !== newCanLeft ? newCanLeft : prev));
-    setCanScrollRight((prev) => (prev !== newCanRight ? newCanRight : prev));
+  // Check scroll boundary & whether containers actually overflow
+  const updateScrollStates = useCallback(() => {
+    // 1. Pills scroll check (Mobile only)
+    if (pillsContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = pillsContainerRef.current;
+      const hasOverflow = scrollWidth > clientWidth + 4;
+      const notScrolledToEnd = scrollLeft + clientWidth < scrollWidth - 10;
+      setPillsScrollable(hasOverflow && notScrolledToEnd);
+    }
+
+    // 2. Car cards scroll check (Mobile & Desktop arrows)
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      const hasOverflow = scrollWidth > clientWidth + 4;
+      const notScrolledToEnd = scrollLeft + clientWidth < scrollWidth - 10;
+
+      setCarsScrollable(hasOverflow && notScrolledToEnd);
+      setCanScrollLeft(scrollLeft > 4);
+      setCanScrollRight(hasOverflow && notScrolledToEnd);
+    }
   }, []);
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
+    const carsEl = scrollContainerRef.current;
+    const pillsEl = pillsContainerRef.current;
 
     let ticking = false;
     const onScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          updateScrollButtons();
+          updateScrollStates();
           ticking = false;
         });
         ticking = true;
       }
     };
 
-    updateScrollButtons();
-    const timer1 = setTimeout(updateScrollButtons, 100);
-    const timer2 = setTimeout(updateScrollButtons, 350);
+    updateScrollStates();
+    const t1 = setTimeout(updateScrollStates, 150);
+    const t2 = setTimeout(updateScrollStates, 400);
 
-    container.addEventListener('scroll', onScroll, { passive: true });
+    if (carsEl) carsEl.addEventListener('scroll', onScroll, { passive: true });
+    if (pillsEl) pillsEl.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      container.removeEventListener('scroll', onScroll);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      if (carsEl) carsEl.removeEventListener('scroll', onScroll);
+      if (pillsEl) pillsEl.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, [updateScrollButtons, selectedBodyType, filteredCars.length]);
+  }, [updateScrollStates, selectedBodyType, filteredCars.length]);
 
   const handleFilterChange = (category) => {
     setSelectedBodyType(category);
@@ -83,16 +127,10 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
     });
   };
 
-  // Container styling:
-  // Mobile (<640px) & Tablets (<1024px): Single horizontal scroll row with CSS snap
-  // Desktop (>=1024px): Grid if <= 3 cars, single-row carousel without rigid mandatory snap to prevent vertical scroll trap
   const containerClasses = isCarouselDesktop
     ? 'flex items-stretch overflow-x-auto overscroll-x-contain touch-pan-y snap-x snap-mandatory md:snap-none scrollbar-none gap-6 pt-2 pb-6 px-1'
     : 'flex items-stretch overflow-x-auto overscroll-x-contain touch-pan-y snap-x snap-mandatory md:snap-none scrollbar-none gap-6 pt-2 pb-6 px-1 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:pb-0 lg:pt-0 lg:px-0';
 
-  // Card wrapper styling:
-  // Mobile: w-[85vw], Tablet: sm:w-[350px] shrink-0 snap-start
-  // Desktop: lg:w-[380px] shrink-0 (if carousel) or lg:w-auto lg:shrink (if grid)
   const cardWrapperClasses = isCarouselDesktop
     ? 'w-[85vw] sm:w-[350px] lg:w-[380px] shrink-0 snap-start md:snap-align-none flex flex-col'
     : 'w-[85vw] sm:w-[350px] shrink-0 snap-start md:snap-align-none lg:w-auto lg:shrink flex flex-col';
@@ -105,7 +143,7 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8"
+        className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6"
       >
         <div>
           <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 tracking-tight">
@@ -116,37 +154,57 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
           </p>
         </div>
 
-        {/* Body Type Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none self-start md:self-end">
-          {FILTER_CATEGORIES.map((type) => {
-            const isSelected = selectedBodyType === type;
-            return (
-              <button
-                key={type}
-                type="button"
-                onClick={() => handleFilterChange(type)}
-                className={`relative px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${isSelected
-                  ? 'text-white bg-blue-600'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                  }`}
-              >
-                {isSelected && (
-                  <motion.div
-                    layoutId="activeFilterPill"
-                    className="absolute inset-0 bg-blue-600 rounded-xl shadow-md shadow-blue-800/20 -z-10"
-                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
-                  />
-                )}
-                {type}
-              </button>
-            );
-          })}
+        {/* Filter Pills Column */}
+        <div className="flex flex-col items-start md:items-end gap-1.5 w-full md:w-auto">
+          {/* 1. Mobile Pill Indicator - ONLY renders if pills overflow on mobile */}
+          {pillsScrollable && (
+            <div className="flex md:hidden self-end">
+              <ScrollIndicator label="swipe categories" />
+            </div>
+          )}
+
+          {/* Responsive Filter Strip */}
+          <div
+            ref={pillsContainerRef}
+            className="w-full md:w-auto overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 py-1 flex items-center gap-2"
+          >
+            {FILTER_CATEGORIES.map((type) => {
+              const isSelected = selectedBodyType === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleFilterChange(type)}
+                  className={`relative shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer active:scale-95 ${isSelected
+                      ? 'text-white bg-blue-600 shadow-sm'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    }`}
+                >
+                  {isSelected && (
+                    <motion.div
+                      layoutId="activeFilterPill"
+                      className="absolute inset-0 bg-blue-600 rounded-xl shadow-md shadow-blue-600/25 -z-10"
+                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                    />
+                  )}
+                  {type}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </motion.div>
 
-      {/* Cars Container: Responsive Grid vs Single-Row Carousel with Side Arrows */}
+      {/* 2. Mobile Car Cards Indicator - ONLY renders on mobile when cards overflow */}
+      {carsScrollable && (
+        <div className="flex lg:hidden justify-end mb-2 pr-1">
+          <ScrollIndicator label="swipe models" />
+        </div>
+      )}
+
+      {/* Cars Container */}
       <div className="relative group">
-        {/* Left Navigation Arrow */}
+        {/* Desktop Left Arrow Button */}
         {filteredCars.length > 3 && (
           <button
             type="button"
@@ -159,13 +217,12 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
           </button>
         )}
 
-        {/* Scrollable Container - Isolated from vertical scroll hijacking */}
         <div
           ref={scrollContainerRef}
           style={{ overscrollBehaviorX: 'contain', touchAction: 'pan-y' }}
           className={containerClasses}
         >
-          <AnimatePresence>
+          <AnimatePresence mode="popLayout">
             {filteredCars.map((car, index) => (
               <motion.div
                 key={car.id}
@@ -186,7 +243,7 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
           </AnimatePresence>
         </div>
 
-        {/* Right Navigation Arrow */}
+        {/* Desktop Right Arrow Button */}
         {filteredCars.length > 3 && (
           <button
             type="button"

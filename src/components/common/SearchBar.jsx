@@ -7,6 +7,7 @@ export default function SearchBar({
   placeholder = 'Search Swift, Grand Vitara, periodic service...',
   className = '',
   isScrolled = false,
+  onOpenChange,
 }) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +15,15 @@ export default function SearchBar({
   const navigate = useNavigate();
   const containerRef = useRef(null);
 
-  // Close when clicking outside
+  const trimmed = query.trim().toLowerCase();
+  const isDropdownOpen = Boolean(isOpen && trimmed);
+
+  // Notify parent of dropdown open state
+  useEffect(() => {
+    onOpenChange?.(isDropdownOpen);
+  }, [isDropdownOpen, onOpenChange]);
+
+  // Close when clicking or tapping outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -22,10 +31,12 @@ export default function SearchBar({
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
-
-  const trimmed = query.trim().toLowerCase();
 
   const matchedCars = trimmed
     ? (cars || []).filter(
@@ -117,7 +128,17 @@ export default function SearchBar({
 
       {/* Instant live search results dropdown */}
       {isOpen && trimmed && (
-        <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50 max-h-[420px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          style={{
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
+          }}
+          className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 z-50 max-h-[60vh] sm:max-h-[400px] overflow-y-auto overscroll-contain animate-in fade-in slide-in-from-top-2 duration-150"
+        >
           {hasResults ? (
             <div className="space-y-3">
               {/* Cars Matches */}

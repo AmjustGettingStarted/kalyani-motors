@@ -54,7 +54,7 @@ const itemVariants = {
     },
 };
 
-const HERO_WORDS = ['CHOOSE.', 'BOOK.', 'DRIVE.'];
+const HERO_WORDS = ['DISCOVER', 'DESIRE', 'DRIVE'];
 
 export default function HeroVideo() {
     const { openTestDrive } = useKalyani();
@@ -148,7 +148,7 @@ export default function HeroVideo() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 0.85, y: 0 }}
                 transition={{ delay: 1.1, duration: 0.8 }}
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 pointer-events-none"
+                className="absolute bottom-8 inset-x-0 mx-auto w-fit z-10 flex flex-col items-center gap-2 pointer-events-none"
             >
                 <span className="text-[10px] uppercase tracking-widest text-slate-300 font-bold">
                     Scroll Down
