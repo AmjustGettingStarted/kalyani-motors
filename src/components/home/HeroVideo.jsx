@@ -54,7 +54,7 @@ const itemVariants = {
     },
 };
 
-const HERO_WORDS = ['CHOOSE.', 'BOOK.', 'DRIVE.'];
+const HERO_WORDS = ['DESCOVER', 'DESIRE', 'DRIVE'];
 
 export default function HeroVideo() {
     const { openTestDrive } = useKalyani();
