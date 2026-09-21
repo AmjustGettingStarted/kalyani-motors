@@ -4,11 +4,6 @@ import { useKalyani } from "../../../context/KalyaniContext";
 import FeaturedCarsSection from "../../../components/home/FeaturedCarsSection";
 import HeroVideo from "../../../components/home/HeroVideo";
 import {
-  ShieldCheck,
-  Clock,
-  Users,
-  Building,
-  ChevronDown,
   ArrowRight,
 } from "lucide-react";
 import ChannelExperienceSection from "../../../components/home/ArenavsNexaCTA";
