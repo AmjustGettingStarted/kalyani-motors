@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useKalyani } from '../../context/KalyaniContext';
-import { MapPin, ChevronDown, Check, Building2, Sparkles } from 'lucide-react';
+import { MapPin, ChevronDown, Check, Building2 } from 'lucide-react';
 
 export default function CitySelector({ variant = 'header', isScrolled = false, onSelect }) {
   const { selectedCity, setSelectedCity, cities, allLocations } = useKalyani();
