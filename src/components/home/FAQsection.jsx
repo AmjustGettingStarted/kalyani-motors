@@ -1,6 +1,5 @@
-import React from 'react';
-import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus,
     Car,
@@ -62,20 +61,25 @@ const DEFAULT_FAQS = [
     },
 ];
 
-export default function FaqSection({ faqs = DEFAULT_FAQS }) {
+export default function FAQsection({ faqs = DEFAULT_FAQS }) {
+    const [openIds, setOpenIds] = useState([faqs[0]?.id]);
+
+    const toggleItem = (id) => {
+        setOpenIds((prev) =>
+            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+        );
+    };
+
     return (
-        <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.15 }}
-            transition={{
-                duration: 0.6,
-                ease: [0.21, 0.47, 0.32, 0.98],
-            }}
-            className="w-[90%] max-w-6xl mx-auto py-16 will-change-transform"
-        >
-            {/* Header */}
-            <div className="text-center mb-10">
+        <section className="w-[90%] max-w-6xl mx-auto py-16">
+            {/* Header with entrance animation */}
+            <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="text-center mb-10"
+            >
                 <span className="text-xs font-bold tracking-widest text-blue-800 uppercase block mb-1">
                     Have Questions?
                 </span>
@@ -85,61 +89,113 @@ export default function FaqSection({ faqs = DEFAULT_FAQS }) {
                 <p className="text-slate-600 text-xs sm:text-sm mt-2 max-w-2xl mx-auto leading-relaxed">
                     Everything you need to know about buying, test drives, financing, and authorized Maruti Suzuki care across South India.
                 </p>
-            </div>
+            </motion.div>
 
-            {/* Accordion Component */}
-            <AccordionPrimitive.Root
-                type="multiple"
-                defaultValue={[faqs[0]?.id]}
-                className="space-y-3.5"
-            >
-                {faqs.map((faq) => {
+            {/* Accordion Cards with Staggered Entrance */}
+            <div className="space-y-3.5">
+                {faqs.map((faq, index) => {
+                    const isOpen = openIds.includes(faq.id);
                     const Icon = faq.icon || Car;
 
                     return (
-                        <AccordionPrimitive.Item
+                        <motion.div
                             key={faq.id}
-                            value={faq.id}
-                            className="bg-white rounded-2xl border border-slate-200/90 shadow-sm transition-all hover:border-slate-300 data-[state=open]:border-blue-200 data-[state=open]:shadow-md overflow-hidden"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-20px' }}
+                            transition={{
+                                duration: 0.45,
+                                delay: index * 0.06,
+                                ease: [0.21, 0.47, 0.32, 0.98],
+                            }}
+                            className={`bg-white rounded-2xl border transition-all duration-200 shadow-sm overflow-hidden will-change-transform ${isOpen
+                                    ? 'border-blue-200 shadow-md'
+                                    : 'border-slate-200/90 hover:border-slate-300'
+                                }`}
                         >
-                            <AccordionPrimitive.Header className="flex">
-                                <AccordionPrimitive.Trigger className="group flex flex-1 items-center justify-between gap-4 px-5 sm:px-7 py-4 sm:py-5 text-left outline-none transition-colors">
-                                    {/* Left Side: Icon Container + Text */}
-                                    <span className="flex items-center gap-4 sm:gap-5 min-w-0">
+                            <button
+                                type="button"
+                                onClick={() => toggleItem(faq.id)}
+                                aria-expanded={isOpen}
+                                className="group w-full flex items-center justify-between gap-4 px-5 sm:px-7 py-4 sm:py-5 text-left outline-none transition-colors"
+                            >
+                                {/* Left Side: Icon Container + Text */}
+                                <span className="flex items-center gap-4 sm:gap-5 min-w-0">
+                                    <span
+                                        aria-hidden="true"
+                                        className={`flex size-11 shrink-0 items-center justify-center rounded-xl border transition-colors ${isOpen
+                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                : 'bg-slate-50 border-slate-200 text-blue-600 group-hover:bg-blue-50 group-hover:border-blue-100'
+                                            }`}
+                                    >
+                                        <Icon className="size-5 shrink-0" />
+                                    </span>
+
+                                    <span className="flex flex-col space-y-0.5 min-w-0">
                                         <span
-                                            aria-hidden="true"
-                                            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-blue-600 transition-colors group-hover:bg-blue-50 group-hover:border-blue-100 group-data-[state=open]:bg-blue-600 group-data-[state=open]:text-white group-data-[state=open]:border-blue-600"
+                                            className={`font-display font-bold text-sm sm:text-base transition-colors truncate sm:whitespace-normal ${isOpen
+                                                    ? 'text-blue-600'
+                                                    : 'text-slate-900 group-hover:text-blue-800'
+                                                }`}
                                         >
-                                            <Icon className="size-5 shrink-0" />
+                                            {faq.title || faq.question}
                                         </span>
-
-                                        <span className="flex flex-col space-y-0.5 min-w-0">
-                                            <span className="font-display font-bold text-sm sm:text-base text-slate-900 group-hover:text-blue-800 group-data-[state=open]:text-blue-600 transition-colors truncate sm:whitespace-normal">
-                                                {faq.title || faq.question}
-                                            </span>
-                                            <span className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                                {faq.subtitle || 'General Inquiry'}
-                                            </span>
+                                        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            {faq.subtitle || 'General Inquiry'}
                                         </span>
                                     </span>
+                                </span>
 
-                                    {/* Right Side: Plus / X rotate trigger */}
-                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-100/70 text-slate-500 transition-all group-hover:bg-slate-200 group-data-[state=open]:bg-blue-50 group-data-[state=open]:text-blue-600">
-                                        <Plus className="size-4 shrink-0 transition-transform duration-300 ease-out group-data-[state=open]:rotate-45" />
-                                    </span>
-                                </AccordionPrimitive.Trigger>
-                            </AccordionPrimitive.Header>
+                                {/* Right Side: Plus / X rotate trigger */}
+                                <span
+                                    className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-all ${isOpen
+                                            ? 'bg-blue-50 text-blue-600'
+                                            : 'bg-slate-100/70 text-slate-500 group-hover:bg-slate-200'
+                                        }`}
+                                >
+                                    <Plus
+                                        className={`size-4 shrink-0 transition-transform duration-300 ease-out ${isOpen ? 'rotate-45' : ''
+                                            }`}
+                                    />
+                                </span>
+                            </button>
 
                             {/* Accordion Expandable Content */}
-                            <AccordionPrimitive.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                                <div className="px-5 sm:px-7 pb-5 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
-                                    <p className="pl-0 sm:pl-[60px]">{faq.content || faq.answer}</p>
-                                </div>
-                            </AccordionPrimitive.Content>
-                        </AccordionPrimitive.Item>
+                            <AnimatePresence initial={false}>
+                                {isOpen && (
+                                    <motion.div
+                                        key="content"
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{
+                                            height: 'auto',
+                                            opacity: 1,
+                                            transition: {
+                                                height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
+                                                opacity: { duration: 0.2, delay: 0.05 },
+                                            },
+                                        }}
+                                        exit={{
+                                            height: 0,
+                                            opacity: 0,
+                                            transition: {
+                                                height: { duration: 0.25, ease: [0.04, 0.62, 0.23, 0.98] },
+                                                opacity: { duration: 0.1 },
+                                            },
+                                        }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="px-5 sm:px-7 pb-5 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100">
+                                            <p className="pl-0 sm:pl-[60px]">
+                                                {faq.content || faq.answer}
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
                     );
                 })}
-            </AccordionPrimitive.Root>
-        </motion.section>
+            </div>
+        </section>
     );
 }
