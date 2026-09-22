@@ -550,7 +550,7 @@ function ServiceSection({ service, index, sectionRef, onBook }) {
         localSectionRef.current = element;
         sectionRef(element);
       }}
-      className="relative min-h-screen overflow-hidden md:min-h-[760px]"
+      className="relative min-h-screen overflow-hidden"
     >
       {/* image */}
 
@@ -565,7 +565,7 @@ function ServiceSection({ service, index, sectionRef, onBook }) {
           className="h-full w-full object-cover"
         />
         <motion.div
-          className={`pointer-events-none absolute inset-y-0 w-full z-[5] blur-3xl ${
+          className={`pointer-events-none absolute inset-y-0 w-full z-[5] rounded-full blur-3xl ${
             isReversed
               ? "right-0 bg-gradient-to-l from-white to-white"
               : "left-0 bg-gradient-to-r from-white to-white"
