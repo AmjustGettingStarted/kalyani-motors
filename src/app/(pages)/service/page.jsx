@@ -546,12 +546,12 @@ function ServiceSection({ service, index, sectionRef, onBook }) {
   });
 
   const desktopRange = isReversed
-    ? ["100%", "60%", "60%", "100%"]
-    : ["-100%", "-60%", "-60%", "-100%"];
+    ? ["100%", "65%", "65%", "100%"]
+    : ["-100%", "-65%", "-65%", "-100%"];
 
   const mobileRange = isReversed
-    ? ["100%", "20%", "20%", "100%"]
-    : ["-100%", "-20%", "-20%", "-100%"];
+    ? ["100%", "45%", "45%", "100%"]
+    : ["-100%", "-45%", "-45%", "-100%"];
 
   const smokeX = useTransform(
     scrollYProgress,
