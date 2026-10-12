@@ -27,11 +27,6 @@ Object.entries(allFrames).forEach(([path, url]) => {
   });
 });
 
-// Sort numerically:
-// fronx_blue_1
-// fronx_blue_2
-// ...
-// fronx_blue_72
 Object.values(framesByCarAndColor).forEach((frames) => {
   frames.sort((a, b) =>
     a.filename.localeCompare(b.filename, undefined, {
