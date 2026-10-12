@@ -28,13 +28,13 @@ export const mockServices = {
       id: "tyres",
       title: "Tyres",
       image:
-        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=85",
+        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85",
     },
     {
       id: "accessories",
       title: "Accessories",
       image:
-        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=85",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=85",
     },
     {
       id: "body-repair",
@@ -102,7 +102,7 @@ export const mockServices = {
       description:
         "Tyre inspection and support for safer handling, better grip and smoother drives.",
       image:
-        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1800&q=90",
+        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1800&q=90",
     },
 
     {
@@ -114,7 +114,7 @@ export const mockServices = {
       description:
         "Make your vehicle more comfortable, convenient and personal with genuine accessories.",
       image:
-        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1800&q=90",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1800&q=90",
     },
 
     {

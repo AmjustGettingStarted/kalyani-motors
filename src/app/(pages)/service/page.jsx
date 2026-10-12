@@ -1,15 +1,7 @@
 //src\app\(pages)\service\page.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import {
-  ArrowDown,
-  ArrowRight,
-  Calendar,
-  Check,
-  Clock,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 import { useKalyani } from "../../../context/KalyaniContext";
 import { submitServiceBooking } from "../../../services/kalyaniApi";
@@ -22,6 +14,9 @@ export default function ServicePage() {
   const serviceRefs = useRef({});
   const [activeService, setActiveService] = useState("maintenance");
   const [isServiceNavSticky, setIsServiceNavSticky] = useState(false);
+  const isProgrammaticScroll = useRef(false);
+
+  // const HERO_WORDS = ["SERVICE", "AND", "DRIVE"];
 
   const [bookingForm, setBookingForm] = useState({
     carModel: "Swift",
@@ -37,6 +32,9 @@ export default function ServicePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null);
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const [bookingConsent, setBookingConsent] = useState(null);
 
   /* HERO SCROLL */
   const { scrollYProgress } = useScroll({
@@ -47,85 +45,100 @@ export default function ServicePage() {
   const heroImages = services?.heroImages || [];
   const serviceCategories = services?.serviceCategories || [];
 
+  // In ServicePage:
+  const visibleRatiosRef = useRef({});
+  const activeServiceRef = useRef(activeService);
+
+  useEffect(() => {
+    activeServiceRef.current = activeService;
+  }, [activeService]);
+
   useEffect(() => {
     if (!serviceCategories.length) return;
-    const observers = [];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isProgrammaticScroll.current) return;
+
+        // Update the running visibility ratio for every reporting section
+        entries.forEach((entry) => {
+          const id = entry.target.dataset.serviceId;
+          if (id) {
+            visibleRatiosRef.current[id] = entry.isIntersecting
+              ? entry.intersectionRatio
+              : 0;
+          }
+        });
+
+        // Find the section that currently has the HIGHEST visibility on screen
+        let bestId = null;
+        let highestRatio = 0;
+
+        for (const [id, ratio] of Object.entries(visibleRatiosRef.current)) {
+          if (ratio > highestRatio) {
+            highestRatio = ratio;
+            bestId = id;
+          }
+        }
+
+        const currentId = activeServiceRef.current;
+        const currentRatio =
+          (currentId && visibleRatiosRef.current[currentId]) || 0;
+
+        // Switch only when the top section meets threshold and either:
+        // 1. beats the current active section by a solid margin (+0.15), or
+        // 2. the current active section has fallen below 0.10 visibility
+        if (bestId && highestRatio > 0.15) {
+          if (bestId !== currentId) {
+            if (highestRatio > currentRatio + 0.15 || currentRatio < 0.1) {
+              setActiveService(bestId);
+            }
+          }
+        }
+      },
+      {
+        // Balances mobile and desktop viewports
+        rootMargin: "-20% 0px -30% 0px",
+        threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
+      },
+    );
+
     serviceCategories.forEach((service) => {
       const el = serviceRefs.current[service.id];
-      if (!el) return;
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setActiveService(service.id);
-          }
-        },
-        {
-          // Triggers when the section crosses the middle of the screen
-          rootMargin: "-40% 0px -40% 0px",
-          threshold: 0,
-        },
-      );
-      observer.observe(el);
-      observers.push(observer);
+      if (el) {
+        el.dataset.serviceId = service.id;
+        observer.observe(el);
+      }
     });
-    return () => {
-      observers.forEach((obs) => obs.disconnect());
-    };
+
+    return () => observer.disconnect();
   }, [serviceCategories]);
+
   const scrollToService = (id) => {
+    isProgrammaticScroll.current = true;
+    setActiveService(id);
+
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
     serviceRefs.current[id]?.scrollIntoView({
       behavior: "smooth",
-      block: "start",
+      block: isMobile ? "center" : "start",
     });
-    setActiveService(id);
+
+    window.setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 1000);
   };
 
   const positions = [
-    {
-      x: "-38vw",
-      y: "-17vh",
-      rotate: 0,
-    },
-    {
-      x: "-34vw",
-      y: "16vh",
-      rotate: 0,
-    },
-    {
-      x: "-14vw",
-      y: "-28vh",
-      rotate: 0,
-    },
-    {
-      x: "0vw",
-      y: "34vh",
-      rotate: 0,
-    },
-    {
-      x: "14vw",
-      y: "-28vh",
-      rotate: 0,
-    },
-    {
-      x: "34vw",
-      y: "16vh",
-      rotate: 0,
-    },
-    {
-      x: "38vw",
-      y: "-13vh",
-      rotate: 0,
-    },
+    { x: "-38vw", y: "-17vh", rotate: 0 },
+    { x: "-34vw", y: "16vh", rotate: 0 },
+    { x: "-14vw", y: "-28vh", rotate: 0 },
+    { x: "0vw", y: "34vh", rotate: 0 },
+    { x: "14vw", y: "-28vh", rotate: 0 },
+    { x: "34vw", y: "16vh", rotate: 0 },
+    { x: "38vw", y: "-13vh", rotate: 0 },
   ];
-
-  // const scrollToService = (id) => {
-  //   serviceRefs.current[id]?.scrollIntoView({
-  //     behaviour: "smooth",
-  //     block: "start",
-  //   });
-
-  //   setActiveService(id);
-  // };
 
   useEffect(() => {
     const section = serviceSectionRef.current;
@@ -145,8 +158,26 @@ export default function ServicePage() {
     return () => observer.disconnect();
   }, []);
 
+  const openBooking = (service) => {
+    setSelectedService(service);
+    setBookingConsent(false);
+    setSuccessInfo(null);
+
+    setBookingForm((prev) => ({
+      ...prev,
+      serviceType: service.title,
+    }));
+
+    setIsBookingOpen(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!bookingConsent) {
+      alert("Please accept to continue");
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -174,6 +205,7 @@ export default function ServicePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#edf7ff] via-[#f7fbff] to-[#eaf4ff]" />
           {/* small top label */}
           <div className="absolute top-8 left-6 md:left-12 z-40" />
+          <div className="absolute top-8 left-6 md:left-12 z-40" />
 
           {/* center content */}
 
@@ -184,35 +216,14 @@ export default function ServicePage() {
             }}
           >
             <div className="max-w-3xl px-6">
-              {/* <motion.p
-                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.35em] text-red-600 mb-2"
-                style={{
-                  opacity: useTransform(scrollYProgress, [0, 0.25], [1, 0]),
-                }}
-              >
-                Service & Care
-              </motion.p> */}
-
-              <motion.h1
-                className="font-display font-black tracking-[-0.06em] text-[clamp(3.5rem,8vw,8rem)] leading-[0.82]"
+              <motion.p
+                className="font-display font-black tracking-[0.12em] text-[clamp(3rem,7vw,5rem)] leading-[0.9]"
                 style={{
                   scale: useTransform(scrollYProgress, [0, 0.7], [1, 0.78]),
                 }}
               >
-                Care for
-                <br />
-                every journey
-              </motion.h1>
-
-              {/* <motion.p
-                className="max-w-lg mx-auto mt-8 text-sm md:text-base text-slate-500 leading-relaxed"
-                style={{
-                  opacity: useTransform(scrollYProgress, [0, 0.35], [1, 0]),
-                }}
-              >
-                From routine maintenance to complete protection, everything your
-                car needs is handled by trained professionals.
-              </motion.p> */}
+                SERVICE AND CARE
+              </motion.p>
             </div>
           </motion.div>
 
@@ -229,25 +240,10 @@ export default function ServicePage() {
               />
             ))}
           </div>
-
-          {/* scroll indicator */}
-
-          <motion.div
-            className="absolute bottom-7 right-1 -translate-x-1/2 z-40 flex flex-col items-center gap-2"
-            style={{
-              opacity: useTransform(scrollYProgress, [0, 0.12], [1, 0]),
-            }}
-          >
-            <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400">
-              Scroll to explore
-            </span>
-
-            <ArrowDown className="w-4 h-4 text-red-600 animate-bounce" />
-          </motion.div>
         </div>
       </section>
 
-      {/* SERVICES SECTION*/}
+      {/* SERVICES SECTION */}
 
       <section
         ref={serviceSectionRef}
@@ -263,67 +259,257 @@ export default function ServicePage() {
             key={service.id}
             service={service}
             index={index}
+            onBook={openBooking}
             sectionRef={(element) => {
               serviceRefs.current[service.id] = element;
             }}
           />
         ))}
         <div className="pb-20 md:pb-20" />
-        {/* BOOKING SECTION WILL GO HERE */}
       </section>
+
+      {/* SERVICE BOOKING POPUP */}
+      {isBookingOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/70 bg-white shadow-2xl"
+          >
+            {/* top blue accent */}
+            <div className="h-1.5 w-full bg-blue-700" />
+
+            <div className="p-6 md:p-8">
+              {/* HEADER */}
+              <div className="mb-7">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-blue-700">
+                  Kalyani Motors
+                </p>
+
+                <h2 className="mt-2 font-display text-3xl font-black tracking-tight text-[#071936]">
+                  Book Your Service
+                </h2>
+
+                {selectedService && (
+                  <p className="mt-2 text-sm font-semibold text-slate-500">
+                    {selectedService.title}
+                  </p>
+                )}
+              </div>
+
+              {/* SUCCESS */}
+              {successInfo ? (
+                <div className="py-6 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 18,
+                    }}
+                    className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100"
+                  >
+                    <Check className="h-8 w-8 text-emerald-600" />
+                  </motion.div>
+
+                  <h3 className="font-display text-2xl font-black text-[#071936]">
+                    Service Request Received
+                  </h3>
+
+                  <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+                    Thank you, {bookingForm.fullName}. Our team will contact you
+                    shortly regarding your service request.
+                  </p>
+
+                  {successInfo?.appointmentId && (
+                    <p className="mt-4 text-xs font-bold text-blue-700">
+                      Appointment ID: {successInfo.appointmentId}
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsBookingOpen(false);
+                      setSuccessInfo(null);
+                    }}
+                    className="mt-6 rounded-full bg-blue-700 px-6 py-3 text-xs font-bold text-white transition hover:bg-blue-800"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* NAME */}
+                  <div>
+                    <label className="mb-2 block text-xs font-bold text-slate-700">
+                      Name
+                    </label>
+
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter your name"
+                      value={bookingForm.fullName}
+                      onChange={(e) =>
+                        setBookingForm({
+                          ...bookingForm,
+                          fullName: e.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:bg-white"
+                    />
+                  </div>
+
+                  {/* PHONE */}
+                  <div>
+                    <label className="mb-2 block text-xs font-bold text-slate-700">
+                      Phone Number
+                    </label>
+
+                    <input
+                      type="tel"
+                      required
+                      pattern="[0-9]{10}"
+                      placeholder="10-digit mobile number"
+                      value={bookingForm.phone}
+                      onChange={(e) =>
+                        setBookingForm({
+                          ...bookingForm,
+                          phone: e.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:bg-white"
+                    />
+                  </div>
+
+                  {/* CONSENT */}
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <input
+                      type="checkbox"
+                      checked={bookingConsent}
+                      onChange={(e) => setBookingConsent(e.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-blue-700"
+                    />
+
+                    <span className="text-[11px] leading-relaxed text-slate-600">
+                      Disclaimer: I authorize Kalyani Motors to send
+                      notifications via SMS, Kalyani Super App, WhatsApp, Email
+                      and RCS.
+                    </span>
+                  </label>
+
+                  {/* BUTTONS */}
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsBookingOpen(false)}
+                      className="rounded-full border border-slate-200 px-6 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
+                    >
+                      Close
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="rounded-full bg-blue-700 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-blue-700/20 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isSubmitting ? "Booking..." : "Book Service"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </main>
   );
 }
 
-/* TOGGLE */
+/* Mobile Check */
 
-// function ServiceNavigation({
-//   services,
-//   activeService,
-//   onSelect,
-//   sticky = false,
-// }) {
-//   return (
-//     <div className="sticky top-[calc(100vh-6rem)] z-40 flex justify-center px-4 py-3 pointer-events-none">
-//       <nav className="flex max-w-full overflow-x-auto items-center gap-1 rounded-full border border-white bg-white/95 p-2 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl">
-//         {services?.map((service) => {
-//           const isActive = activeService === service.id;
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(false);
 
-//           return (
-//             <button
-//               key={service.id}
-//               onClick={() => onSelect(service.id)}
-//               className={`shrink-0 rounded-full px-4 py-3 text-[10px] font-bold transition-all md:px-5 md:text-xs ${
-//                 isActive
-//                   ? "bg-blue-700 text-white shadow-md"
-//                   : "text-slate-700 hover:bg-blue-50"
-//               }`}
-//             >
-//               {service.shortTitle}
-//             </button>
-//           );
-//         })}
-//       </nav>
-//     </div>
-//   );
-// }
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < breakpoint);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [breakpoint]);
 
-function ServiceNavigation({ services, activeService, onSelect }) {
+  return isMobile;
+}
+
+/* SERVICE NAVIGATION */
+
+function ServiceNavigation({ services = [], activeService, onSelect }) {
+  const navRef = useRef(null);
+  const itemRefs = useRef({});
+
+  const centerItem = (id, behavior = "smooth") => {
+    const nav = navRef.current;
+    const item = itemRefs.current[id];
+    if (!nav || !item) return;
+
+    nav.scrollTo({
+      left: item.offsetLeft + item.offsetWidth / 2 - nav.clientWidth / 2,
+      behavior,
+    });
+  };
+
+  useEffect(() => {
+    if (!services.length) return;
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      centerItem(activeService, "smooth");
+    }
+  }, [activeService, services]);
+
   return (
     <div className="sticky top-[calc(100vh-6rem)] z-40 flex justify-center px-4 py-3 pointer-events-none">
-      <nav className="pointer-events-auto flex max-w-full overflow-x-auto items-center gap-1 rounded-full border border-white/80 bg-white/95 p-1.5 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl">
-        {services?.map((service) => {
+      {/* Mobile Navigation - center - slide */}
+      <nav
+        ref={navRef}
+        className="pointer-events-auto flex max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-white/80 bg-white/95 p-1.5 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden"
+      >
+        {services.map((service) => {
           const isActive = activeService === service.id;
-
           return (
             <button
               key={service.id}
+              ref={(element) => {
+                if (element) itemRefs.current[service.id] = element;
+              }}
+              type="button"
               onClick={() => onSelect(service.id)}
-              className={`relative shrink-0 rounded-full px-4 py-2.5 text-[10px] font-bold transition-colors md:px-5 md:text-xs cursor-pointer ${
+              className={`relative shrink-0 rounded-full px-4 py-2 text-[11px] font-bold cursor-pointer transition-all duration-300 ${
+                isActive ? "bg-blue-700 text-white shadow-md" : "text-slate-700"
+              }`}
+            >
+              <span className="relative z-10 whitespace-nowrap">
+                {service.shortTitle}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Desktop Navigation - slide */}
+      <nav className="pointer-events-auto hidden max-w-full items-center gap-1 rounded-full border border-white/80 bg-white/95 p-1.5 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl md:flex">
+        {services.map((service) => {
+          const isActive = activeService === service.id;
+          return (
+            <button
+              key={service.id}
+              type="button"
+              onClick={() => onSelect(service.id)}
+              className={`relative shrink-0 rounded-full px-5 py-2.5 text-xs font-bold cursor-pointer transition-colors ${
                 isActive ? "text-white" : "text-slate-700 hover:text-blue-700"
               }`}
             >
-              {/* Sliding Background Pill */}
               {isActive && (
                 <motion.div
                   layoutId="activeServiceNavBg"
@@ -335,7 +521,9 @@ function ServiceNavigation({ services, activeService, onSelect }) {
                   }}
                 />
               )}
-              <span className="relative z-10">{service.shortTitle}</span>
+              <span className="relative z-10 whitespace-nowrap">
+                {service.shortTitle}
+              </span>
             </button>
           );
         })}
@@ -346,18 +534,43 @@ function ServiceNavigation({ services, activeService, onSelect }) {
 
 /* SERVICE CARD */
 
-function ServiceSection({ service, index, sectionRef }) {
+function ServiceSection({ service, index, sectionRef, onBook }) {
   const isReversed = index % 2 === 1;
+  const isMobile = useIsMobile();
+
+  const localSectionRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: localSectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  const desktopRange = isReversed
+    ? ["100%", "65%", "65%", "100%"]
+    : ["-100%", "-65%", "-65%", "-100%"];
+
+  const mobileRange = isReversed
+    ? ["100%", "45%", "45%", "100%"]
+    : ["-100%", "-45%", "-45%", "-100%"];
+
+  const smokeX = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.8, 1],
+    isMobile ? mobileRange : desktopRange,
+  );
 
   return (
     <section
-      ref={sectionRef}
-      className="relative min-h-[650px] overflow-hidden md:min-h-[760px]"
+      ref={(element) => {
+        localSectionRef.current = element;
+        sectionRef(element);
+      }}
+      className="relative h-[70vh] md:h-screen overflow-hidden"
     >
       {/* image */}
 
       <div
-        className={`absolute inset-y-0 w-full md:w-[72%] ${
+        className={`absolute inset-y-0 w-full ${
           isReversed ? "left-0" : "right-0"
         }`}
       >
@@ -366,25 +579,27 @@ function ServiceSection({ service, index, sectionRef }) {
           alt={service.title}
           className="h-full w-full object-cover"
         />
-
-        <div
-          className={`absolute inset-0 ${
+        <motion.div
+          className={`pointer-events-none absolute inset-y-0 w-full z-[5] rounded-xxl md:rounded-full blur-3xl ${
             isReversed
-              ? "bg-gradient-to-r from-[#f4f9ff] via-[#f4f9ff]/70 to-transparent"
-              : "bg-gradient-to-l from-[#f4f9ff] via-[#f4f9ff]/70 to-transparent"
-          }`}
+              ? "right-0 bg-gradient-to-l from-white to-white"
+              : "left-0 bg-gradient-to-r from-white to-white"
+          }   `}
+          style={{
+            x: smokeX,
+          }}
         />
       </div>
 
       {/* content */}
 
-      <div className="relative z-10 mx-auto flex min-h-[650px] items-center px-6 md:min-h-[760px] md:px-12 lg:px-16 bg-white/30">
-        <div className={`w-full md:w-[30%] ${isReversed ? "ml-auto" : ""}`}>
-          <h2 className="mt-4 max-w-xl font-display text-5xl font-black leading-[0.9] tracking-[-0.05em] text-[#071936] md:text-6xl lg:text-7xl">
+      <div className="relative z-10 mx-auto flex h-[70vh] md:h-screen items-center px-6 md:px-12 lg:px-16">
+        <div className={`w-[50%] md:w-[30%] ${isReversed ? "ml-auto" : ""}`}>
+          <h2 className="mt-4 max-w-xl font-display text-3xl font-black leading-[0.9] tracking-[-0.05em] text-[#071936] md:text-6xl lg:text-7xl">
             {service.title}
           </h2>
 
-          <p className="mt-4 text-base font-semibold text-blue-700 md:text-lg">
+          <p className="mt-4 text-sm font-semibold text-blue-700 md:text-lg">
             {service.subtitle}
           </p>
 
@@ -392,8 +607,12 @@ function ServiceSection({ service, index, sectionRef }) {
             {service.description}
           </p>
 
-          <button className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-800">
-            Know More
+          <button
+            type="button"
+            onClick={() => onBook(service)}
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-700 px-6 py-3 text-xs md:text-sm font-bold text-white transition-colors hover:bg-blue-800"
+          >
+            Book Your Service
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -467,6 +686,8 @@ function OrbitImage({ item, index, scrollYProgress, position }) {
     </motion.div>
   );
 }
+
+//  OLD CODE
 
 // import React, { useState } from 'react';
 // import { useKalyani } from '../../../context/KalyaniContext';
