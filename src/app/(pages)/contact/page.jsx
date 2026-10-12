@@ -1,524 +1,521 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { mockLocations } from "../../../data/mockLocations";
-import useHeader from "../../../components/hooks/useHeader";
 import {
-  Car,
-  Settings,
-  GraduationCap,
-  MapPin,
   Phone,
+  Mail,
+  MapPin,
+  Clock,
   ArrowRight,
-  ArrowDown,
-  ChevronDown,
+  Send,
+  CheckCircle2,
   Building2,
+  Sparkles,
+  Car,
+  Wrench,
+  ShieldCheck,
+  Headphones,
+  MessageSquare,
 } from "lucide-react";
 import { useKalyani } from "../../../context/KalyaniContext";
+import { submitContactEnquiry } from "../../../services/kalyaniApi";
 
-const TABS = [
-  { name: "Commercial", category: "commercial", icon: Building2 },
-  {
-    name: "Arena",
-    category: "arena",
-    icon: Car,
-    subOptions: ["Sales", "Service"],
-  },
-  {
-    name: "Nexa",
-    category: "nexa",
-    icon: Settings,
-    subOptions: ["Sales", "Service"],
-  },
-  { name: "True Value", category: "truevalue", icon: Settings },
-  { name: "Driving School", category: "driving-school", icon: GraduationCap },
+const INQUIRY_CATEGORIES = [
+  { id: "new-car", label: "New Car Sales (Arena / Nexa)", icon: Car },
+  { id: "service", label: "Service & Maintenance", icon: Wrench },
+  { id: "test-drive", label: "Book a Test Drive", icon: Sparkles },
+  { id: "insurance", label: "Car Insurance & Renewal", icon: ShieldCheck },
+  { id: "true-value", label: "True Value (Pre-Owned)", icon: Building2 },
+  { id: "general", label: "General Feedback / Other", icon: MessageSquare },
 ];
 
-const SUB_ICONS = {
-  Sales: Car,
-  Service: Settings,
-};
+export default function ContactPage() {
+  const { selectedCity, cities } = useKalyani();
 
-export default function AnimatedOutlets() {
-  const [activeTab, setActiveTab] = useState("Arena");
-  const [activeSubType, setActiveSubType] = useState("Sales");
-
-  // Header state
-  const { isHidden } = useHeader();
-
-  // Pull the current city from your context (e.g., 'bengaluru', 'hyderabad')
-  const { selectedCity } = useKalyani();
-
-  const cityKey = selectedCity?.toLowerCase() || "bengaluru";
-  const locationsForCity = mockLocations[cityKey] || [];
-
-  const currentTabInfo = TABS.find((t) => t.name === activeTab);
-  const hasSub = !!currentTabInfo?.subOptions;
-
-  const filteredOutlets = locationsForCity.filter((outlet) => {
-    if (outlet.category !== currentTabInfo.category) return false;
-    if (hasSub && outlet.type !== activeSubType) return false;
-    return true;
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    city: selectedCity || "Bengaluru",
+    category: "New Car Sales (Arena / Nexa)",
+    message: "",
+    authorized: true,
   });
 
-  const handleSelectTab = (tab) => {
-    setActiveTab(tab.name);
-    setActiveSubType(tab.subOptions ? tab.subOptions[0] : null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  const handleSelectSub = (tab, subOption) => {
-    setActiveTab(tab.name);
-    setActiveSubType(subOption);
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
 
-  return (
-    <>
-      <div className="min-h-screen lg:mx-24 bg-[#f8fafc] text-slate-900 font-sans">
-        <div className="max-w-full px-8 pb-6 pt-20">
-          {/* Desktop Navigation */}
-          <div
-            className={`sticky z-40 flex justify-center transition-all duration-300 ${isHidden ? "top-4" : "top-20"}`}
-          >
-            <div className="hidden md:inline-flex w-full justify-between items-center bg-white p-1.5 rounded-full shadow-sm border border-slate-200">
-              {TABS.map((tab) => (
-                <TabButton
-                  key={tab.name}
-                  tab={tab}
-                  isActive={activeTab === tab.name}
-                  activeSubType={activeSubType}
-                  onSelectTab={handleSelectTab}
-                  onSelectSub={handleSelectSub}
-                />
-              ))}
-            </div>
-          </div>
-          {/* Mobile View */}
-          <div
-            className={`md:hidden sticky z-40 flex justify-start transition-all duration-300 pt-8 ${
-              isHidden ? "top-0" : "top-24"
-            }`}
-          >
-            <MobileFilterDropdown
-              activeTab={activeTab}
-              activeSubType={activeSubType}
-              onSelectTab={handleSelectTab}
-              onSelectSub={handleSelectSub}
-            />
-          </div>
-
-          {/* SECTION LABEL */}
-          <div className="text-center">
-            <p className="text-sm font-bold tracking-[0.2em] text-slate-800 uppercase pt-6 p-3">
-              Our Outlets in {selectedCity}
-            </p>
-          </div>
-
-          {/* ROAD + CARDS */}
-          <div className="relative">
-            {/* Central dashed road line — hidden on mobile, where cards stack in one column */}
-            <div className="hidden md:flex justify-between absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-20 z-0">
-              <div className="w-px border-l-2 border border-slate-300" />
-              <div className="w-px border-l-2 border-dashed border-slate-300" />
-              <div className="w-px border-l-2 border border-slate-300" />
-            </div>
-            {/* Mobile: line runs down the left edge instead */}
-            <div className="md:hidden absolute left-4 top-0 bottom-0 w-px border-l-2 border-dashed border-slate-300 z-0" />
-
-            {/* Sticky car marker riding the road */}
-            <div className="hidden md:flex sticky top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#f8fafc] items-center justify-center z-10 text-slate-500">
-              <Car className="w-5 h-5" />
-            </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${activeTab}-${activeSubType}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="relative z-0 "
-              >
-                {filteredOutlets.length > 0 ? (
-                  <>
-                    {/* Mobile Card */}
-                    <div className="md:hidden flex flex-col gap-10 pl-12 pb-6">
-                      {filteredOutlets.map((outlet, index) => (
-                        <OutletCard
-                          key={outlet.id}
-                          outlet={outlet}
-                          index={index}
-                          side="right"
-                        />
-                      ))}
-                    </div>
-
-                    {/* desktop card */}
-                    <div className="hidden md:grid grid-cols-2 gap-x-48">
-                      {/* LEFT HALF */}
-                      <div className="flex flex-col gap-14 pt-32">
-                        {filteredOutlets
-                          .filter((_, index) => index % 2 === 1)
-                          .map((outlet, index) => (
-                            <OutletCard
-                              key={outlet.id}
-                              outlet={outlet}
-                              index={index * 2 + 1}
-                              side="left"
-                            />
-                          ))}
-                      </div>
-
-                      {/* RIGHT HALF */}
-                      <div className="flex flex-col gap-14">
-                        {filteredOutlets
-                          .filter((_, index) => index % 2 === 0)
-                          .map((outlet, index) => (
-                            <OutletCard
-                              key={outlet.id}
-                              outlet={outlet}
-                              index={index * 2}
-                              side="right"
-                            />
-                          ))}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="py-12 text-slate-500 text-center bg-white rounded-2xl border border-slate-200">
-                    No {activeSubType || activeTab} outlets found in{" "}
-                    {selectedCity}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function MobileFilterDropdown({
-  activeTab,
-  activeSubType,
-  onSelectTab,
-  onSelectSub,
-}) {
-  const [open, setOpen] = useState(false);
-
-  const currentTab = TABS.find((tab) => tab.name === activeTab);
-
-  const currentLabel = currentTab?.subOptions
-    ? `${activeTab} — ${activeSubType}`
-    : activeTab;
-
-  return (
-    <div className="relative w-[240px]">
-      {/* Selected filter */}
-      <button
-        onClick={() => setOpen((prev) => !prev)}
-        className="w-full flex items-center justify-between gap-3 px-5 py-3 bg-white rounded-full border border-slate-200 shadow-sm text-sm font-semibold text-slate-800"
-      >
-        <span className="truncate">{currentLabel}</span>
-
-        <ChevronDown
-          className={`w-4 h-4 shrink-0 text-slate-500 transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      {/* Dropdown */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: -8,
-              scale: 0.97,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-            }}
-            exit={{
-              opacity: 0,
-              y: -8,
-              scale: 0.97,
-            }}
-            transition={{
-              duration: 0.2,
-              ease: "easeOut",
-            }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden z-50"
-          >
-            <div className="p-1.5">
-              {TABS.map((tab) => {
-                const Icon = tab.icon || Car;
-
-                // Tabs without sub-options
-                if (!tab.subOptions) {
-                  const isActive = activeTab === tab.name;
-
-                  return (
-                    <button
-                      key={tab.name}
-                      onClick={() => {
-                        onSelectTab(tab);
-                        setOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm transition-colors ${
-                        isActive
-                          ? "bg-slate-800 text-white"
-                          : "text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 shrink-0" />
-
-                      <span>{tab.name}</span>
-                    </button>
-                  );
-                }
-
-                // Tabs with Sales / Service
-                return (
-                  <div key={tab.name}>
-                    {/* Parent */}
-                    <div className="flex items-center gap-3 px-4 pt-3 pb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">
-                      <Icon className="w-4 h-4" />
-                      {tab.name}
-                    </div>
-
-                    {/* Sub options */}
-                    {tab.subOptions.map((option) => {
-                      const isActive =
-                        activeTab === tab.name && activeSubType === option;
-
-                      return (
-                        <button
-                          key={`${tab.name}-${option}`}
-                          onClick={() => {
-                            onSelectSub(tab, option);
-                            setOpen(false);
-                          }}
-                          className={`w-full flex items-center px-4 py-2.5 pl-11 rounded-xl text-left text-sm transition-colors ${
-                            isActive
-                              ? "bg-slate-100 text-slate-900 font-semibold"
-                              : "text-slate-600 hover:bg-slate-50"
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function TabButton({ tab, isActive, activeSubType, onSelectTab, onSelectSub }) {
-  const [open, setOpen] = useState(false);
-  const Icon = tab.icon || Car;
-  const hasSub = !!tab.subOptions;
-  const [displayLabel, setDisplayLabel] = useState(tab.name);
-
-  useEffect(() => {
-    if (!isActive || !hasSub || !activeSubType) {
-      setDisplayLabel(tab.name);
+    if (!formData.fullName.trim()) {
+      setErrorMsg("Please enter your full name.");
+      return;
+    }
+    if (!formData.phone.trim() || formData.phone.length < 10) {
+      setErrorMsg("Please enter a valid 10-digit phone number.");
+      return;
+    }
+    if (!formData.authorized) {
+      setErrorMsg("Please authorize us to contact you regarding your inquiry.");
       return;
     }
 
-    const interval = setInterval(() => {
-      setDisplayLabel((prev) => (prev === tab.name ? activeSubType : tab.name));
-    }, 8000);
+    setIsSubmitting(true);
+    try {
+      const res = await submitContactEnquiry({
+        ...formData,
+        submittedAt: new Date().toISOString(),
+      });
+      setSubmissionResult(res);
+    } catch (err) {
+      setErrorMsg(
+        err?.message || "Could not submit inquiry. Please call our hotline.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    return () => clearTimeout(interval);
-  }, [isActive, hasSub, activeSubType, tab.name]);
-
-  return (
-    <div
-      className="relative"
-      onMouseEnter={() => hasSub && setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button
-        onClick={() => {
-          onSelectTab(tab);
-          if (hasSub) setOpen((o) => !o);
-        }}
-        className={`relative flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold ${hasSub ? "w-[120px]" : ""}`}
-      >
-        {isActive && (
-          <motion.div
-            layoutId="active-tab"
-            className="absolute inset-0 bg-slate-800 rounded-full shadow-md"
-            transition={{
-              type: "spring",
-              stiffness: 500,
-              damping: 35,
-            }}
-          />
-        )}
-
-        <Icon
-          className={`relative z-10 w-4 h-4 ${
-            isActive ? "text-white" : "text-slate-500"
-          }`}
-        />
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={displayLabel}
-            className={`relative z-10 ${
-              isActive ? "text-white" : "text-slate-600"
-            }`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {displayLabel}
-          </motion.span>
-        </AnimatePresence>
-
-        {hasSub && (
-          <ChevronDown
-            className={`relative z-10 w-3.5 h-3.5 transition-transform duration-200 ${
-              open ? "rotate-180" : ""
-            } ${isActive ? "text-white" : "text-slate-400"}`}
-          />
-        )}
-      </button>
-
-      <AnimatePresence>
-        {hasSub && open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.16, ease: "easeOut" }}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 min-w-[180px] z-20 overflow-hidden"
-          >
-            {tab.subOptions.map((option) => {
-              const SubIcon = SUB_ICONS[option] || Settings;
-              const isSubActive = isActive && activeSubType === option;
-              return (
-                <button
-                  key={option}
-                  onClick={() => {
-                    onSelectSub(tab, option);
-                    setDisplayLabel(option);
-                    setOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-2.5 text-left px-4 py-2.5 text-sm transition-colors ${
-                    isSubActive
-                      ? "bg-slate-50 text-slate-900 font-semibold"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                >
-                  <SubIcon
-                    className={`w-4 h-4 ${isSubActive ? "text-slate-700" : "text-slate-400"}`}
-                  />
-                  {option}
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function OutletCard({ outlet, index, side }) {
-  const fallbackImage =
-    "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=800";
-  const isLeft = side === "left";
+  const handleReset = () => {
+    setSubmissionResult(null);
+    setFormData({
+      fullName: "",
+      phone: "",
+      email: "",
+      city: selectedCity || "Bengaluru",
+      category: "New Car Sales (Arena / Nexa)",
+      message: "",
+      authorized: true,
+    });
+  };
 
   return (
-    <motion.div
-      initial={{
-        opacity: 0,
-        x: isLeft ? 40 : -40,
-        y: 15,
-        scale: 0.96,
-      }}
-      whileInView={{
-        opacity: 1,
-        x: 0,
-        y: 0,
-        scale: 1,
-      }}
-      viewport={{
-        once: true,
-        margin: "-80px",
-      }}
-      transition={{
-        duration: 0.65,
-        delay: index * 0.08,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className="relative"
-    >
-      {/* Connector dot back to the road (desktop only) */}
-      <div
-        className={`block absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 border-[#f8fafc] bg-slate-700 z-10 shadow-sm ${
-          isLeft ? "-right-[41px]" : "-left-[41px]"
-        }`}
-      />
-      {/* Card Container */}
-      <div className="bg-white rounded-2xl p-4 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex flex-col gap-4 hover:shadow-lg transition-shadow duration-300">
-        {/* Image Box */}
-        <div className="w-full h-40 rounded-xl overflow-hidden shrink-0 bg-slate-100">
-          <img
-            src={outlet.image || fallbackImage}
-            alt={outlet.name}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-          />
-        </div>
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 pt-24 pb-20">
+      {/* HERO HEADER */}
+      <section className="relative px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto mb-12 sm:mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-3xl mx-auto space-y-4"
+        >
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#071936]">
+            We&apos;re Here to Help You
+          </h1>
 
-        {/* Content Box */}
-        <div className="flex flex-col justify-between flex-1">
-          <div>
-            <h3 className="font-bold text-base text-slate-900 leading-tight">
-              {outlet.name}
-            </h3>
-            <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-              {outlet.address}
-            </p>
-          </div>
+          <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
+            Have questions about buying a Maruti Suzuki car, scheduling periodic
+            maintenance, or need quick roadside support? Reach out to our
+            dedicated team.
+          </p>
+        </motion.div>
+      </section>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-5 pt-4 border-t border-slate-100">
-            <div className="flex items-center gap-5">
-              <a
-                href={`tel:${outlet.phone}`}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-700 transition-colors"
-              >
-                <Phone className="w-4 h-4" /> Call
-              </a>
-              <a
-                href={outlet.mapUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-700 transition-colors"
-              >
-                <MapPin className="w-4 h-4" /> Directions
-              </a>
+      {/* MAIN TWO-COLUMN CONTENT */}
+      <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          {/* LEFT COLUMN: CONTACT FORM */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.55 }}
+            className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-[0_10px_35px_-10px_rgba(15,23,42,0.06)]"
+          >
+            <div className="mb-8">
+              <h2 className="font-display text-2xl sm:text-3xl font-black text-[#071936]">
+                Send Us a Message
+              </h2>
+              <p className="text-slate-500 text-sm mt-1">
+                Fill out the details below. Our customer executive will get back
+                to you within 2 hours.
+              </p>
             </div>
 
-            <button className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-800 hover:text-blue-950 transition-colors group">
-              Contact Us
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+            <AnimatePresence mode="wait">
+              {submissionResult ? (
+                <motion.div
+                  key="success-box"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="rounded-2xl bg-emerald-50 border border-emerald-200 p-8 text-center space-y-5"
+                >
+                  <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
+                    <CheckCircle2 className="w-9 h-9" />
+                  </div>
+
+                  <div>
+                    <h3 className="font-display text-2xl font-bold text-emerald-950">
+                      Message Received!
+                    </h3>
+                    <p className="text-emerald-800 text-sm mt-2 max-w-md mx-auto leading-relaxed">
+                      {submissionResult.message ||
+                        "Thank you for reaching out! Our customer team has received your inquiry and will call you shortly."}
+                    </p>
+                  </div>
+
+                  {submissionResult.ticketId && (
+                    <div className="inline-block px-4 py-2 bg-white rounded-xl border border-emerald-200 text-xs font-mono font-bold text-emerald-900 shadow-sm">
+                      Reference Ticket: {submissionResult.ticketId}
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="px-6 py-2.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      Send Another Inquiry
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <form
+                  key="contact-form"
+                  onSubmit={handleSubmit}
+                  className="space-y-5"
+                >
+                  {errorMsg && (
+                    <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+                      {errorMsg}
+                    </div>
+                  )}
+
+                  {/* Name and Phone */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        placeholder="e.g. Ramesh Kumar"
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm outline-none focus:bg-white focus:border-blue-600 transition-colors"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Phone Number <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">
+                          +91
+                        </span>
+                        <input
+                          type="tel"
+                          name="phone"
+                          maxLength={10}
+                          value={formData.phone}
+                          onChange={handleChange}
+                          placeholder="98765 43210"
+                          className="w-full pl-12 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm outline-none focus:bg-white focus:border-blue-600 transition-colors"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Email and City */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="ramesh@example.com"
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm outline-none focus:bg-white focus:border-blue-600 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        Preferred City
+                      </label>
+                      <select
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm outline-none focus:bg-white focus:border-blue-600 transition-colors"
+                      >
+                        {(
+                          cities || [
+                            "Bengaluru",
+                            "Hyderabad",
+                            "Mysore",
+                            "Chennai",
+                          ]
+                        ).map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Inquiry Type */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                      How Can We Help You?
+                    </label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm outline-none focus:bg-white focus:border-blue-600 transition-colors"
+                    >
+                      {INQUIRY_CATEGORIES.map((cat) => (
+                        <option key={cat.id} value={cat.label}>
+                          {cat.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                      Your Message or Requirements
+                    </label>
+                    <textarea
+                      name="message"
+                      rows={4}
+                      value={formData.message}
+                      onChange={handleChange}
+                      placeholder="Tell us what car model, service package, or question you have in mind..."
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm outline-none focus:bg-white focus:border-blue-600 transition-colors resize-none"
+                    />
+                  </div>
+
+                  {/* Consent Checkbox */}
+                  <div className="flex items-start gap-3 pt-1">
+                    <input
+                      type="checkbox"
+                      id="authorized"
+                      name="authorized"
+                      checked={formData.authorized}
+                      onChange={handleChange}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-700 focus:ring-blue-600 cursor-pointer"
+                    />
+                    <label
+                      htmlFor="authorized"
+                      className="text-xs text-slate-600 leading-relaxed cursor-pointer select-none"
+                    >
+                      I authorize Kalyani Motors and its representatives to
+                      contact me via Call, SMS, WhatsApp, or Email regarding
+                      this inquiry.
+                    </label>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 px-6 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white font-bold text-sm tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <span>Sending your message...</span>
+                    ) : (
+                      <>
+                        <span>Submit Inquiry</span>
+                        <Send className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* RIGHT COLUMN: CUSTOMER DETAILS & DIRECT REACH */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.55, delay: 0.1 }}
+            className="lg:col-span-5 space-y-6"
+          >
+            {/* Quick Contact Card */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-[0_10px_35px_-10px_rgba(15,23,42,0.06)] space-y-6">
+              <div>
+                <h3 className="font-display text-xl font-black text-[#071936]">
+                  Customer Care & Support
+                </h3>
+                <p className="text-slate-500 text-xs mt-1">
+                  Connect with our centralized helpline or regional desk.
+                </p>
+              </div>
+
+              {/* Phone Line */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-100">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Call Center / Hotline
+                  </p>
+                  <a
+                    href="tel:+919845012345"
+                    className="text-base font-bold text-slate-900 hover:text-blue-700 transition-colors block mt-0.5"
+                  >
+                    +91 98450 12345
+                  </a>
+                  <a
+                    href="tel:+919845012346"
+                    className="text-xs text-slate-600 hover:text-blue-700 transition-colors block"
+                  >
+                    Alt: +91 98450 12346
+                  </a>
+                </div>
+              </div>
+
+              {/* Email Line */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Official Email
+                  </p>
+                  <a
+                    href="mailto:support@kalyanimotors.com"
+                    className="text-sm font-bold text-slate-900 hover:text-blue-700 transition-colors block mt-0.5"
+                  >
+                    support@kalyanimotors.com
+                  </a>
+                  <a
+                    href="mailto:care@kalyanimotors.com"
+                    className="text-xs text-slate-600 hover:text-blue-700 transition-colors block"
+                  >
+                    Escalations: care@kalyanimotors.com
+                  </a>
+                </div>
+              </div>
+
+              {/* Hours */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-100">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Operating Hours
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900 mt-0.5">
+                    Monday – Sunday: 9:00 AM – 8:00 PM
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Service bays operate all 7 days for your convenience.
+                  </p>
+                </div>
+              </div>
+
+              {/* Head Office */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-700 flex items-center justify-center shrink-0 border border-rose-100">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Corporate Headquarters
+                  </p>
+                  <p className="text-xs leading-relaxed text-slate-800 mt-0.5">
+                    Nayandahalli, Mysore Road, Bengaluru, Karnataka - 560039
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick 24/7 Roadside Assistance Badge */}
+            <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-3xl p-6 shadow-md flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[10px] font-bold uppercase tracking-wider text-blue-100">
+                  <ShieldCheck className="w-3 h-3" /> 24x7 Breakdown
+                </div>
+                <h4 className="font-display text-base font-bold">
+                  Roadside Assistance
+                </h4>
+                <p className="text-xs text-blue-100">
+                  Emergency towing & on-spot assistance across South India.
+                </p>
+              </div>
+
+              <a
+                href="tel:18001021800"
+                className="shrink-0 px-4 py-2.5 rounded-full bg-white text-blue-800 font-bold text-xs hover:bg-blue-50 transition-colors shadow-sm"
+              >
+                1800 102 1800
+              </a>
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </motion.div>
+      </section>
+
+      {/* OUTLET NAVIGATION BANNER */}
+      <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto mt-16 sm:mt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#071936] via-[#0b244d] to-[#071936] text-white p-8 sm:p-12 lg:p-16 shadow-xl"
+        >
+          {/* Subtle decorative glow */}
+          <div className="pointer-events-none absolute -right-20 -top-20 w-80 h-80 rounded-full bg-blue-500/15 blur-3xl" />
+          <div className="pointer-events-none absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-indigo-500/15 blur-3xl" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            <div className="max-w-2xl space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-blue-300 text-xs font-bold tracking-wider uppercase backdrop-blur-sm">
+                <MapPin className="w-3.5 h-3.5" />
+                <span>100+ Touchpoints in South India</span>
+              </div>
+
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
+                Or Visit Us at Your Nearest Branch
+              </h2>
+
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                Prefer an in-person visit? Explore Maruti Suzuki Arena, Nexa,
+                True Value, and state-of-the-art service workshops located near
+                you in {selectedCity} and beyond.
+              </p>
+            </div>
+
+            <div className="shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              <Link
+                to="/outlets"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm tracking-wide shadow-lg hover:shadow-blue-500/30 transition-all duration-300 group cursor-pointer"
+              >
+                <span>View All Outlets</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+    </div>
   );
 }
