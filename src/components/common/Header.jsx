@@ -29,6 +29,9 @@ export default function Header() {
   } = useKalyani();
   const location = useLocation();
 
+  const isHomePage = location.pathname === "/";
+  const isSolid = !isHomePage || isScrolled;
+
   // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -148,7 +151,7 @@ export default function Header() {
         duration: 0.3,
         ease: [0.25, 0.1, 0.25, 1.0],
       }}
-      className={`fixed top-0 z-50 w-full transition-colors duration-300 ${isScrolled
+      className={`fixed top-0 z-50 w-full transition-colors duration-300 ${isSolid
         ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200"
         : "bg-gradient-to-b from-black/80 via-black/40 to-transparent border-transparent"
         }`}
@@ -171,7 +174,7 @@ export default function Header() {
                 key={item.name}
                 to={item.path}
                 className={({ isActive }) =>
-                  `text-xs font-semibold tracking-wide transition-colors duration-200 ${isScrolled
+                  `text-xs font-semibold tracking-wide transition-colors duration-200 ${isSolid
                     ? isActive
                       ? "text-blue-600 font-bold"
                       : "text-slate-700 hover:text-blue-600"
@@ -189,14 +192,14 @@ export default function Header() {
           {/* Right: Desktop Controls */}
           <div className="hidden md:flex items-center gap-2.5">
             <div className="w-56 lg:w-64">
-              <SearchBar isScrolled={isScrolled} />
+              <SearchBar isScrolled={isSolid} />
             </div>
 
             {/* Compare Button */}
             <Link
               to="/compare"
               title="Compare Cars"
-              className={`p-2.5 rounded-full transition-all duration-200 flex items-center justify-center shrink-0 ${isScrolled
+              className={`p-2.5 rounded-full transition-all duration-200 flex items-center justify-center shrink-0 ${isSolid
                 ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
                 : "bg-transparent hover:bg-white/20 backdrop-blur-md text-white border border-white/15"
                 }`}
@@ -205,7 +208,7 @@ export default function Header() {
             </Link>
 
             {/* City Selector */}
-            <CitySelector isScrolled={isScrolled} />
+            <CitySelector isScrolled={isSolid} />
           </div>
 
           {/* Mobile Menu Trigger */}
@@ -213,7 +216,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`p-2 rounded-xl transition-colors ${isScrolled
+              className={`p-2 rounded-xl transition-colors ${isSolid
                 ? "bg-slate-100 text-slate-900 border border-slate-200"
                 : "bg-white/10 text-white backdrop-blur-md border border-white/20"
                 }`}
@@ -255,7 +258,7 @@ export default function Header() {
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
               style={{ touchAction: isMobileSearchActive ? "none" : "pan-y" }}
               className={`lg:hidden border-t px-4 sm:px-6 pt-3.5 pb-7 space-y-4 shadow-2xl transition-colors duration-300 max-h-[85vh] ${isMobileSearchActive ? "overflow-y-hidden" : "overflow-y-auto overscroll-contain"
-                } ${isScrolled
+                } ${isSolid
                   ? "bg-white/98 backdrop-blur-2xl border-slate-200 text-slate-800"
                   : "bg-neutral-950/98 backdrop-blur-2xl border-white/10 text-white"
                 }`}
@@ -263,14 +266,14 @@ export default function Header() {
               {/* 1. Top Search Bar */}
               <div className="pt-0.5">
                 <SearchBar
-                  isScrolled={isScrolled}
+                  isScrolled={isSolid}
                   onOpenChange={setIsMobileSearchActive}
                 />
               </div>
 
               {/* 2. City Selection Hub (Interactive Grid) */}
               <div
-                className={`p-3.5 rounded-2xl border transition-colors ${isScrolled
+                className={`p-3.5 rounded-2xl border transition-colors ${isSolid
                   ? "bg-slate-50/90 border-slate-200/80 shadow-sm"
                   : "bg-white/[0.04] border-white/10"
                   }`}
@@ -282,14 +285,14 @@ export default function Header() {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
                     </span>
                     <span
-                      className={`text-[10px] font-extrabold uppercase tracking-wider ${isScrolled ? "text-slate-500" : "text-neutral-400"
+                      className={`text-[10px] font-extrabold uppercase tracking-wider ${isSolid ? "text-slate-500" : "text-neutral-400"
                         }`}
                     >
                       Showroom City Hub
                     </span>
                   </div>
                   <span
-                    className={`text-[11px] font-bold ${isScrolled ? "text-blue-700" : "text-blue-400"
+                    className={`text-[11px] font-bold ${isSolid ? "text-blue-700" : "text-blue-400"
                       }`}
                   >
                     {selectedCity} Active
@@ -302,7 +305,7 @@ export default function Header() {
               {/* 3. Navigation Menu Links */}
               <div className="space-y-1">
                 <div
-                  className={`text-[10px] font-extrabold uppercase tracking-wider px-1 mb-1.5 ${isScrolled ? "text-slate-400" : "text-neutral-500"
+                  className={`text-[10px] font-extrabold uppercase tracking-wider px-1 mb-1.5 ${isSolid ? "text-slate-400" : "text-neutral-500"
                     }`}
                 >
                   Explore & Discover
@@ -316,7 +319,7 @@ export default function Header() {
                       to={item.path}
                       onClick={() => setMobileMenuOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group active:scale-[0.99] ${isScrolled
+                        `flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 group active:scale-[0.99] ${isSolid
                           ? isActive
                             ? "bg-blue-50/90 text-blue-900 border border-blue-200/70 font-bold shadow-sm"
                             : "text-slate-700 hover:bg-slate-100 hover:text-slate-950 border border-transparent"
@@ -328,7 +331,7 @@ export default function Header() {
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isScrolled
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isSolid
                             ? "bg-slate-200/70 text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-700"
                             : "bg-white/10 text-neutral-300 group-hover:bg-white/20 group-hover:text-white"
                             }`}
@@ -345,7 +348,7 @@ export default function Header() {
                             )}
                           </div>
                           <div
-                            className={`text-[11px] mt-0.5 truncate ${isScrolled ? "text-slate-500" : "text-neutral-400"
+                            className={`text-[11px] mt-0.5 truncate ${isSolid ? "text-slate-500" : "text-neutral-400"
                               }`}
                           >
                             {item.subtitle}
@@ -354,7 +357,7 @@ export default function Header() {
                       </div>
 
                       <ChevronRight
-                        className={`w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${isScrolled ? "text-slate-400" : "text-neutral-500"
+                        className={`w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${isSolid ? "text-slate-400" : "text-neutral-500"
                           }`}
                       />
                     </NavLink>
@@ -364,7 +367,7 @@ export default function Header() {
 
               {/* 4. VIP Actions & Support */}
               <div
-                className={`pt-3 border-t space-y-2.5 ${isScrolled ? "border-slate-200/80" : "border-white/10"
+                className={`pt-3 border-t space-y-2.5 ${isSolid ? "border-slate-200/80" : "border-white/10"
                   }`}
               >
                 {openTestDrive && (
@@ -383,7 +386,7 @@ export default function Header() {
 
                 <a
                   href="tel:+919590990011"
-                  className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all ${isScrolled
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all ${isSolid
                     ? "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800"
                     : "bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-neutral-200"
                     }`}

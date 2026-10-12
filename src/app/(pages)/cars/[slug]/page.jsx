@@ -103,7 +103,7 @@ const CarDetailPage = () => {
 
   return (
     <>
-      <div className="w-full mx-auto px-4 sm:px-8 py-8" />
+      <div className="w-full pt-16 sm:pt-20" />
       <div className="min-h-screen bg-gray-50 text-gray-900 font-sans px-4 pb-4 sm:p-6">
         {/* Navigation & Breadcrumbs */}
         {/* <div className="flex items-center justify-between mb-6">
