@@ -18,8 +18,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        display: ['"Clash Display"', '"ClashDisplay-Variable"', '"Outfit"', 'sans-serif'],
+        sans: ['"Satoshi"', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Cabinet Grotesk"', 'system-ui', 'sans-serif'],
         clash: ['"Clash Display"', '"ClashDisplay-Variable"', 'sans-serif'],
       },
       boxShadow: {
