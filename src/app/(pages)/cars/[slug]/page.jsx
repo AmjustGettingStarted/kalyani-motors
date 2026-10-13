@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useKalyani } from "../../../../context/KalyaniContext";
 import { formatINR } from "../../../../lib/utils";
 import CarCard from "../../../../components/widgets/CarCard";
+import EMICalculator from "./EMICalculator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../../components/ui/select";
 // import Car360Viewer from "../../../../components/widgets/Car360Viewer";
 // import get360Frames from "../../../../app/images/fronx/360/frames";
 import {
@@ -43,21 +51,69 @@ const CarDetailPage = () => {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [activeSpecTab, setActiveSpecTab] = useState("Performance");
   const [activeGalleryTab, setActiveGalleryTab] = useState("Exterior");
+  const [openFaqIndices, setOpenFaqIndices] = useState([0]);
+  const [previewImage, setPreviewImage] = useState(null);
 
-  // EMI Calculator State
-  const [downPayment, setDownPayment] = useState(100000);
-  const [loanTenureYears, setLoanTenureYears] = useState(5);
-  const [interestRate, setInterestRate] = useState(8.5);
+  const toggleFaq = (idx) => {
+    setOpenFaqIndices((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
 
-  // CLEANED UP: Directly accessing the clean data structure
   useEffect(() => {
     if (car) {
-      const initialImg = car.gallery?.exterior?.[0] || car.heroImage || "";
-      setActiveImage(initialImg);
-      setSelectedColor(car.colors?.[0] || null);
-      setSelectedVariant(car.variants?.[0] || null);
-      setDownPayment(Math.round(car.startingPrice * 0.2));
+      if (!selectedVariant && car.variants?.[0]) {
+        setSelectedVariant(car.variants[0]);
+      }
+      if (!selectedColor && car.colors?.[0]) {
+        setSelectedColor(car.colors[0]);
+      }
     }
+  }, [car, selectedVariant, selectedColor]);
+
+  const carFaqs = useMemo(() => {
+    if (!car) return [];
+    return [
+      {
+        question: `What is the exact mileage of Maruti Suzuki ${car.name}?`,
+        answer: `The Maruti Suzuki ${car.name} delivers an impressive ARAI-certified fuel efficiency of ${car.mileage || "22.89 km/l"}. Real-world mileage may vary based on driving style, traffic conditions, and maintenance.`,
+        category: "Mileage & Efficiency",
+        icon: Fuel,
+      },
+      {
+        question: `What are the available variants of ${car.name}?`,
+        answer: `The ${car.name} is available in ${car.variants?.length || 4} variants: ${car.variants?.map((v) => v.name).join(", ") || "Sigma, Delta, Zeta, Alpha"}. You can choose between ${car.transmissionTypes?.join(" and ") || "Manual and Automatic"} transmissions.`,
+        category: "Variants & Trims",
+        icon: Gauge,
+      },
+      {
+        question: `Does the ${car.name} come with a sunroof option?`,
+        answer: `${car.name.toLowerCase().includes("grand vitara") || car.name.toLowerCase().includes("brezza")
+            ? `Yes, ${car.name} comes equipped with an electric/panoramic sunroof on select top variants for a premium, airy cabin feel.`
+            : `The ${car.name} emphasizes aerodynamic coupe styling and enhanced structural rigidity with UV-cut glass and modern cabin design.`
+          } Visit Kalyani Motors for complete trim feature details.`,
+        category: "Features & Comfort",
+        icon: Sparkles,
+      },
+      {
+        question: `What is the boot space capacity of ${car.name}?`,
+        answer: `The Maruti Suzuki ${car.name} features a practical ${car.bootSpace || "308 Litres"} luggage capacity with 60:40 split-folding rear seats, easily accommodating family road trip bags and daily shopping.`,
+        category: "Storage & Utility",
+        icon: ShieldCheck,
+      },
+      {
+        question: `What warranty and roadside assistance coverage is included?`,
+        answer: `Every new car comes with a 2-year / 40,000 km standard manufacturer warranty, extendable up to 5 years / 1,00,000 km, plus 24/7 Roadside Assistance across South India.`,
+        category: "Warranty & Support",
+        icon: Award,
+      },
+      {
+        question: `How can I finance ${car.name} or book a doorstep test drive?`,
+        answer: `You can schedule a complimentary doorstep test drive right from this page. Kalyani Motors also arranges instant bank financing approvals with low interest rates and low down payments.`,
+        category: "Booking & Finance",
+        icon: Calendar,
+      },
+    ];
   }, [car]);
 
   if (!car) {
@@ -82,18 +138,18 @@ const CarDetailPage = () => {
   const currentPrice = selectedVariant
     ? selectedVariant.price
     : car.startingPrice;
-  const loanPrincipal = Math.max(0, currentPrice - downPayment);
-  const monthlyRate = interestRate / 12 / 100;
-  const totalMonths = loanTenureYears * 12;
-  const emi =
-    loanPrincipal > 0
-      ? Math.round(
-          (loanPrincipal *
-            monthlyRate *
-            Math.pow(1 + monthlyRate, totalMonths)) /
-            (Math.pow(1 + monthlyRate, totalMonths) - 1),
-        )
-      : 0;
+  // const loanPrincipal = Math.max(0, currentPrice - downPayment);
+  // const monthlyRate = interestRate / 12 / 100;
+  // const totalMonths = loanTenureYears * 12;
+  // const emi =
+  //   loanPrincipal > 0
+  //     ? Math.round(
+  //         (loanPrincipal *
+  //           monthlyRate *
+  //           Math.pow(1 + monthlyRate, totalMonths)) /
+  //           (Math.pow(1 + monthlyRate, totalMonths) - 1),
+  //       )
+  //     : 0;
 
   const otherCars = cars.filter((c) => c.id !== car.id).slice(0, 5);
 
@@ -193,33 +249,43 @@ const CarDetailPage = () => {
                   </h2>
                 </div>
 
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-black/70 font-semibold block uppercase tracking-wider">
                     Select Variant
                   </label>
-                  <div className="relative">
-                    <select
-                      value={selectedVariant?.name || ""}
-                      onChange={(e) => {
-                        const variant = car.variants?.find(
-                          (v) => v.name === e.target.value,
-                        );
-                        setSelectedVariant(variant);
-                      }}
-                      className="w-full p-3 bg-white/40 border border-grey/20 rounded-xl text-black font-medium appearance-none outline-none focus:border-white/60 transition-colors backdrop-blur-sm cursor-pointer"
-                    >
+                  <Select
+                    value={selectedVariant?.name || ""}
+                    onValueChange={(val) => {
+                      const variant = car.variants?.find((v) => v.name === val);
+                      if (variant) setSelectedVariant(variant);
+                    }}
+                  >
+                    <SelectTrigger className="w-full h-12 bg-white/40 hover:bg-white/60 border border-grey/20 rounded-xl px-4 text-black font-semibold appearance-none outline-none focus:border-white/60 focus:ring-0 transition-colors backdrop-blur-sm cursor-pointer shadow-sm">
+                      <SelectValue placeholder="Select Variant">
+                        {selectedVariant
+                          ? `${selectedVariant.name} (${selectedVariant.fuel})`
+                          : "Select Variant"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-slate-200 shadow-2xl rounded-xl z-50 p-1 min-w-[240px]">
                       {car.variants?.map((v) => (
-                        <option
+                        <SelectItem
                           key={v.name}
                           value={v.name}
-                          className="bg-white text-black"
+                          className="py-2.5 px-3 rounded-lg text-sm font-medium text-slate-800 cursor-pointer focus:bg-slate-100 focus:text-slate-900 transition-colors"
                         >
-                          {v.name} ({v.fuel})
-                        </option>
+                          <div className="flex items-center justify-between gap-3 w-full">
+                            <span className="font-semibold text-slate-900">
+                              {v.name}
+                            </span>
+                            <span className="text-xs text-slate-500 font-normal bg-slate-100 px-2 py-0.5 rounded-full">
+                              ({v.fuel})
+                            </span>
+                          </div>
+                        </SelectItem>
                       ))}
-                    </select>
-                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/60 rotate-90 pointer-events-none" />
-                  </div>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {car.colors && (
@@ -229,11 +295,10 @@ const CarDetailPage = () => {
                         <button
                           key={i}
                           onClick={() => setSelectedColor(c)}
-                          className={`w-7 h-7 rounded-full border-2 transition-all ${
-                            selectedColor?.name === c.name
+                          className={`w-7 h-7 rounded-full border-2 transition-all ${selectedColor?.name === c.name
                               ? "border-grey scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                               : `border-grey/20 opacity-80 hover:opacity-100 hover:scale-110`
-                          }`}
+                            }`}
                           style={{ backgroundColor: c.hex }}
                           title={c.name}
                         />
@@ -300,26 +365,43 @@ const CarDetailPage = () => {
               </div>
 
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
                   Variant
                 </p>
 
-                <select
+                <Select
                   value={selectedVariant?.name || ""}
-                  onChange={(e) => {
-                    const variant = car.variants?.find(
-                      (v) => v.name === e.target.value,
-                    );
-                    setSelectedVariant(variant);
+                  onValueChange={(val) => {
+                    const variant = car.variants?.find((v) => v.name === val);
+                    if (variant) setSelectedVariant(variant);
                   }}
-                  className="w-full mt-1 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-800 outline-none"
                 >
-                  {car.variants?.map((v) => (
-                    <option key={v.name} value={v.name}>
-                      {v.name} ({v.fuel})
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-800 shadow-sm focus:ring-2 focus:ring-slate-900/10 cursor-pointer">
+                    <SelectValue placeholder="Select Variant">
+                      {selectedVariant
+                        ? `${selectedVariant.name} (${selectedVariant.fuel})`
+                        : "Select Variant"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-slate-200 shadow-xl rounded-xl z-50 p-1">
+                    {car.variants?.map((v) => (
+                      <SelectItem
+                        key={v.name}
+                        value={v.name}
+                        className="py-2.5 px-3 rounded-lg text-sm font-medium text-slate-800 cursor-pointer focus:bg-slate-100 focus:text-slate-900"
+                      >
+                        <div className="flex items-center justify-between gap-2 w-full">
+                          <span className="font-semibold text-slate-900">
+                            {v.name}
+                          </span>
+                          <span className="text-xs text-slate-500 font-normal">
+                            ({v.fuel})
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -335,11 +417,10 @@ const CarDetailPage = () => {
                     <button
                       key={i}
                       onClick={() => setSelectedColor(c)}
-                      className={`w-7 h-7 rounded-full border-2 transition-all ${
-                        selectedColor?.name === c.name
+                      className={`w-7 h-7 rounded-full border-2 transition-all ${selectedColor?.name === c.name
                           ? "border-slate-900 scale-110"
                           : "border-slate-300"
-                      }`}
+                        }`}
                       style={{ backgroundColor: c.hex }}
                       title={c.name}
                     />
@@ -391,9 +472,8 @@ const CarDetailPage = () => {
                     )}
 
                     <motion.span
-                      className={`relative z-10 ${
-                        isActive ? "text-white" : "text-gray-600"
-                      }`}
+                      className={`relative z-10 ${isActive ? "text-white" : "text-gray-600"
+                        }`}
                       animate={{
                         color: isActive ? "#ffffff" : "#4b5563",
                       }}
@@ -527,11 +607,10 @@ const CarDetailPage = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveSpecTab(tab)}
-                  className={`flex-1 py-2 rounded-full text-[11px] font-bold transition-all ${
-                    isActive
+                  className={`flex-1 py-2 rounded-full text-[11px] font-bold transition-all ${isActive
                       ? "bg-slate-900 text-white shadow-sm"
                       : "text-slate-500"
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -658,11 +737,10 @@ const CarDetailPage = () => {
                         setActiveImage(nextImages[0]);
                       }
                     }}
-                    className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
-                      activeGalleryTab === tab
+                    className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${activeGalleryTab === tab
                         ? "bg-slate-900 text-white shadow-sm"
                         : "text-slate-600 hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     {tab}
                   </button>
@@ -693,51 +771,138 @@ const CarDetailPage = () => {
                   : currentImages[0];
 
               return (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[220px]">
-                  {/* Main Featured Display */}
-                  <div className="md:col-span-2 md:row-span-2 relative rounded-3xl overflow-hidden bg-slate-900 group shadow-md min-h-[300px] md:min-h-[460px]">
-                    <img
-                      src={displayImage}
-                      alt={`${car.name} ${activeGalleryTab} view`}
-                      className="w-full h-full object-cover object-center transition-all duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                    <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-slate-900 shadow-sm">
-                        {activeGalleryTab} View
-                      </span>
-                      <span className="text-xs text-white/90 font-medium hidden sm:inline">
-                        Click thumbnails to view
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Thumbnails - Sliced to 4 to prevent grid breaking */}
-                  {currentImages.slice(0, 4).map((img, idx) => (
-                    <button
-                      key={idx}
+                <>
+                  <motion.div
+                    key={activeGalleryTab}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[220px]"
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.15 }}
+                    variants={{
+                      hidden: {},
+                      visible: {
+                        transition: {
+                          staggerChildren: 0.16,
+                          delayChildren: 0.1,
+                        },
+                      },
+                    }}
+                  >
+                    {/* Main featured image */}
+                    <motion.button
                       type="button"
-                      onClick={() => setActiveImage(img)}
-                      className={`relative rounded-2xl overflow-hidden bg-slate-100 group shadow-xs transition-all text-left ${
-                        displayImage === img
-                          ? "ring-2 ring-slate-900"
-                          : "hover:opacity-90"
-                      }`}
+                      onClick={() => setPreviewImage(displayImage)}
+                      variants={{
+                        hidden: { opacity: 0, scale: 0.94 },
+                        visible: {
+                          opacity: 1,
+                          scale: 1,
+                          transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+                        },
+                      }}
+                      whileHover={{ scale: 1.005 }}
+                      whileTap={{ scale: 0.99 }}
+                      className="md:col-span-2 md:row-span-2 relative rounded-3xl overflow-hidden bg-slate-900 group shadow-md min-h-[300px] md:min-h-[460px] text-left cursor-zoom-in"
                     >
                       <img
-                        src={img}
-                        alt={`${car.name} ${activeGalleryTab} #${idx + 1}`}
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        src={displayImage}
+                        alt={`${car.name} ${activeGalleryTab} view`}
+                        className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.02]"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute bottom-3 left-3 z-10">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/60 text-white backdrop-blur-sm">
-                          {activeGalleryTab} #{idx + 1}
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+                      <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2">
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-slate-900 shadow-sm">
+                          {activeGalleryTab} View
                         </span>
                       </div>
-                    </button>
-                  ))}
-                </div>
+                    </motion.button>
+
+                    {/* Secondary bento images — all click-to-enlarge */}
+                    {currentImages.slice(1, 5).map((img, idx) => (
+                      <motion.button
+                        key={img}
+                        type="button"
+                        onClick={() => setPreviewImage(img)}
+                        variants={{
+                          hidden: {
+                            opacity: 0,
+                            scale: 0.82,
+                            x: -35,
+                            y: 25,
+                          },
+                          visible: {
+                            opacity: 1,
+                            scale: 1,
+                            x: 0,
+                            y: 0,
+                            transition: {
+                              duration: 0.45,
+                              ease: [0.22, 1, 0.36, 1],
+                            },
+                          },
+                        }}
+                        whileHover={{ scale: 1.025 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="relative rounded-2xl overflow-hidden bg-slate-100 group shadow-sm text-left cursor-zoom-in"
+                      >
+                        <img
+                          src={img}
+                          alt={`${car.name} ${activeGalleryTab} ${idx + 2}`}
+                          loading="lazy"
+                          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                        />
+
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </motion.button>
+                    ))}
+                  </motion.div>
+
+                  {/* Enlarged image lightbox */}
+                  <AnimatePresence>
+                    {previewImage && (
+                      <motion.div
+                        key="gallery-lightbox"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => setPreviewImage(null)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") setPreviewImage(null);
+                        }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 sm:p-10"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Enlarged gallery image"
+                        tabIndex={-1}
+                      >
+                        <motion.button
+                          type="button"
+                          aria-label="Close enlarged image"
+                          onClick={() => setPreviewImage(null)}
+                          className="absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl text-white backdrop-blur-md hover:bg-white/25"
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.94 }}
+                        >
+                          &times;
+                        </motion.button>
+
+                        <motion.img
+                          src={previewImage}
+                          alt={`${car.name} enlarged ${activeGalleryTab} view`}
+                          onClick={(e) => e.stopPropagation()}
+                          initial={{ scale: 0.92 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0.96 }}
+                          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                          className="max-h-full max-w-full rounded-xl object-contain"
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
               );
             })()}
           </section>
@@ -770,11 +935,10 @@ const CarDetailPage = () => {
                       setActiveImage(nextImages[0]);
                     }
                   }}
-                  className={`px-3.5 py-1.5 rounded-full text-[10px] font-bold transition-all whitespace-nowrap ${
-                    activeGalleryTab === tab
+                  className={`px-3.5 py-1.5 rounded-full text-[10px] font-bold transition-all whitespace-nowrap ${activeGalleryTab === tab
                       ? "bg-slate-900 text-white shadow-sm"
                       : "text-slate-600"
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -796,50 +960,58 @@ const CarDetailPage = () => {
               );
             }
 
-            const displayImage =
-              activeImage && currentImages.includes(activeImage)
-                ? activeImage
-                : currentImages[0];
+            const displayImage = currentImages[0];
 
             return (
-              <>
-                {/* Main Image */}
-                <div className="relative w-full h-[220px] rounded-xl overflow-hidden bg-slate-100">
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* Main featured bento image */}
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(displayImage)}
+                  className="col-span-2 relative h-[210px] rounded-2xl overflow-hidden bg-slate-900 group shadow-sm text-left cursor-zoom-in"
+                >
                   <img
                     src={displayImage}
                     alt={`${car.name} ${activeGalleryTab} view`}
                     className="w-full h-full object-cover object-center"
                   />
-                </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-3 left-3 z-10">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 text-slate-900 shadow-sm">
+                      {activeGalleryTab} View
+                    </span>
+                  </div>
+                </button>
 
-                {/* Thumbnails */}
-                <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-                  {currentImages.map((img, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setActiveImage(img)}
-                      className={`relative shrink-0 w-[64px] h-[52px] rounded-lg overflow-hidden bg-slate-100 transition-all ${
-                        displayImage === img
-                          ? "ring-2 ring-slate-900 ring-offset-1"
-                          : "opacity-75"
-                      }`}
-                    >
-                      <img
-                        src={img}
-                        alt={`${car.name} ${activeGalleryTab} ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </>
+                {/* Secondary bento images - click to enlarge */}
+                {currentImages.slice(1, 5).map((img, idx) => (
+                  <button
+                    key={img}
+                    type="button"
+                    onClick={() => setPreviewImage(img)}
+                    className="relative h-[110px] rounded-xl overflow-hidden bg-slate-100 group shadow-sm text-left cursor-zoom-in"
+                  >
+                    <img
+                      src={img}
+                      alt={`${car.name} ${activeGalleryTab} ${idx + 2}`}
+                      loading="lazy"
+                      className="w-full h-full object-cover object-center"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                ))}
+              </div>
             );
           })()}
         </section>
 
         {/* EMI CALCULATOR */}
-        <section className="mb-8 bg-gray-900 rounded-2xl p-8 text-white shadow-lg space-y-8">
+        <EMICalculator
+          car={car}
+          selectedVariant={selectedVariant}
+          currentPrice={currentPrice}
+        />
+        {/* <section className="mb-8 bg-gray-900 rounded-2xl p-8 text-white shadow-lg space-y-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-6">
             <div>
               <span className="text-xs font-bold tracking-widest text-blue-400 uppercase flex items-center gap-1.5 mb-2">
@@ -923,26 +1095,40 @@ const CarDetailPage = () => {
               />
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* FOOTER: FAQ & EXPLORE MORE */}
-        <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <FaqCard
-              question={`What is the exact mileage of Maruti Suzuki ${car.name}?`}
-            />
-            <FaqCard
-              question={`What are the available variants of ${car.name}?`}
-            />
-            <FaqCard
-              question={`Does the ${car.name} come with a sunroof option?`}
-            />
-            <FaqCard
-              question={`What is the boot space capacity of ${car.name}?`}
-            />
+        <section className="mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-30px" }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-2"
+          >
+            <div>
+              <span className="text-xs font-bold tracking-widest text-blue-600 uppercase flex items-center gap-1.5 mb-1.5">
+                <Sparkles className="w-3.5 h-3.5" /> Frequently Asked Questions
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                Everything About Maruti Suzuki {car.name}
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              Click any question to view verified specifications & details
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+            {carFaqs.map((faq, index) => (
+              <FaqCard
+                key={index}
+                index={index}
+                faq={faq}
+                isOpen={openFaqIndices.includes(index)}
+                onToggle={() => toggleFaq(index)}
+              />
+            ))}
           </div>
           {/* Explore more - desktop */}
           <section className="hidden md:block">
@@ -1014,14 +1200,84 @@ const StatItem = ({ title, value, desc, direction = "left", delay = 0 }) => {
   );
 };
 
-const FaqCard = ({ question }) => {
+const FaqCard = ({ faq, index, isOpen, onToggle }) => {
+  const Icon = faq.icon || Sparkles;
+
   return (
-    <div className="border border-gray-200 rounded-xl p-6 flex justify-between items-start bg-white shadow-sm hover:shadow-md transition cursor-pointer">
-      <p className="text-sm font-medium pr-4 text-gray-700">{question}</p>
-      <button className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 shrink-0 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-        +
-      </button>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{
+        duration: 0.45,
+        delay: index * 0.07,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      whileHover={{ y: -3, transition: { duration: 0.2 } }}
+      onClick={onToggle}
+      className={`group rounded-2xl border bg-white p-5 sm:p-6 shadow-sm transition-all duration-300 cursor-pointer overflow-hidden ${isOpen
+          ? "border-blue-500/50 shadow-md ring-1 ring-blue-500/20 bg-gradient-to-b from-white to-blue-50/20"
+          : "border-slate-200/90 hover:border-slate-300 hover:shadow-md"
+        }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3.5 min-w-0">
+          <div
+            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200 ${isOpen
+                ? "bg-blue-600 text-white shadow-sm"
+                : "bg-slate-100 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600"
+              }`}
+          >
+            <Icon className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            {faq.category && (
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
+                {faq.category}
+              </span>
+            )}
+            <h3
+              className={`text-sm sm:text-base font-bold transition-colors leading-snug ${isOpen
+                  ? "text-blue-700"
+                  : "text-slate-900 group-hover:text-blue-600"
+                }`}
+            >
+              {faq.question}
+            </h3>
+          </div>
+        </div>
+
+        <motion.div
+          animate={{ rotate: isOpen ? 45 : 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${isOpen
+              ? "bg-blue-100 text-blue-700"
+              : "border border-slate-200 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-700"
+            }`}
+        >
+          <span className="text-base font-semibold leading-none">+</span>
+        </motion.div>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: "auto", marginTop: 14 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="pl-12 pt-2 border-t border-slate-100">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                {faq.answer}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
