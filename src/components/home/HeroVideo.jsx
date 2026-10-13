@@ -97,7 +97,7 @@ export default function HeroVideo() {
                     {/* Staggered Word Stack */}
                     <motion.h1
                         variants={wordListVariants}
-                        className="font-display font-black text-5xl sm:text-7xl lg:text-8xl tracking-tight leading-[0.92] select-none flex flex-col items-start gap-1"
+                        className="font-clash font-black text-5xl sm:text-7xl lg:text-8xl tracking-tight leading-[0.92] select-none flex flex-col items-start gap-1"
                     >
                         {HERO_WORDS.map((word) => (
                             <motion.span
