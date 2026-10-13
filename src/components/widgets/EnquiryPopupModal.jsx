@@ -4,15 +4,12 @@ import { useKalyani } from '../../context/KalyaniContext';
 import { submitContactEnquiry } from '../../services/kalyaniApi';
 import {
   X,
-  Car,
-  User,
-  Phone,
   CheckCircle2,
-  ArrowRight,
   ShieldCheck,
-  MapPin,
-  Sparkles,
 } from 'lucide-react';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '../ui/select';
 
 export default function EnquiryPopupModal({ isOpen, onClose }) {
   const { cars, selectedCity } = useKalyani();
@@ -134,7 +131,7 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
           </button>
 
           {/* LEFT COLUMN: Clean Executive Enquiry Form */}
-          <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-9 flex flex-col justify-between overflow-y-auto">
+          <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-9 flex flex-col justify-between overflow-y-auto" data-lenis-prevent="true">
             {successInfo ? (
               /* Success Screen */
               <div className="py-8 my-auto text-center space-y-4 animate-in fade-in zoom-in-95 duration-300">
@@ -147,19 +144,19 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 max-w-xs mx-auto leading-relaxed">
                     Thank you, <strong className="text-slate-900">{formData.fullName}</strong>. Our senior consultant from Kalyani Motors{' '}
-                    <strong className="text-brand-blue">{formData.city}</strong> will contact you shortly with the best ex-showroom quotation.
+                    <strong className="text-blue-500">{formData.city}</strong> will contact you shortly with the best ex-showroom quotation.
                   </p>
                 </div>
-                {successInfo.ticketId && (
+                {/* {successInfo.ticketId && (
                   <div className="inline-block px-3 py-1 bg-slate-100 rounded-lg text-[11px] font-mono text-slate-600">
                     Ref ID: {successInfo.ticketId}
                   </div>
-                )}
+                )} */}
                 <div className="pt-2">
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="px-6 py-2.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm"
+                    className="px-6 py-2.5 rounded-full bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-all shadow-sm"
                   >
                     Continue Browsing
                   </button>
@@ -183,35 +180,57 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
                     <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">
                       Choose a model
                     </label>
-                    <div className="relative">
-                      <select
-                        value={formData.model}
-                        onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                        className="w-full px-4 py-3 bg-[#eef1f4] hover:bg-[#e8ecf0] border border-transparent focus:border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:ring-2 focus:ring-slate-200 transition-all cursor-pointer appearance-none"
-                        required
+                    <Select
+                      value={formData.model}
+                      onValueChange={(val) => setFormData({ ...formData, model: val })}
+                      required
+                    >
+                      <SelectTrigger className="w-full h-auto px-4 py-3 bg-[#eef1f4] hover:bg-[#e8ecf0] border border-transparent focus:border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-slate-200 transition-all cursor-pointer shadow-none">
+                        <SelectValue placeholder="Select a model" />
+                      </SelectTrigger>
+                      <SelectContent
+                        className="w-[var(--radix-select-trigger-width)] max-h-60 sm:max-h-72 rounded-xl border border-slate-200 bg-white shadow-xl overflow-y-auto scrollbar-none overscroll-contain"
+                        data-lenis-prevent="true"
                       >
                         {cars && cars.length > 0 ? (
                           cars.map((car) => (
-                            <option key={car.id} value={car.name}>
-                              {car.name} ({car.channel}) • From ₹{(car.startingPrice / 100000).toFixed(2)} Lakh*
-                            </option>
+                            <SelectItem
+                              key={car.id}
+                              value={car.name}
+                              className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100"
+                            >
+                              <span className="truncate block">
+                                {car.name} ({car.channel}) • From ₹{(car.startingPrice / 100000).toFixed(2)} Lakh*
+                              </span>
+                            </SelectItem>
                           ))
                         ) : (
                           <>
-                            <option value="Grand Vitara">Grand Vitara (Nexa)</option>
-                            <option value="Fronx">Fronx (Nexa)</option>
-                            <option value="Swift">All-New Swift (Arena)</option>
-                            <option value="Brezza">Brezza (Arena)</option>
-                            <option value="Invicto">Invicto (Nexa)</option>
-                            <option value="Baleno">Baleno (Nexa)</option>
-                            <option value="Dzire">Dzire (Arena)</option>
+                            <SelectItem value="Grand Vitara" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
+                              <span className="truncate block">Grand Vitara (Nexa)</span>
+                            </SelectItem>
+                            <SelectItem value="Fronx" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
+                              <span className="truncate block">Fronx (Nexa)</span>
+                            </SelectItem>
+                            <SelectItem value="Swift" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
+                              <span className="truncate block">All-New Swift (Arena)</span>
+                            </SelectItem>
+                            <SelectItem value="Brezza" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
+                              <span className="truncate block">Brezza (Arena)</span>
+                            </SelectItem>
+                            <SelectItem value="Invicto" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
+                              <span className="truncate block">Invicto (Nexa)</span>
+                            </SelectItem>
+                            <SelectItem value="Baleno" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
+                              <span className="truncate block">Baleno (Nexa)</span>
+                            </SelectItem>
+                            <SelectItem value="Dzire" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
+                              <span className="truncate block">Dzire (Arena)</span>
+                            </SelectItem>
                           </>
                         )}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-500">
-                        <ArrowRight className="w-4 h-4 rotate-90" />
-                      </div>
-                    </div>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Full Name Input */}
@@ -267,7 +286,7 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-8 py-3 rounded-full bg-[#52f0a4] hover:bg-[#34e392] active:scale-95 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-emerald-400/20 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-50"
+                      className="px-8 py-3 rounded-full bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-400/20 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-50"
                     >
                       <span>{isSubmitting ? 'Requesting...' : 'Request an Enquiry'}</span>
                     </button>
@@ -297,8 +316,8 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
 
             {/* Stylized Brand Watermark Lettering across the Sky (mimicking reference image) */}
             <div className="relative z-10 pt-10 md:pt-16 px-6 text-center pointer-events-none select-none">
-              <span className="font-display font-black text-3xl sm:text-4xl md:text-5xl text-white tracking-[0.22em] uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
-                K A L Y A N I
+              <span className="font-display font-black text-3xl text-white tracking-[0.22em] uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
+                KALYANI MOTORS
               </span>
               <div className="text-[11px] sm:text-xs text-white/95 font-bold uppercase tracking-[0.35em] mt-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
                 M A R U T I &nbsp; S U Z U K I
@@ -317,16 +336,17 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
 
             {/* Bottom Glass Badge Strip */}
             <div className="relative z-10 p-5 sm:p-6">
-              <div className="bg-black/50 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 border border-white/15 text-white space-y-1">
+              <div className="bg-black/20 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 text-white space-y-1">
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-amber-300 flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" />
+                    {/* <Sparkles className="w-3.5 h-3.5" /> */}
                     Special Dealership Benefits
                   </span>
                   <span className="text-[11px] text-slate-300">{formData.city}</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-snug">
-                  Zero Waiting Period on Select Variants • Best Exchange Value Guaranteed • Doorstep Showroom Consultation
+                <p className="text-[9px] text-slate-300 leading-snug">
+                  Zero Waiting Period on Select Variants   •   Best Exchange Value Guaranteed
+                  •   Doorstep Showroom Consultation
                 </p>
               </div>
             </div>
