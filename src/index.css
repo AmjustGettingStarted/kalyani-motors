@@ -65,3 +65,22 @@ html.lenis body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Custom sleek blue scrollbar */
+.custom-scrollbar-blue::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar-blue::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar-blue::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 9999px;
+}
+.custom-scrollbar-blue::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+.custom-scrollbar-blue {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 transparent;
+}

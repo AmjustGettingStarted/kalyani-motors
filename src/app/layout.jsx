@@ -5,6 +5,7 @@ import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import Loader from '../components/common/Loader';
 import TestDriveModal from '../components/widgets/TestDriveModal';
+import { Toaster } from '../components/ui/toaster';
 
 export default function RootLayout() {
   const location = useLocation();
@@ -53,6 +54,7 @@ export default function RootLayout() {
       </main>
       <Footer />
       <TestDriveModal />
+      <Toaster />
     </div>
   );
 }
