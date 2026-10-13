@@ -1,98 +1,206 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useKalyani } from '../../context/KalyaniContext';
-import { Fuel, Gauge, ArrowRight, Star, ShieldCheck } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+} from '../ui/card';
+import { Button } from '../ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
+import { ToastAction } from '../ui/toast';
+import { useToast } from '../ui/use-toast';
+import {
+  Fuel,
+  Gauge,
+  ArrowRight,
+  Star,
+  ShieldCheck,
+  Heart,
+  ArrowLeftRight,
+} from 'lucide-react';
 
 export default function CarCard({ car }) {
   const { openTestDrive } = useKalyani();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isCompared, setIsCompared] = useState(false);
 
   if (!car) return null;
 
   const isNexa = car.channel === 'Nexa';
 
-  return (
-    <motion.div
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="group relative bg-white rounded-2xl border border-slate-200/80 shadow-car-card hover:shadow-car-hover transition-[transform,box-shadow] duration-250 flex flex-col overflow-hidden h-[450px] transform-gpu will-change-transform"
-    >
-      {/* Top badges bar */}
-      <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between pointer-events-none">
-        <span
-          className={`px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider rounded-full shadow-sm ${isNexa
-            ? 'bg-slate-900 text-white border border-slate-700'
-            : 'bg-blue-800 text-white border border-blue-700'
-            }`}
-        >
-          {car.channel}
-        </span>
+  const handleWishlistClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-        <span className="px-2.5 py-1 text-[11px] font-semibold bg-white text-slate-700 rounded-full border border-slate-200/80 shadow-sm">
-          {car.bodyType}
-        </span>
+    const nextState = !isWishlisted;
+    setIsWishlisted(nextState);
+
+    toast({
+      title: nextState ? 'Added to wishlist' : 'Removed from wishlist',
+      description: nextState
+        ? `${car.name} has been saved to your wishlist.`
+        : `${car.name} was removed from your wishlist.`,
+    });
+  };
+
+  const handleCompareClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const nextState = !isCompared;
+    setIsCompared(nextState);
+
+    toast({
+      title: `${car.name} added to comparison`,
+      description: 'Compare technical specs, mileage, and features side-by-side.',
+      action: (
+        <ToastAction
+          altText="Compare Now"
+          onClick={() => navigate('/compare')}
+        >
+          Compare Now
+        </ToastAction>
+      ),
+    });
+  };
+
+  return (
+    <Card className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden h-[455px]">
+      {/* Top Image Container */}
+      <div className="relative aspect-[16/10] overflow-hidden bg-slate-50 border-b border-slate-100">
+        {/* Top Badges Bar: Channel & Body Type */}
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 pointer-events-none">
+          <span
+            className={`px-2.5 py-1 text-[11px] font-black uppercase tracking-wider rounded-md shadow-xs ${isNexa
+                ? 'bg-slate-900 text-white'
+                : 'bg-blue-600 text-white'
+              }`}
+          >
+            {car.channel}
+          </span>
+
+          <span className="px-2.5 py-1 text-[11px] font-semibold bg-white text-slate-700 rounded-md border border-slate-200/90 shadow-xs">
+            {car.bodyType}
+          </span>
+        </div>
+
+        {/* Top-Right Quick Actions: Wishlist & Compare with Tooltips */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+          <TooltipProvider delayDuration={150}>
+            {/* Wishlist Action */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleWishlistClick}
+                  aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-xs border ${isWishlisted
+                      ? 'bg-rose-50 text-rose-600 border-rose-200'
+                      : 'bg-white/95 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 border-slate-200/90'
+                    }`}
+                >
+                  <Heart
+                    className={`w-4 h-4 transition-transform active:scale-90 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''
+                      }`}
+                  />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={5}>
+                {isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Compare Action */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleCompareClick}
+                  aria-label="Add to compare"
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-xs border ${isCompared
+                      ? 'bg-blue-50 text-blue-600 border-blue-200'
+                      : 'bg-white/95 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 border-slate-200/90'
+                    }`}
+                >
+                  <ArrowLeftRight className="w-4 h-4 transition-transform active:scale-90" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={5}>
+                Add to compare
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        {/* Vehicle Image (Synchronized zoom on card hover, clean background with no gradient/glow) */}
+        <Link
+          to={`/cars/${car.slug}`}
+          className="block w-full h-full p-2.5 flex items-center justify-center"
+        >
+          <img
+            src={car.heroImage}
+            alt={car.name}
+            className="w-full h-full object-contain object-center transform scale-100 group-hover:scale-105 transition-transform duration-500 ease-out"
+            loading="lazy"
+          />
+        </Link>
       </div>
 
-      {/* Image container */}
-      <Link
-        to={`/cars/${car.slug}`}
-        className="block relative aspect-[16/10] overflow-hidden bg-slate-100"
-      >
-        <img
-          src={car.heroImage}
-          alt={car.name}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out transform-gpu will-change-transform"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-      </Link>
-
-      {/* Content */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      {/* Card Body Content */}
+      <CardContent className="p-5 flex-1 flex flex-col justify-between">
         <div>
-          {/* Rating and Reviews */}
+          {/* Rating, Reviews & Warranty */}
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
             <div className="flex items-center gap-1 text-amber-500">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span className="font-bold text-slate-800">{car.rating}</span>
               <span className="text-slate-400">({car.reviewsCount})</span>
             </div>
-            <span className="flex items-center gap-1 text-emerald-600 font-medium text-[11px]">
-              <ShieldCheck className="w-3.5 h-3.5" /> 5-Yr Warranty Avail.
+            <span className="flex items-center gap-1 text-emerald-600 font-semibold text-[11px]">
+              <ShieldCheck className="w-3.5 h-3.5" /> 5-Yr Warranty
             </span>
           </div>
 
           {/* Model Name & Tagline */}
           <Link
             to={`/cars/${car.slug}`}
-            className="block group-hover:text-blue-700 transition-colors"
+            className="block group-hover:text-blue-600 transition-colors duration-300"
           >
-            <h3 className="font-display font-extrabold text-lg text-slate-900 leading-snug">
+            <h3 className="font-display font-black text-lg text-slate-900 leading-snug">
               {car.name}
             </h3>
-            <p className="text-xs text-slate-500 line-clamp-1">{car.tagline}</p>
+            <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{car.tagline}</p>
           </Link>
 
-          {/* Quick specs pill row */}
-          <div className="mt-3.5 grid grid-cols-2 gap-2 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+          {/* Quick Specs Solid Grid */}
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
             <div className="flex items-center gap-1.5 truncate">
-              <Gauge className="w-3.5 h-3.5 text-blue-700 shrink-0" />
-              <span className="truncate font-medium">{car.mileage}</span>
+              <Gauge className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span className="truncate font-semibold">{car.mileage}</span>
             </div>
             <div className="flex items-center gap-1.5 truncate">
               <Fuel className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span className="truncate font-medium">
+              <span className="truncate font-semibold">
                 {car.fuelTypes?.join(', ')}
               </span>
             </div>
           </div>
 
-          {/* Transmission types */}
+          {/* Transmission Badges */}
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {car.transmissionTypes?.map((t) => (
               <span
                 key={t}
-                className="text-[10px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"
+                className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200/60"
               >
                 {t}
               </span>
@@ -100,38 +208,51 @@ export default function CarCard({ car }) {
           </div>
         </div>
 
-        {/* Price & Action Row */}
-        <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2">
+        {/* Pricing & Interactive Action Row */}
+        <CardFooter className="mt-4 pt-3.5 p-0 border-t border-slate-100 flex items-center justify-between gap-2">
           <div>
             <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
               Ex-Showroom
             </span>
-            <div className="font-display font-black text-base text-slate-900">
+            <div className="font-display font-black text-base text-slate-900 leading-tight">
               {car.priceRange?.split('-')[0].trim()}
               <span className="text-xs font-normal text-slate-500"> onw.</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
+            {/* Book Test Drive Button using shadcn Button */}
             {openTestDrive && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => openTestDrive(car)}
-                className="px-3 py-2 text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 rounded-xl transition-colors duration-200 border border-red-200"
+                className="h-9 px-3 text-xs font-bold text-red-600 hover:text-white hover:bg-red-600 border-red-200 rounded-xl transition-colors duration-500 shadow-xs"
               >
                 Test Drive
-              </button>
+              </Button>
             )}
-            <Link
-              to={`/cars/${car.slug}`}
-              className="p-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors duration-200 inline-flex items-center justify-center shadow-sm"
-              title="View Model Details"
-            >
-              <ArrowRight className="w-4 h-4" />
+
+            {/* View Details Navigation Button: Smooth and slow color transition from blue-500 to blue-600 */}
+            <Link to={`/cars/${car.slug}`} aria-label={`View ${car.name} details`}>
+              <div
+                style={{
+                  transition: 'background-color 750ms ease-in-out, color 750ms ease-in-out, border-color 750ms ease-in-out',
+                }}
+                className="h-9 w-9 rounded-xl bg-blue-50 text-blue-500 border border-blue-200/90 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 flex items-center justify-center cursor-pointer shadow-xs"
+              >
+                <ArrowRight
+                  style={{
+                    transition: 'transform 750ms ease-in-out',
+                  }}
+                  className="w-4 h-4 group-hover:translate-x-0.5"
+                />
+              </div>
             </Link>
           </div>
-        </div>
-      </div>
-    </motion.div>
+        </CardFooter>
+      </CardContent>
+    </Card>
   );
 }
