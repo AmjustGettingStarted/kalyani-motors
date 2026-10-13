@@ -1,46 +1,54 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useKalyani } from '../../../context/KalyaniContext';
 import CarCard from '../../../components/widgets/CarCard';
-import { Filter, SlidersHorizontal, RotateCcw, Car, MapPin, Search, X } from 'lucide-react';
+import HeroPromoCarousel from './components/HeroPromoCarousel';
+import FilterSidebar from './components/FilterSidebar';
+import ControlsHeader from './components/ControlsHeader';
+import { Car, MapPin, ChevronRight, ChevronLeft, X, SlidersHorizontal } from 'lucide-react';
+import useHeader from '../../../components/hooks/useHeader';
 
-const pageContainerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.28,
-      delayChildren: 0.12,
-    },
-  },
-};
-
-const sectionVariants = {
-  hidden: { opacity: 0, y: 32 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.95,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  },
-};
-
+const ITEMS_PER_PAGE = 9;
 
 export default function CarsPage() {
-  const { cars, selectedCity, openTestDrive } = useKalyani();
+  const { cars, selectedCity, locations } = useKalyani();
+  const { isHidden } = useHeader();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Filters State
   const [channel, setChannel] = useState(searchParams.get('channel') || 'All');
-  const [bodyType, setBodyType] = useState('All');
-  const [fuel, setFuel] = useState('All');
-  const [transmission, setTransmission] = useState('All');
+  const [bodyTypesSelected, setBodyTypesSelected] = useState(() => {
+    const b = searchParams.get('body');
+    return b ? [b] : [];
+  });
+  const [fuelTypesSelected, setFuelTypesSelected] = useState(() => {
+    const f = searchParams.get('fuel');
+    return f ? [f] : [];
+  });
+  const [transmissionSelected, setTransmissionSelected] = useState(() => {
+    const t = searchParams.get('transmission');
+    return t ? [t] : [];
+  });
+  const [maxPrice, setMaxPrice] = useState(3000000);
+  const [selectedLocation, setSelectedLocation] = useState('All');
   const [sortBy, setSortBy] = useState('featured');
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Sync with searchParams if present
+  useEffect(() => {
+    const q = searchParams.get('search');
+    const ch = searchParams.get('channel');
+    if (q !== null) setSearchQuery(q);
+    if (ch !== null) setChannel(ch);
+  }, [searchParams]);
+
+  // Reset page to 1 whenever any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [channel, bodyTypesSelected, fuelTypesSelected, transmissionSelected, maxPrice, selectedLocation, searchQuery, sortBy]);
 
   // Lock body scroll when mobile filter drawer is open
   useEffect(() => {
@@ -54,63 +62,182 @@ export default function CarsPage() {
     };
   }, [isMobileFilterOpen]);
 
-  // Keep searchParams in sync if passed
-  useEffect(() => {
-    const q = searchParams.get('search');
-    const ch = searchParams.get('channel');
-    if (q !== null) setSearchQuery(q);
-    if (ch !== null) setChannel(ch);
-  }, [searchParams]);
+  // Multi-select toggle helpers
+  const toggleBodyType = (type) => {
+    setBodyTypesSelected((prev) =>
+      prev.includes(type) ? prev.filter((item) => item !== type) : [...prev, type]
+    );
+  };
 
-  const channels = ['All', 'Arena', 'Nexa'];
-  const bodyTypes = ['All', 'SUV', 'Hatchback', 'Sedan', 'MPV'];
-  const fuelTypes = ['All', 'Petrol', 'CNG', 'Strong Hybrid'];
-  const transmissionTypes = ['All', 'Manual', 'Automatic'];
+  const toggleFuel = (type) => {
+    setFuelTypesSelected((prev) =>
+      prev.includes(type) ? prev.filter((item) => item !== type) : [...prev, type]
+    );
+  };
 
+  const toggleTransmission = (type) => {
+    setTransmissionSelected((prev) =>
+      prev.includes(type) ? prev.filter((item) => item !== type) : [...prev, type]
+    );
+  };
+
+  // Reset all filters
   const resetFilters = () => {
     setChannel('All');
-    setBodyType('All');
-    setFuel('All');
-    setTransmission('All');
+    setBodyTypesSelected([]);
+    setFuelTypesSelected([]);
+    setTransmissionSelected([]);
+    setMaxPrice(3000000);
+    setSelectedLocation('All');
     setSearchQuery('');
     setSortBy('featured');
+    setCurrentPage(1);
     setSearchParams({});
   };
 
-  const channelCounts = useMemo(() => {
-    return {
-      all: cars.length,
-      arena: cars.filter((c) => c.channel.toLowerCase() === 'arena').length,
-      nexa: cars.filter((c) => c.channel.toLowerCase() === 'nexa').length,
+  // Selected showroom details
+  const activeLocationObj = useMemo(() => {
+    if (selectedLocation === 'All') return null;
+    return locations.find((l) => String(l.id) === String(selectedLocation)) || null;
+  }, [selectedLocation, locations]);
+
+  // Available counts computation for badges
+  const availableCounts = useMemo(() => {
+    const counts = {
+      channel: {
+        all: cars.length,
+        arena: cars.filter((c) => c.channel.toLowerCase() === 'arena').length,
+        nexa: cars.filter((c) => c.channel.toLowerCase() === 'nexa').length,
+      },
+      bodyType: {
+        Hatchback: cars.filter((c) => c.bodyType.toLowerCase() === 'hatchback').length,
+        Sedan: cars.filter((c) => c.bodyType.toLowerCase() === 'sedan').length,
+        SUV: cars.filter((c) => c.bodyType.toLowerCase() === 'suv').length,
+        MPV: cars.filter((c) => ['mpv', 'muv'].includes(c.bodyType.toLowerCase())).length,
+      },
+      fuel: {
+        Petrol: cars.filter((c) => c.fuelTypes?.includes('Petrol')).length,
+        CNG: cars.filter((c) => c.fuelTypes?.includes('CNG')).length,
+        'Strong Hybrid': cars.filter((c) => c.fuelTypes?.includes('Strong Hybrid')).length,
+      },
+      transmission: {
+        Manual: cars.filter((c) => c.transmissionTypes?.includes('Manual')).length,
+        Automatic: cars.filter((c) => c.transmissionTypes?.includes('Automatic')).length,
+      },
     };
+    return counts;
   }, [cars]);
 
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (channel !== 'All') count++;
-    if (bodyType !== 'All') count++;
-    if (fuel !== 'All') count++;
-    if (transmission !== 'All') count++;
-    if (searchQuery.trim()) count++;
-    return count;
-  }, [channel, bodyType, fuel, transmission, searchQuery]);
+  // Active filters array for dismissible badges
+  const activeFilters = useMemo(() => {
+    const list = [];
+    if (searchQuery.trim()) {
+      list.push({ type: 'search', label: `"${searchQuery.trim()}"` });
+    }
+    if (channel !== 'All') {
+      list.push({ type: 'channel', label: `Channel: ${channel}` });
+    }
+    bodyTypesSelected.forEach((b) => {
+      list.push({ type: 'body', label: b, value: b });
+    });
+    fuelTypesSelected.forEach((f) => {
+      list.push({ type: 'fuel', label: f, value: f });
+    });
+    transmissionSelected.forEach((t) => {
+      list.push({ type: 'transmission', label: t, value: t });
+    });
+    if (maxPrice < 3000000) {
+      list.push({ type: 'price', label: `< ₹ ${(maxPrice / 100000).toFixed(1)} L` });
+    }
+    if (activeLocationObj) {
+      list.push({
+        type: 'location',
+        label: activeLocationObj.name.replace(/Maruti Suzuki\s*/i, '').replace(/Kalyani Motors,?\s*/i, ''),
+      });
+    }
+    return list;
+  }, [
+    searchQuery,
+    channel,
+    bodyTypesSelected,
+    fuelTypesSelected,
+    transmissionSelected,
+    maxPrice,
+    activeLocationObj,
+  ]);
 
+  const removeFilter = (filter) => {
+    if (filter.type === 'search') setSearchQuery('');
+    if (filter.type === 'channel') setChannel('All');
+    if (filter.type === 'body') toggleBodyType(filter.value);
+    if (filter.type === 'fuel') toggleFuel(filter.value);
+    if (filter.type === 'transmission') toggleTransmission(filter.value);
+    if (filter.type === 'price') setMaxPrice(3000000);
+    if (filter.type === 'location') setSelectedLocation('All');
+  };
+
+  // Main real-time filtering & sorting logic
   const filteredCars = useMemo(() => {
     return cars
       .filter((car) => {
-        if (channel !== 'All' && car.channel.toLowerCase() !== channel.toLowerCase()) return false;
-        if (bodyType !== 'All' && car.bodyType.toLowerCase() !== bodyType.toLowerCase()) return false;
-        if (fuel !== 'All' && !car.fuelTypes.includes(fuel)) return false;
-        if (transmission !== 'All' && !car.transmissionTypes.includes(transmission)) return false;
+        // Channel filter
+        if (channel !== 'All' && car.channel.toLowerCase() !== channel.toLowerCase()) {
+          return false;
+        }
+
+        // Dealership location filter (filters by showroom category/channel)
+        if (activeLocationObj && activeLocationObj.category) {
+          const locCat = activeLocationObj.category.toLowerCase();
+          if (locCat === 'arena' && car.channel.toLowerCase() !== 'arena') return false;
+          if (locCat === 'nexa' && car.channel.toLowerCase() !== 'nexa') return false;
+        }
+
+        // Body type filter (multi-select, treats MUV and MPV equivalently)
+        if (bodyTypesSelected.length > 0) {
+          const carBody = car.bodyType.toLowerCase();
+          const matches = bodyTypesSelected.some((selected) => {
+            const s = selected.toLowerCase();
+            if (s === 'mpv' || s === 'muv') {
+              return carBody === 'mpv' || carBody === 'muv';
+            }
+            return carBody === s;
+          });
+          if (!matches) return false;
+        }
+
+        // Fuel type filter (multi-select)
+        if (fuelTypesSelected.length > 0) {
+          const matches = fuelTypesSelected.some((selected) =>
+            car.fuelTypes?.includes(selected)
+          );
+          if (!matches) return false;
+        }
+
+        // Transmission filter (multi-select)
+        if (transmissionSelected.length > 0) {
+          const matches = transmissionSelected.some((selected) =>
+            car.transmissionTypes?.includes(selected)
+          );
+          if (!matches) return false;
+        }
+
+        // Price range filter
+        if (maxPrice < 3000000 && car.startingPrice > maxPrice) {
+          return false;
+        }
+
+        // Search Query filter
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
           const matches =
             car.name.toLowerCase().includes(q) ||
             car.tagline.toLowerCase().includes(q) ||
             car.bodyType.toLowerCase().includes(q) ||
-            car.channel.toLowerCase().includes(q);
+            car.channel.toLowerCase().includes(q) ||
+            car.fuelTypes?.some((f) => f.toLowerCase().includes(q));
           if (!matches) return false;
         }
+
         return true;
       })
       .sort((a, b) => {
@@ -121,531 +248,273 @@ export default function CarsPage() {
           const m2 = parseFloat(b.mileage) || 0;
           return m2 - m1;
         }
+        if (sortBy === 'newest') {
+          const newSlugs = ['swift', 'dzire', 'fronx', 'grand-vitara', 'invicto'];
+          const idxA = newSlugs.indexOf(a.slug);
+          const idxB = newSlugs.indexOf(b.slug);
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          if (idxA !== -1) return -1;
+          if (idxB !== -1) return 1;
+        }
         return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
       });
-  }, [cars, channel, bodyType, fuel, transmission, searchQuery, sortBy]);
+  }, [
+    cars,
+    channel,
+    activeLocationObj,
+    bodyTypesSelected,
+    fuelTypesSelected,
+    transmissionSelected,
+    maxPrice,
+    searchQuery,
+    sortBy,
+  ]);
 
-  // Group filtered cars into rows of 3 for scroll-triggered row reveals
+  // Pagination computations (9 cars per page)
+  const totalPages = Math.ceil(filteredCars.length / ITEMS_PER_PAGE);
+
+  const paginatedCars = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredCars.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredCars, currentPage]);
+
+  // Group paginated cars into rows of 3 for scroll-triggered row reveals
   const carRows = useMemo(() => {
     const rows = [];
-    for (let i = 0; i < filteredCars.length; i += 3) {
+    for (let i = 0; i < paginatedCars.length; i += 3) {
       rows.push({
-        id: `row-${i}-${channel}-${bodyType}-${fuel}-${transmission}-${sortBy}-${searchQuery}`,
-        items: filteredCars.slice(i, i + 3),
+        id: `row-${currentPage}-${i}`,
+        items: paginatedCars.slice(i, i + 3),
       });
     }
     return rows;
-  }, [filteredCars, channel, bodyType, fuel, transmission, sortBy, searchQuery]);
+  }, [paginatedCars, currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    const target = document.getElementById('cars-controls-top');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 320, behavior: 'smooth' });
+    }
+  };
 
   return (
-    <motion.div
-      variants={pageContainerVariants}
-      initial="hidden"
-      animate="visible"
-      className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-24 sm:pt-28 md:pt-32 pb-12 space-y-6 sm:space-y-8"
-    >
-      {/* Top Heading Banner */}
+    <div className="min-h-screen bg-slate-50 flex flex-col pt-[68px] sm:pt-[72px]">
+      {/* 1. Hero Promotional Banner Carousel (Slow & Smooth Fade In) */}
       <motion.div
-        variants={sectionVariants}
-        className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 border border-slate-200/90 shadow-sm relative overflow-hidden"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Subtle accent bar at top */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-brand-blue" />
+        <HeroPromoCarousel />
+      </motion.div>
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
-          <div className="max-w-2xl space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-red-50 border border-red-200/70 text-brand-red text-[11px] sm:text-xs font-bold uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse" />
-                Authorized Dealership Catalog
-              </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
-                <MapPin className="w-3.5 h-3.5 text-brand-blue" />
-                {selectedCity}
-              </span>
-            </div>
-
-            <h1 className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-slate-900 tracking-tight leading-tight">
-              Explore Maruti Suzuki Range in <span className="text-brand-blue">{selectedCity}</span>
+      {/* 2. Main Page Layout (Two-Column Split-View) */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
+        {/* Page Header / Breadcrumbs (Slow & Smooth Entrance) */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+        >
+          <div>
+            <nav className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-1">
+              <Link to="/" className="hover:text-brand-blue transition-colors">
+                Home
+              </Link>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-slate-900 font-semibold">New Vehicles</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-brand-blue font-bold">{selectedCity}</span>
+            </nav>
+            <h1 className="font-display font-black text-2xl sm:text-3xl text-slate-900 tracking-tight">
+              Maruti Suzuki Cars in <span className="text-brand-blue">{selectedCity}</span>
             </h1>
-
-            <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed">
-              Browse genuine ex-showroom prices, complete variant technical specifications, fuel efficiency, and schedule instant test drives across our {selectedCity} dealerships.
-            </p>
-
-            {/* Trust and feature badges */}
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 pt-1 text-[11px] sm:text-xs font-semibold text-slate-700">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/80">
-                Verified Ex-Showroom Pricing
-              </span>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/80">
-                Arena &amp; Nexa Full Range
-              </span>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/80">
-                Doorstep Test Drives
-              </span>
-            </div>
           </div>
 
-          {/* Quick Stats & Direct Action Box */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 shrink-0 lg:w-72">
-            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200/80">
-              <div className="text-2xl sm:text-3xl font-display font-black text-slate-900">
-                {cars.length}+
-              </div>
-              <div className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
-                Available Models
-              </div>
-            </div>
-            <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200/80">
-              <div className="text-2xl sm:text-3xl font-display font-black text-brand-blue">
-                100%
-              </div>
-              <div className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
-                Genuine Pricing
-              </div>
-            </div>
-            <div className="col-span-2 p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-blue-50/70 border border-blue-100 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">Book A Test Drive</p>
-                <p className="text-[11px] text-slate-600 truncate">Doorstep or showroom</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => openTestDrive && openTestDrive(null)}
-                className="px-3 py-1.5 rounded-lg bg-brand-blue hover:bg-brand-darkBlue text-white text-xs font-bold transition-colors shadow-sm shrink-0"
-              >
-                Book Now
-              </button>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-brand-blue text-xs font-bold">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>Kalyani Dealership Pricing</span>
+            </span>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Compact Mobile Filter Bar (Mobile Only: ~80px height) */}
-      <motion.div
-        variants={sectionVariants}
-        className="block md:hidden bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-sm space-y-2.5"
-      >
-        {/* Top Line: Search Input + Filters Trigger Button */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search Swift, Brezza, Fronx..."
-              className="w-full pl-8 pr-7 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-brand-blue"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsMobileFilterOpen(true)}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 shadow-sm ${
-              activeFiltersCount > 0
-                ? 'bg-brand-blue text-white'
-                : 'bg-slate-900 text-white'
-            }`}
+        {/* Two-Column Layout Container defining sticky boundary */}
+        <div className="flex flex-col lg:flex-row items-start gap-6">
+          {/* Left Column: Sticky Sidebar (Slow & Smooth Entrance) */}
+          <motion.aside
+            initial={{ opacity: 0, x: -28 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.95, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className={`w-full lg:w-72 shrink-0 hidden lg:block lg:sticky self-start transition-[top] duration-300 ${isHidden ? 'lg:top-4' : 'lg:top-20'
+              }`}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>Filters</span>
-            {activeFiltersCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-red-500 text-white text-[10px] inline-flex items-center justify-center font-black">
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
-        </div>
+            <FilterSidebar
+              channel={channel}
+              setChannel={setChannel}
+              bodyTypesSelected={bodyTypesSelected}
+              toggleBodyType={toggleBodyType}
+              fuelTypesSelected={fuelTypesSelected}
+              toggleFuel={toggleFuel}
+              transmissionSelected={transmissionSelected}
+              toggleTransmission={toggleTransmission}
+              maxPrice={maxPrice}
+              setMaxPrice={setMaxPrice}
+              selectedLocation={selectedLocation}
+              setSelectedLocation={setSelectedLocation}
+              locations={locations}
+              resetFilters={resetFilters}
+              activeFiltersCount={activeFilters.length}
+              availableCounts={availableCounts}
+              isHidden={isHidden}
+            />
+          </motion.aside>
 
-        {/* Second Line: Showroom Quick Tabs + Sort Dropdown */}
-        <div className="flex items-center justify-between gap-2">
-          {/* Quick Showroom Channel Chips */}
-          <div className="inline-flex p-0.5 bg-slate-100 rounded-lg border border-slate-200/60 overflow-x-auto shrink-0">
-            {channels.map((c) => {
-              const isSelected = channel === c;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setChannel(c)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all shrink-0 ${
-                    isSelected
-                      ? c === 'Nexa'
-                        ? 'bg-slate-950 text-white shadow-xs'
-                        : c === 'Arena'
-                        ? 'bg-brand-blue text-white shadow-xs'
-                        : 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600'
-                  }`}
-                >
-                  {c === 'All' ? 'All' : c}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Compact Sort Select & Count */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] font-bold text-slate-400 hidden sm:inline">
-              {filteredCars.length} cars
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="text-[11px] font-bold bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-slate-800 focus:outline-none cursor-pointer"
+          {/* Right Column: Search + Car Grid */}
+          <main className="flex-1 min-w-0 space-y-6 w-full" id="cars-controls-top">
+            {/* Top Controls Header (Slow & Smooth Entrance) */}
+            <motion.div
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
-              <option value="featured">Featured</option>
-              <option value="price-low">Price: Low-High</option>
-              <option value="price-high">Price: High-Low</option>
-              <option value="mileage">Mileage</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Active Filters Summary (If any active) */}
-        {activeFiltersCount > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100 text-[11px]">
-            {searchQuery && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue font-semibold border border-blue-100">
-                "{searchQuery}"
-                <button type="button" onClick={() => setSearchQuery('')}>
-                  <X className="w-2.5 h-2.5" />
-                </button>
-              </span>
-            )}
-            {channel !== 'All' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold border border-slate-200">
-                {channel}
-                <button type="button" onClick={() => setChannel('All')}>
-                  <X className="w-2.5 h-2.5" />
-                </button>
-              </span>
-            )}
-            {bodyType !== 'All' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold border border-slate-200">
-                {bodyType}
-                <button type="button" onClick={() => setBodyType('All')}>
-                  <X className="w-2.5 h-2.5" />
-                </button>
-              </span>
-            )}
-            {fuel !== 'All' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold border border-slate-200">
-                {fuel}
-                <button type="button" onClick={() => setFuel('All')}>
-                  <X className="w-2.5 h-2.5" />
-                </button>
-              </span>
-            )}
-            {transmission !== 'All' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold border border-slate-200">
-                {transmission}
-                <button type="button" onClick={() => setTransmission('All')}>
-                  <X className="w-2.5 h-2.5" />
-                </button>
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="text-[11px] font-bold text-red-600 hover:underline ml-auto"
-            >
-              Reset
-            </button>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Desktop Expanded Interactive Filter Control Panel (Hidden on Mobile) */}
-      <motion.div
-        variants={sectionVariants}
-        className="hidden md:block bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm space-y-5"
-      >
-        {/* Top Control Bar: Search + Results Count + Sort & Reset */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-          {/* Search Input & Model Count */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search Swift, Brezza, Grand Vitara, Fronx..."
-                className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-blue-100 transition-all"
+              <ControlsHeader
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                totalCarsCount={cars.length}
+                filteredCarsCount={filteredCars.length}
+                activeFilters={activeFilters}
+                onRemoveFilter={removeFilter}
+                onResetFilters={resetFilters}
+                onOpenMobileFilters={() => setIsMobileFilterOpen(true)}
+                activeFiltersCount={activeFilters.length}
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                  aria-label="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            </motion.div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-blue-50 text-brand-blue border border-blue-100/80 inline-flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-blue animate-pulse" />
-                {filteredCars.length} {filteredCars.length === 1 ? 'Model' : 'Models'} Available
-              </span>
-            </div>
-          </div>
-
-          {/* Sort By & Reset Controls */}
-          <div className="flex items-center justify-between lg:justify-end gap-3 shrink-0">
-            <div className="flex items-center gap-2 text-xs">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
-              <span className="text-slate-500 font-semibold hidden sm:inline">Sort By:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="text-xs font-bold bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors cursor-pointer"
-              >
-                <option value="featured">Featured First</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="mileage">Highest Mileage</option>
-              </select>
-            </div>
-
-            {activeFiltersCount > 0 && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100/70 border border-red-100 transition-all"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset ({activeFiltersCount})</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Channel Segmented Control Strip */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 shrink-0 sm:w-24">
-            Showroom:
-          </span>
-          <div className="inline-flex p-1 bg-slate-100/80 rounded-xl border border-slate-200/60 max-w-full overflow-x-auto">
-            {channels.map((c) => {
-              const isSelected = channel === c;
-              const count =
-                c === 'All'
-                  ? channelCounts.all
-                  : c === 'Arena'
-                  ? channelCounts.arena
-                  : channelCounts.nexa;
-
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setChannel(c)}
-                  className={`inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                    isSelected
-                      ? c === 'Nexa'
-                        ? 'bg-slate-950 text-white shadow-sm'
-                        : c === 'Arena'
-                        ? 'bg-brand-blue text-white shadow-sm'
-                        : 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {c === 'Arena' && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-red-500'}`} />
-                  )}
-                  {c === 'Nexa' && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-blue-300' : 'bg-slate-700'}`} />
-                  )}
-                  <span>{c === 'All' ? 'All Channels' : c}</span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-medium ${
-                      isSelected
-                        ? 'bg-white/20 text-white'
-                        : 'bg-slate-200/70 text-slate-600'
-                    }`}
+            {/* Vehicle Grid (Rows Animate In on Scroll Down) */}
+            {filteredCars.length > 0 ? (
+              <div className="space-y-6">
+                {carRows.map((row) => (
+                  <motion.div
+                    key={row.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.12, margin: '0px 0px -40px 0px' }}
+                    transition={{
+                      duration: 0.85,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                   >
-                    {count}
-                  </span>
+                    {row.items.map((car, index) => (
+                      <motion.div
+                        key={car.id}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.12, margin: '0px 0px -40px 0px' }}
+                        transition={{
+                          duration: 0.8,
+                          delay: index * 0.12,
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
+                      >
+                        <CarCard car={car} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                ))}
+
+                {/* Pagination Controls (9 cars per page) */}
+                {totalPages > 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    className="pt-8 pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200/80"
+                  >
+                    <div className="text-xs text-slate-500 font-medium">
+                      Showing Page <strong className="text-slate-900 font-bold">{currentPage}</strong> of{' '}
+                      <strong className="text-slate-900 font-bold">{totalPages}</strong> ({filteredCars.length} models total)
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        className="p-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Previous Page"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`w-9 h-9 rounded-xl text-xs font-bold transition-all ${currentPage === pageNum
+                              ? 'bg-brand-blue text-white shadow-sm'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                            }`}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+
+                      <button
+                        type="button"
+                        disabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        className="p-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Next Page"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center max-w-md mx-auto space-y-4 shadow-sm my-8"
+              >
+                <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+                  <Car className="w-8 h-8" />
+                </div>
+                <h3 className="font-display font-black text-xl text-slate-900">
+                  No matching models found
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  We couldn't find any Maruti Suzuki models matching your current filter selections. Try clearing some filters or searching for another model.
+                </p>
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="px-6 py-2.5 bg-brand-blue hover:bg-brand-darkBlue text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
+                >
+                  Reset All Filters
                 </button>
-              );
-            })}
-          </div>
+              </motion.div>
+            )}
+          </main>
         </div>
-
-        {/* Filter Rows Grid: Body Type, Fuel, Gearbox */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-          {/* Body Type */}
-          <div className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block">
-              Body Type
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {bodyTypes.map((b) => (
-                <button
-                  key={b}
-                  type="button"
-                  onClick={() => setBodyType(b)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                    bodyType === b
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/70 hover:border-slate-300'
-                  }`}
-                >
-                  {b}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Fuel */}
-          <div className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block">
-              Fuel Type
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {fuelTypes.map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setFuel(f)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                    fuel === f
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/70 hover:border-slate-300'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Transmission */}
-          <div className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 block">
-              Gearbox
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {transmissionTypes.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTransmission(t)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                    transmission === t
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200/70 hover:border-slate-300'
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Active Filters Tag Strip */}
-        {activeFiltersCount > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
-            <span className="text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
-              Active Filters:
-            </span>
-            {searchQuery && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-brand-blue font-semibold">
-                Search: "{searchQuery}"
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="hover:text-red-600"
-                  aria-label="Remove search filter"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {channel !== 'All' && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-semibold">
-                Channel: {channel}
-                <button
-                  type="button"
-                  onClick={() => setChannel('All')}
-                  className="hover:text-red-600"
-                  aria-label="Remove channel filter"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {bodyType !== 'All' && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-semibold">
-                Body: {bodyType}
-                <button
-                  type="button"
-                  onClick={() => setBodyType('All')}
-                  className="hover:text-red-600"
-                  aria-label="Remove body filter"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {fuel !== 'All' && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-semibold">
-                Fuel: {fuel}
-                <button
-                  type="button"
-                  onClick={() => setFuel('All')}
-                  className="hover:text-red-600"
-                  aria-label="Remove fuel filter"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {transmission !== 'All' && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-semibold">
-                Gearbox: {transmission}
-                <button
-                  type="button"
-                  onClick={() => setTransmission('All')}
-                  className="hover:text-red-600"
-                  aria-label="Remove transmission filter"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="text-[11px] font-bold text-red-600 hover:underline ml-1"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
-      </motion.div>
+      </div>
 
       {/* Mobile Filter Drawer Modal */}
       <AnimatePresence>
         {isMobileFilterOpen && (
-          <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end">
+          <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -673,21 +542,21 @@ export default function CarsPage() {
                   <h3 className="font-display font-bold text-base text-slate-900">
                     Filter Vehicles
                   </h3>
-                  {activeFiltersCount > 0 && (
+                  {activeFilters.length > 0 && (
                     <span className="px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue text-[11px] font-bold">
-                      {activeFiltersCount} active
+                      {activeFilters.length} active
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {activeFiltersCount > 0 && (
+                  {activeFilters.length > 0 && (
                     <button
                       type="button"
                       onClick={resetFilters}
                       className="text-xs font-bold text-red-600 hover:underline"
                     >
-                      Reset All
+                      Clear all
                     </button>
                   )}
                   <button
@@ -701,194 +570,33 @@ export default function CarsPage() {
                 </div>
               </div>
 
-              {/* Drawer Body (Scrollable) */}
-              <div className="overflow-y-auto p-5 space-y-5 flex-1 overscroll-contain">
-                {/* Showroom Channel */}
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-slate-500 block">
-                    Showroom Channel
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {channels.map((c) => {
-                      const isSelected = channel === c;
-                      const count =
-                        c === 'All'
-                          ? channelCounts.all
-                          : c === 'Arena'
-                          ? channelCounts.arena
-                          : channelCounts.nexa;
-
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setChannel(c)}
-                          className={`py-2 px-2 rounded-xl text-xs font-bold transition-all text-center flex flex-col items-center justify-center gap-1 border ${
-                            isSelected
-                              ? c === 'Nexa'
-                                ? 'bg-slate-950 text-white border-slate-950 shadow-sm'
-                                : c === 'Arena'
-                                ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
-                                : 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                              : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                          }`}
-                        >
-                          <span>{c === 'All' ? 'All Channels' : c}</span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                              isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
-                            }`}
-                          >
-                            {count} models
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Body Type */}
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-slate-500 block">
-                    Body Type
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {bodyTypes.map((b) => (
-                      <button
-                        key={b}
-                        type="button"
-                        onClick={() => setBodyType(b)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                          bodyType === b
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {b}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Fuel Type */}
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-slate-500 block">
-                    Fuel Type
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {fuelTypes.map((f) => (
-                      <button
-                        key={f}
-                        type="button"
-                        onClick={() => setFuel(f)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                          fuel === f
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {f}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Gearbox */}
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold uppercase tracking-wider text-slate-500 block">
-                    Gearbox
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {transmissionTypes.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setTransmission(t)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                          transmission === t
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Drawer Sticky Footer Action */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50">
-                <button
-                  type="button"
-                  onClick={() => setIsMobileFilterOpen(false)}
-                  className="w-full py-3 bg-brand-blue hover:bg-brand-darkBlue text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-colors"
-                >
-                  Show {filteredCars.length} {filteredCars.length === 1 ? 'Model' : 'Models'}
-                </button>
+              {/* Scrollable Drawer Body */}
+              <div className="overflow-y-auto flex-1 overscroll-contain">
+                <FilterSidebar
+                  channel={channel}
+                  setChannel={setChannel}
+                  bodyTypesSelected={bodyTypesSelected}
+                  toggleBodyType={toggleBodyType}
+                  fuelTypesSelected={fuelTypesSelected}
+                  toggleFuel={toggleFuel}
+                  transmissionSelected={transmissionSelected}
+                  toggleTransmission={toggleTransmission}
+                  maxPrice={maxPrice}
+                  setMaxPrice={setMaxPrice}
+                  selectedLocation={selectedLocation}
+                  setSelectedLocation={setSelectedLocation}
+                  locations={locations}
+                  resetFilters={resetFilters}
+                  activeFiltersCount={activeFilters.length}
+                  availableCounts={availableCounts}
+                  isMobileDrawer={true}
+                  onCloseDrawer={() => setIsMobileFilterOpen(false)}
+                />
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
-      {/* Car Grid Results */}
-      <motion.div variants={sectionVariants} className="space-y-6 sm:space-y-8">
-        {carRows.length > 0 ? (
-          carRows.map((row) => (
-            <motion.div
-              key={row.id}
-              initial={{ opacity: 0, y: 45 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15, margin: "0px 0px -40px 0px" }}
-              transition={{
-                duration: 0.9,
-                ease: [0.16, 1, 0.3, 1],
-                staggerChildren: 0.14,
-              }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
-            >
-              {row.items.map((car, index) => (
-                <motion.div
-                  key={car.id}
-                  initial={{ opacity: 0, y: 35 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.15, margin: "0px 0px -40px 0px" }}
-                  transition={{
-                    duration: 0.85,
-                    delay: index * 0.12,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <CarCard car={car} />
-                </motion.div>
-              ))}
-            </motion.div>
-          ))
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-3xl border border-slate-200 p-12 text-center max-w-md mx-auto space-y-4 shadow-sm"
-          >
-            <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
-              <Car className="w-8 h-8" />
-            </div>
-            <h3 className="font-display font-bold text-lg text-slate-900">No matching models found</h3>
-            <p className="text-xs text-slate-500">
-              We couldn't find any vehicles matching your selected filters. Try broadening your fuel, body type, or transmission options.
-            </p>
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="px-6 py-2.5 bg-blue-800 text-white rounded-xl text-xs font-bold hover:bg-blue-900 transition-colors shadow-sm"
-            >
-              Clear All Filters
-            </button>
-          </motion.div>
-        )}
-      </motion.div>
-    </motion.div>
+    </div>
   );
 }
