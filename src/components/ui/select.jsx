@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { Check, ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "../../lib/utils";
 
@@ -101,18 +101,17 @@ const SelectItem = React.forwardRef(({ className, children, ...props }, ref) => 
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-pointer select-none items-center justify-between rounded-md py-2.5 px-3 text-sm outline-none transition-colors border-l-[3px] border-transparent focus:bg-slate-50 focus:text-slate-900 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-50/80 data-[state=checked]:text-blue-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
-
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    <div className="flex-1 min-w-0 pr-2">
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </div>
+    <SelectPrimitive.ItemIndicator className="shrink-0 flex items-center justify-center">
+      <span className="h-2 w-2 rounded-full bg-blue-600 ring-2 ring-blue-100" />
+    </SelectPrimitive.ItemIndicator>
   </SelectPrimitive.Item>
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName
