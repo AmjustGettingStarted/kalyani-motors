@@ -672,7 +672,7 @@ const CarDetailPage = () => {
         {/* SPECIFICATIONS - desktop */}
         <section className="hidden lg:block mb-8 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center">
-            <h2 className="text-4xl font-bold">Specifications</h2>
+            <h2 className="text-4xl font-bold font-sans">Specifications</h2>
 
             <div className="flex bg-gray-100 rounded-full p-1">
               {["Performance", "Safety", "Technology"].map((tab) => {
@@ -682,7 +682,7 @@ const CarDetailPage = () => {
                   <button
                     key={tab}
                     onClick={() => setActiveSpecTab(tab)}
-                    className="relative px-6 py-2 rounded-full text-sm font-medium"
+                    className="relative px-6 py-2 rounded-full text-lg font-medium"
                   >
                     {isActive && (
                       <motion.div
@@ -713,7 +713,7 @@ const CarDetailPage = () => {
           </div>
 
           {activeSpecTab === "Performance" && (
-            <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex flex-col md:flex-row justify-center items-center gap-8">
               <div className="space-y-8 flex-1 w-full">
                 <StatItem
                   title="Engine"
@@ -746,7 +746,7 @@ const CarDetailPage = () => {
               </div>
 
               <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="w-[220px] sm:w-[260px] h-[460px]">
+                <div className="w-[220px] sm:w-[260px] h-[460px] flex items-center justify-center">
                   {car.topViewImage ? (
                     <img
                       src={car.topViewImage}
@@ -754,21 +754,23 @@ const CarDetailPage = () => {
                       className="w-full h-full object-contain drop-shadow-xl transition-transform duration-500 hover:scale-105"
                     />
                   ) : (
-                    <div className="text-center p-4">
-                      <img
-                        src={car.heroImage}
-                        alt={car.name}
-                        className="w-full h-auto object-contain opacity-40 drop-shadow"
-                      />
-                      <span className="text-gray-400 text-xs mt-2 block font-medium">
-                        Top View Diagram
-                      </span>
-                    </div>
+                    <img
+                      src="/assets/generic-top-view.png"
+                      alt={`${car.name} Generic Top View`}
+                      className="w-full h-full object-contain"
+                    />
                   )}
                 </div>
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-3">
-                  Aerodynamic Top Profile
-                </span>
+                <div className="flex flex-col items-center text-center mt-3">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Aerodynamic Top Profile
+                  </span>
+                  {!car.topViewImage && (
+                    <span className="text-[18px] font-bold text-slate-400 mt-0.5">
+                      No Top-view Available
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-8 flex-1 pl-0 lg:pl-12 w-full">
@@ -910,8 +912,8 @@ const CarDetailPage = () => {
                 </div>
               )}
             </div>
-            <div className="hidden md:flex md:w-[40%] items-center">
-              <div className="w-[220px] sm:w-[260px] h-[460px] bg-gradient-to-b from-blue-50/70 via-slate-50 to-slate-100 rounded-full flex items-center justify-center shadow-inner p-5 overflow-hidden relative border border-slate-200">
+            <div className="hidden md:flex md:w-[40%] flex-col items-center justify-center">
+              <div className="w-[220px] sm:w-[260px] h-[460px] flex items-center justify-center">
                 {car.topViewImage ? (
                   <img
                     src={car.topViewImage}
@@ -919,16 +921,21 @@ const CarDetailPage = () => {
                     className="w-full h-full object-contain drop-shadow-xl transition-transform duration-500 hover:scale-105"
                   />
                 ) : (
-                  <div className="text-center p-4">
-                    <img
-                      src={car.heroImage}
-                      alt={car.name}
-                      className="w-full h-auto object-contain opacity-40 drop-shadow"
-                    />
-                    <span className="text-gray-400 text-xs mt-2 block font-medium">
-                      Top View Diagram
-                    </span>
-                  </div>
+                  <img
+                    src="/assets/generic-top-view.png"
+                    alt={`${car.name} Generic Top View`}
+                    className="w-full h-full object-contain"
+                  />
+                )}
+              </div>
+              <div className="flex flex-col items-center text-center mt-3">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Aerodynamic Top Profile
+                </span>
+                {!car.topViewImage && (
+                  <span className="text-[18px] font-medium text-slate-400 mt-0.5">
+                    No Top-view Available
+                  </span>
                 )}
               </div>
             </div>
@@ -1417,9 +1424,9 @@ const StatItem = ({ title, value, desc, direction = "left", delay = 0 }) => {
         <CheckCircle className="w-4 h-4 opacity-50" />
       </div>
       <div>
-        <p className="text-[10px] text-gray-500">{title}</p>
-        <p className="font-bold text-sm md:ext-base text-gray-900">{value}</p>
-        <p className="text-[10px] text-gray-400 mt-0.5">{desc}</p>
+        <p className="text-[10px] lg:text-[16px] text-gray-500">{title}</p>
+        <p className="font-bold text-sm lg:text-2xl text-gray-900">{value}</p>
+        <p className="text-[10px] lg:text-[12px] text-gray-400 mt-0.5">{desc}</p>
       </div>
     </motion.div>
   );
