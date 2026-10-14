@@ -108,8 +108,8 @@ const CarDetailPage = () => {
       {
         question: `Does the ${car.name} come with a sunroof option?`,
         answer: `${car.name.toLowerCase().includes("grand vitara") || car.name.toLowerCase().includes("brezza")
-            ? `Yes, ${car.name} comes equipped with an electric/panoramic sunroof on select top variants for a premium, airy cabin feel.`
-            : `The ${car.name} emphasizes aerodynamic coupe styling and enhanced structural rigidity with UV-cut glass and modern cabin design.`
+          ? `Yes, ${car.name} comes equipped with an electric/panoramic sunroof on select top variants for a premium, airy cabin feel.`
+          : `The ${car.name} emphasizes aerodynamic coupe styling and enhanced structural rigidity with UV-cut glass and modern cabin design.`
           } Visit Kalyani Motors for complete trim feature details.`,
         category: "Features & Comfort",
         icon: Sparkles,
@@ -191,7 +191,8 @@ const CarDetailPage = () => {
         </nav>
       </div> */}
 
-        {/* HERO - desktop */}
+        {/* OLD HERO SECTION - DESKTOP (COMMENTED OUT)                                */}
+        {/*
         <section className="hidden lg:block relative w-full h-auto lg:max-h-[540px] mb-8 border rounded-2xl overflow-hidden group">
           <div>
             <img
@@ -199,20 +200,10 @@ const CarDetailPage = () => {
               alt={car.name}
               className="w-full h-full object-contain object-center"
             />
-            {/* <div className="absolute inset-0 ">
-            <Car360Viewer
-              frames={rotationFrames}
-              fallbackImage={selectedColor?.image || car.heroImage}
-              alt={car.name}
-            />
-          </div> */}
-            {/* <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-transparent md:w-2/3"></div> */}
           </div>
 
           <div className="absolute w-full h-full inset-0 z-10">
             <div className="flex h-full flex-row items-center justify-between px-16">
-              {/* left-part */}
               <motion.div
                 initial={{ opacity: 0, x: -100 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -229,9 +220,6 @@ const CarDetailPage = () => {
                 <h1 className="text-4xl font-black mb-2 tracking-tight drop-shadow-xl">
                   {car.name}
                 </h1>
-                <p className="text-lg tracking-widest font-light mb-4 uppercase ">
-                  {car.tagline}
-                </p>
 
                 <div className="flex flex-wrap gap-4">
                   <span className="px-5 py-2.5 rounded-full bg-white/10  text-sm font-semibold border border-white/20 shadow-lg flex items-center gap-2">
@@ -245,7 +233,6 @@ const CarDetailPage = () => {
                 </div>
               </motion.div>
 
-              {/* right-part */}
               <motion.div
                 className="flex flex-col gap-2"
                 initial={{ opacity: 0, x: 100 }}
@@ -314,15 +301,15 @@ const CarDetailPage = () => {
                 </div>
 
                 {car.colors && (
-                  <div className="">
+                  <div>
                     <div className="flex gap-2.5 flex-wrap">
                       {car.colors.map((c, i) => (
                         <button
                           key={i}
                           onClick={() => setSelectedColor(c)}
                           className={`w-7 h-7 rounded-full border-2 transition-all ${selectedColor?.name === c.name
-                              ? "border-grey scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]"
-                              : `border-grey/20 opacity-80 hover:opacity-100 hover:scale-110`
+                            ? "border-grey scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+                            : `border-grey/20 opacity-80 hover:opacity-100 hover:scale-110`
                             }`}
                           style={{ backgroundColor: c.hex }}
                           title={c.name}
@@ -355,6 +342,179 @@ const CarDetailPage = () => {
             </div>
           </div>
         </section>
+        */}
+
+        {/* NEW 3-COLUMN CAR HERO SECTION (Left Info | Center Car Image | Right Form) */}
+        <section className="hidden lg:grid lg:grid-cols-3 gap-6 items-center w-full mb-10 p-8 rounded-3xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden">
+          {/* Column 1 (Left): Brand, Car Name & Specifications */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col justify-center space-y-5 pr-2"
+          >
+            <div>
+              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-blue-700 block mb-1.5">
+                {car.channel === "Nexa"
+                  ? "Nexa by Maruti Suzuki"
+                  : "Maruti Suzuki Arena"}
+              </span>
+              <h1 className="text-3xl xl:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                {car.name}
+              </h1>
+              {car.tagline && (
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                  {car.tagline}
+                </p>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Column 2 (Center): Car Image Centered */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col items-center justify-center relative min-h-[340px] px-2"
+          >
+            {/* Ambient soft glow background */}
+            <div className="absolute inset-0 bg-slate-100/70 rounded-full -z-10" />
+
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={selectedColor?.image || car.heroImage}
+                src={selectedColor?.image || car.heroImage}
+                alt={car.name}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="w-full max-h-[340px] object-contain select-none"
+                loading="eager"
+              />
+            </AnimatePresence>
+
+            {selectedColor?.name && (
+              <span className="text-[11px] font-semibold text-slate-500 mt-2 text-center">
+                Color: {selectedColor.name}
+              </span>
+            )}
+          </motion.div>
+
+          {/* Column 3 (Right): Pricing, Variant, Color Picker & Get On-Road Price Button */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col justify-center space-y-4"
+          >
+            {/* Price Header */}
+            <div>
+              <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-0.5">
+                Ex-Showroom Price ({selectedCity})
+              </span>
+              <h2 className="text-2xl xl:text-3xl font-black text-slate-900 tracking-tight">
+                {currentPrice ? formatINR(currentPrice) : car.priceRange}
+              </h2>
+            </div>
+
+            {/* Variant Selector */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                Select Variant
+              </label>
+              <Select
+                value={selectedVariant?.name || ""}
+                onValueChange={(val) => {
+                  const variant = car.variants?.find((v) => v.name === val);
+                  if (variant) setSelectedVariant(variant);
+                }}
+              >
+                <SelectTrigger className="w-full h-11 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-xl px-3.5 text-slate-900 font-semibold text-xs outline-none focus:ring-2 focus:ring-blue-600/20 transition-all cursor-pointer">
+                  <SelectValue placeholder="Select Variant">
+                    {selectedVariant
+                      ? `${selectedVariant.name} (${selectedVariant.fuel})`
+                      : "Select Variant"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-slate-200 shadow-2xl rounded-xl z-50 p-1 min-w-[240px]">
+                  {car.variants?.map((v) => (
+                    <SelectItem
+                      key={v.name}
+                      value={v.name}
+                      className="py-2 px-3 rounded-lg text-xs font-medium text-slate-800 cursor-pointer focus:bg-slate-100 focus:text-slate-900 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-3 w-full">
+                        <span className="font-semibold text-slate-900">{v.name}</span>
+                        <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                          ({v.fuel})
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Colors Palette */}
+            {car.colors && car.colors.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                  Available Colors
+                </label>
+                <div className="flex gap-2 flex-wrap items-center">
+                  {car.colors.map((c, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setSelectedColor(c)}
+                      className={`w-5 h-7 rounded-full border-2 transition-all cursor-pointer ${selectedColor?.name === c.name
+                        ? "border-blue-600 scale-110 shadow-sm ring-2 ring-blue-600/30"
+                        : "border-slate-300 opacity-80 hover:opacity-100 hover:scale-110"
+                        }`}
+                      style={{ backgroundColor: c.hex }}
+                      title={c.name}
+                      aria-label={c.name}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons: Commented out Book Test Drive and replaced with Get On-Road Price */}
+            <div className="space-y-2 pt-1">
+              {/* Commented out Book Test Drive button:
+              <button
+                type="button"
+                onClick={() => openTestDrive(car)}
+                className="w-full py-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-sm shadow-xl flex items-center justify-center gap-2"
+              >
+                <Calendar className="w-4 h-4" /> Book Test Drive
+              </button>
+              */}
+
+              {/* Get On-Road Price button */}
+              <button
+                type="button"
+                onClick={() => openTestDrive({ ...car, purpose: "On Road Price", selectedVariant })}
+                className="w-full py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+              >
+                Get On-Road Price
+              </button>
+
+              {car.brochureUrl && (
+                <a
+                  href={car.brochureUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-500" /> Download Brochure
+                </a>
+              )}
+            </div>
+          </motion.div>
+        </section>
 
         {/* HERO - mobile */}
         <section className="lg:hidden pt-20 md:pt-0 mb-8">
@@ -370,9 +530,9 @@ const CarDetailPage = () => {
               {car.name}
             </h1>
 
-            <p className="text-xs tracking-widest font-medium text-slate-500 uppercase mt-1">
+            {/* <p className="text-xs tracking-widest font-medium text-slate-500 uppercase mt-1">
               {car.tagline}
-            </p>
+            </p> */}
           </motion.div>
 
           {/* Cropped car image */}
@@ -462,8 +622,8 @@ const CarDetailPage = () => {
                       key={i}
                       onClick={() => setSelectedColor(c)}
                       className={`w-7 h-7 rounded-full border-2 transition-all ${selectedColor?.name === c.name
-                          ? "border-slate-900 scale-110"
-                          : "border-slate-300"
+                        ? "border-slate-900 scale-110"
+                        : "border-slate-300"
                         }`}
                       style={{ backgroundColor: c.hex }}
                       title={c.name}
@@ -477,13 +637,23 @@ const CarDetailPage = () => {
               </div>
             )}
 
-            {/* Test Drive */}
+            {/* Commented out Book Test Drive button:
             <button
               onClick={() => openTestDrive(car)}
               className="w-full mt-5 py-3.5 rounded-xl bg-slate-900 text-white text-sm font-bold flex items-center justify-center gap-2"
             >
               <Calendar className="w-4 h-4" />
               Book Test Drive
+            </button>
+            */}
+
+            {/* Get On-Road Price button */}
+            <button
+              type="button"
+              onClick={() => openTestDrive({ ...car, purpose: "On Road Price", selectedVariant })}
+              className="w-full mt-5 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs uppercase tracking-wider font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg shadow-blue-600/25 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              Get On-Road Price
             </button>
             {car.brochureUrl && (
               <a
@@ -663,8 +833,8 @@ const CarDetailPage = () => {
                   key={tab}
                   onClick={() => setActiveSpecTab(tab)}
                   className={`flex-1 py-2 rounded-full text-[11px] font-bold transition-all ${isActive
-                      ? "bg-slate-900 text-white shadow-sm"
-                      : "text-slate-500"
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "text-slate-500"
                     }`}
                 >
                   {tab}
@@ -793,8 +963,8 @@ const CarDetailPage = () => {
                       }
                     }}
                     className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${activeGalleryTab === tab
-                        ? "bg-slate-900 text-white shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
                       }`}
                   >
                     {tab}
@@ -991,8 +1161,8 @@ const CarDetailPage = () => {
                     }
                   }}
                   className={`px-3.5 py-1.5 rounded-full text-[10px] font-bold transition-all whitespace-nowrap ${activeGalleryTab === tab
-                      ? "bg-slate-900 text-white shadow-sm"
-                      : "text-slate-600"
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "text-slate-600"
                     }`}
                 >
                   {tab}
@@ -1271,16 +1441,16 @@ const FaqCard = ({ faq, index, isOpen, onToggle }) => {
       whileHover={{ y: -3, transition: { duration: 0.2 } }}
       onClick={onToggle}
       className={`group rounded-2xl border bg-white p-5 sm:p-6 shadow-sm transition-all duration-300 cursor-pointer overflow-hidden ${isOpen
-          ? "border-blue-500/50 shadow-md ring-1 ring-blue-500/20 bg-gradient-to-b from-white to-blue-50/20"
-          : "border-slate-200/90 hover:border-slate-300 hover:shadow-md"
+        ? "border-blue-500/50 shadow-md ring-1 ring-blue-500/20 bg-gradient-to-b from-white to-blue-50/20"
+        : "border-slate-200/90 hover:border-slate-300 hover:shadow-md"
         }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3.5 min-w-0">
           <div
             className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200 ${isOpen
-                ? "bg-blue-600 text-white shadow-sm"
-                : "bg-slate-100 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "bg-slate-100 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600"
               }`}
           >
             <Icon className="w-4 h-4" />
@@ -1293,8 +1463,8 @@ const FaqCard = ({ faq, index, isOpen, onToggle }) => {
             )}
             <h3
               className={`text-sm sm:text-base font-bold transition-colors leading-snug ${isOpen
-                  ? "text-blue-700"
-                  : "text-slate-900 group-hover:text-blue-600"
+                ? "text-blue-700"
+                : "text-slate-900 group-hover:text-blue-600"
                 }`}
             >
               {faq.question}
@@ -1306,8 +1476,8 @@ const FaqCard = ({ faq, index, isOpen, onToggle }) => {
           animate={{ rotate: isOpen ? 45 : 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${isOpen
-              ? "bg-blue-100 text-blue-700"
-              : "border border-slate-200 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-700"
+            ? "bg-blue-100 text-blue-700"
+            : "border border-slate-200 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-700"
             }`}
         >
           <span className="text-base font-semibold leading-none">+</span>
