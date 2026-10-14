@@ -2,6 +2,13 @@ import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Mail, MapPin, ArrowUpRight, ChevronDown } from "lucide-react";
+import {
+  FaFacebookF,
+  FaTwitter,
+  FaInstagram,
+  FaWhatsapp,
+  FaYoutube,
+} from "react-icons/fa";
 import { useKalyani } from "../../context/KalyaniContext";
 import useBlogPages from "../hooks/useBlogPages";
 import useIconLocations from "../hooks/useIconLocations";
@@ -42,30 +49,30 @@ const DEALERSHIP_HUBS = [
 
 function StoreBadges({ className = "" }) {
   return (
-    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
+    <div className={`flex flex-wrap lg:justify-center lg:items-center gap-3 ${className}`}>
       <a
-        href="https://play.google.com"
+        href="https://play.google.com/store/apps/details?id=com.kalyanimotors.superapp"
         target="_blank"
         rel="noopener noreferrer"
         className="inline-block transition-transform duration-200 hover:scale-105 active:scale-95"
         aria-label="Get it on Google Play"
       >
         <img
-          src="/assets/google-play-badge.svg"
+          src="/assets/playstore.png"
           alt="Get it on Google Play"
           className="h-9 sm:h-10 w-auto object-contain"
           loading="lazy"
         />
       </a>
       <a
-        href="https://www.apple.com/app-store/"
+        href="https://apps.apple.com/in/app/kalyani-motors-app/id6479185557"
         target="_blank"
         rel="noopener noreferrer"
         className="inline-block transition-transform duration-200 hover:scale-105 active:scale-95"
         aria-label="Download on the App Store"
       >
         <img
-          src="/assets/app-store-badge.svg"
+          src="/assets/appstore.png"
           alt="Download on the App Store"
           className="h-9 sm:h-10 w-auto object-contain"
           loading="lazy"
@@ -148,8 +155,43 @@ export default function Footer() {
   const activeAddress = cityContact?.address || "Nayandahalli, Mysore Road, Bengaluru - 560039";
   const activeEmail = cityContact?.email || "support@kalyanimotors.com";
 
+  const socialLinks = [
+    {
+      label: "Facebook",
+      href: cityContact?.facebook_id || "https://www.facebook.com/kalyanimotors",
+      Icon: FaFacebookF,
+    },
+    {
+      label: "Twitter",
+      href: cityContact?.twitter_id || "https://twitter.com/kalyanimotors",
+      Icon: FaTwitter,
+    },
+    {
+      label: "Instagram",
+      href: cityContact?.instagram_id || "https://www.instagram.com/kalyanimotors",
+      Icon: FaInstagram,
+    },
+    {
+      label: "WhatsApp",
+      href: cityContact?.whatsapp
+        ? cityContact.whatsapp.startsWith("http")
+          ? cityContact.whatsapp
+          : `https://wa.me/${cityContact.whatsapp.replace(/\D/g, "")}`
+        : "https://wa.me/919590990011",
+      Icon: FaWhatsapp,
+    },
+    {
+      label: "YouTube",
+      href: cityContact?.youtube_id || "https://www.youtube.com/@kalyanimotors",
+      Icon: FaYoutube,
+    },
+  ].filter(
+    (social) =>
+      typeof social.href === "string" && social.href.trim() !== ""
+  );
+
   // Accordion state for tab & mobile screens
-  const [tabOpen, setTabOpen] = useState({
+  const [accordionOpen, setAccordionOpen] = useState({
     brand: true,
     models: false,
     service: false,
@@ -157,18 +199,8 @@ export default function Footer() {
     quickLinks: false,
   });
 
-  const [mobileOpen, setMobileOpen] = useState({
-    brand: true,
-    models: false,
-    service: false,
-    hubs: false,
-    quickLinks: false,
-  });
-
-  const toggleTab = (key) =>
-    setTabOpen((prev) => ({ ...prev, [key]: !prev[key] }));
-  const toggleMobile = (key) =>
-    setMobileOpen((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleAccordion = (key) =>
+    setAccordionOpen((prev) => ({ ...prev, [key]: !prev[key] }));
 
   useEffect(() => {
     const checkVisibility = () => {
@@ -241,6 +273,23 @@ export default function Footer() {
           </a>
         </div>
       </div>
+      {socialLinks.length > 0 && (
+        <div className="flex items-center gap-3 pt-2">
+          {socialLinks.map(({ label, href, Icon }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={label}
+              title={label}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-blue-600 hover:bg-blue-600 hover:text-white"
+            >
+              <Icon size={17} />
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -312,98 +361,99 @@ export default function Footer() {
       ref={footerRef}
       className="w-full bg-slate-50 text-slate-600 text-xs border-t border-slate-200 overflow-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 lg:py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 lg:py-14">
         {/* 1) DESKTOP UI (>= 1024px): 40% Left : 60% Right */}
-        <div className="hidden lg:grid lg:grid-cols-[40%_60%] gap-12 items-start">
-          {/* Left Column (40%): 2 rows (80% Up & 20% Down) */}
+        <div className="hidden lg:grid lg:grid-cols-[40%_60%] gap-6 items-start">
+          {/* Left Column (40%): Brand & Bio Info */}
           <motion.div
             variants={columnVariants}
             initial="hidden"
             animate={isVisible ? "visible" : "hidden"}
             custom={0.05}
-            className="flex flex-col justify-between h-full space-y-8 will-change-transform pr-4"
+            className="space-y-4 will-change-transform pr-4"
           >
-            {/* Row 1 (80% Up): Brand & Bio Info */}
-            <div className="space-y-4">
-              <Link to="/" className="inline-block focus:outline-none mb-1">
-                <img
-                  src="/assets/kalyani_light.png"
-                  alt="Kalyani Motors - Authorized Maruti Suzuki Dealership"
-                  className="h-14 sm:h-16 w-auto object-contain object-left select-none"
-                  loading="lazy"
-                />
-              </Link>
-              {BrandBioContent}
-            </div>
-
-            {/* Row 2 (20% Down): App Store & Play Store links in image format */}
-            <div className="pt-4 border-t border-slate-200/80">
-              <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-2.5">
-                Download Kalyani Motors App
-              </span>
-              <StoreBadges />
-            </div>
+            <Link to="/" className="inline-block focus:outline-none mb-1">
+              <img
+                src="/assets/kalyani_light.png"
+                alt="Kalyani Motors - Authorized Maruti Suzuki Dealership"
+                className="h-14 sm:h-16 w-auto object-contain object-left select-none"
+                loading="lazy"
+              />
+            </Link>
+            {BrandBioContent}
           </motion.div>
 
-          {/* Right Column (60%): 3 or 4 columns depending on CMS quick links */}
+          {/* Right Column (60%): Links grid with App Store & Play Store underneath */}
           <motion.div
             variants={columnVariants}
             initial="hidden"
             animate={isVisible ? "visible" : "hidden"}
             custom={0.2}
-            className={`grid ${
-              validBlogPages.length > 0 ? "grid-cols-4" : "grid-cols-3"
-            } gap-6 will-change-transform`}
+            className="flex flex-col space-y-8 will-change-transform"
           >
-            {/* Popular Models */}
-            <div>
-              <h4 className="text-slate-900 font-display font-bold text-xs uppercase tracking-wider mb-4">
-                Popular Models
-              </h4>
-              {ModelsContent}
-            </div>
-
-            {/* Service & Care */}
-            <div>
-              <h4 className="text-slate-900 font-display font-bold text-xs uppercase tracking-wider mb-4">
-                Service & Care
-              </h4>
-              {ServiceContent}
-            </div>
-
-            {/* Dealership Hubs */}
-            <div>
-              <h4 className="text-slate-900 font-display font-bold text-xs uppercase tracking-wider mb-4">
-                Dealership Hubs
-              </h4>
-              {DealershipContent}
-            </div>
-
-            {/* Optional CMS Quick Links */}
-            {validBlogPages.length > 0 && (
+            <div
+              className={`grid ${validBlogPages.length > 0 ? "grid-cols-4" : "grid-cols-3"
+                } gap-6`}
+            >
+              {/* Popular Models */}
               <div>
                 <h4 className="text-slate-900 font-display font-bold text-xs uppercase tracking-wider mb-4">
-                  Quick Links
+                  Popular Models
                 </h4>
-                {QuickLinksContent}
+                {ModelsContent}
               </div>
-            )}
+
+              {/* Service & Care */}
+              <div>
+                <h4 className="text-slate-900 font-display font-bold text-xs uppercase tracking-wider mb-4">
+                  Service & Care
+                </h4>
+                {ServiceContent}
+              </div>
+
+              {/* Dealership Hubs */}
+              <div>
+                <h4 className="text-slate-900 font-display font-bold text-xs uppercase tracking-wider mb-4">
+                  Outlets
+                </h4>
+                {DealershipContent}
+              </div>
+
+              {/* Optional CMS Quick Links */}
+              {validBlogPages.length > 0 && (
+                <div>
+                  <h4 className="text-slate-900 font-display font-bold text-xs uppercase tracking-wider mb-4">
+                    Quick Links
+                  </h4>
+                  {QuickLinksContent}
+                </div>
+              )}
+            </div>
+
+            {/* App Store & Play Store badges */}
+            <div className="pt-6 border-t border-slate-200/80">
+              <span className="flex justify-center items-center block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-2.5">
+                Download Kalyani Motors App
+              </span>
+              <StoreBadges />
+            </div>
           </motion.div>
         </div>
 
-        {/* 2) TAB UI (768px - 1023px) */}
-        <div className="hidden md:grid lg:hidden grid-cols-2 gap-10 items-start">
-          {/* Left Side: Brand (Logo dropdown) + App/Play Store badges */}
-          <div className="space-y-6">
+        {/* 2) TAB & MOBILE ACCORDION UI (< 1024px) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-10 items-start lg:hidden">
+          {/* Column 1 on Tablet / First items on Mobile */}
+          <div className="space-y-1 md:space-y-6">
             <DropdownItem
               isLogoHeading
-              isOpen={tabOpen.brand}
-              onToggle={() => toggleTab("brand")}
+              isOpen={accordionOpen.brand}
+              onToggle={() => toggleAccordion("brand")}
             >
               {BrandBioContent}
             </DropdownItem>
 
-            <div className="pt-2">
+            {/* Badges: Visible here on Tablet (under logo dropdown) */}
+            <div className="hidden md:block pt-2">
               <span className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-2.5">
                 Download Kalyani Motors App
               </span>
@@ -411,28 +461,28 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Right Side: Popular Models, Service & Care, Dealership Hubs, Quick Links */}
+          {/* Column 2 on Tablet / Followed on Mobile */}
           <div className="space-y-1">
             <DropdownItem
               title="Popular Models"
-              isOpen={tabOpen.models}
-              onToggle={() => toggleTab("models")}
+              isOpen={accordionOpen.models}
+              onToggle={() => toggleAccordion("models")}
             >
               {ModelsContent}
             </DropdownItem>
 
             <DropdownItem
               title="Service & Care"
-              isOpen={tabOpen.service}
-              onToggle={() => toggleTab("service")}
+              isOpen={accordionOpen.service}
+              onToggle={() => toggleAccordion("service")}
             >
               {ServiceContent}
             </DropdownItem>
 
             <DropdownItem
-              title="Dealership Hubs"
-              isOpen={tabOpen.hubs}
-              onToggle={() => toggleTab("hubs")}
+              title="Outlets"
+              isOpen={accordionOpen.hubs}
+              onToggle={() => toggleAccordion("hubs")}
             >
               {DealershipContent}
             </DropdownItem>
@@ -440,60 +490,16 @@ export default function Footer() {
             {validBlogPages.length > 0 && (
               <DropdownItem
                 title="Quick Links"
-                isOpen={tabOpen.quickLinks}
-                onToggle={() => toggleTab("quickLinks")}
+                isOpen={accordionOpen.quickLinks}
+                onToggle={() => toggleAccordion("quickLinks")}
               >
                 {QuickLinksContent}
               </DropdownItem>
             )}
           </div>
-        </div>
 
-        {/* 3) MOBILE UI - All in rows - dropdown structure */}
-        <div className="block md:hidden space-y-1">
-          <DropdownItem
-            isLogoHeading
-            isOpen={mobileOpen.brand}
-            onToggle={() => toggleMobile("brand")}
-          >
-            {BrandBioContent}
-          </DropdownItem>
-
-          <DropdownItem
-            title="Popular Models"
-            isOpen={mobileOpen.models}
-            onToggle={() => toggleMobile("models")}
-          >
-            {ModelsContent}
-          </DropdownItem>
-
-          <DropdownItem
-            title="Service & Care"
-            isOpen={mobileOpen.service}
-            onToggle={() => toggleMobile("service")}
-          >
-            {ServiceContent}
-          </DropdownItem>
-
-          <DropdownItem
-            title="Dealership Hubs"
-            isOpen={mobileOpen.hubs}
-            onToggle={() => toggleMobile("hubs")}
-          >
-            {DealershipContent}
-          </DropdownItem>
-
-          {validBlogPages.length > 0 && (
-            <DropdownItem
-              title="Quick Links"
-              isOpen={mobileOpen.quickLinks}
-              onToggle={() => toggleMobile("quickLinks")}
-            >
-              {QuickLinksContent}
-            </DropdownItem>
-          )}
-
-          <div className="pt-6 pb-2">
+          {/* Badges: Visible at the very bottom on Mobile */}
+          <div className="block md:hidden pt-2 pb-2">
             <span className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-2.5">
               Download Kalyani Motors App
             </span>
@@ -507,7 +513,7 @@ export default function Footer() {
           initial="hidden"
           animate={isVisible ? "visible" : "hidden"}
           custom={0.45}
-          className="mt-12 pt-6 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500 will-change-transform"
+          className="mt-6 pt-6 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500 will-change-transform"
         >
           <p>
             © {currentYear} Kalyani Motors Pvt Ltd. All rights reserved.
