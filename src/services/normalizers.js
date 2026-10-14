@@ -426,13 +426,13 @@ export function normalizeCarVariant(raw, slug) {
     images: (raw.images ?? []).map((img) => getStorageUrl(img.images)),
     variant: raw.varient
       ? {
-          id: String(raw.varient.id),
-          name: raw.varient.var_title,
-          price: parseFloat(raw.varient.price) || null,
-          exShowroomPrice: parseFloat(raw.varient.ex_showroom_price) || null,
-          fuel: raw.fuel,
-          transmission: raw.transmission,
-        }
+        id: String(raw.varient.id),
+        name: raw.varient.var_title,
+        price: parseFloat(raw.varient.price) || null,
+        exShowroomPrice: parseFloat(raw.varient.ex_showroom_price) || null,
+        fuel: raw.fuel,
+        transmission: raw.transmission,
+      }
       : null,
     brochureUrl: raw.brochure ? getFileUrl(raw.brochure) : null,
     colors: (raw.colors ?? []).map((c) => ({

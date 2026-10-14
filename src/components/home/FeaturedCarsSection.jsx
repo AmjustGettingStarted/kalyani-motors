@@ -176,8 +176,8 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
                   type="button"
                   onClick={() => handleFilterChange(type)}
                   className={`relative shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer active:scale-95 ${isSelected
-                      ? 'text-white bg-blue-600 shadow-sm'
-                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                    ? 'text-white bg-blue-600 shadow-sm'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                     }`}
                 >
                   {isSelected && (
