@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useKalyani } from "../../../context/KalyaniContext";
+import useOutlets from "../../../components/hooks/useOutlets";
 import FeaturedCarsSection from "../../../components/home/FeaturedCarsSection";
 import HeroVideo from "../../../components/home/HeroVideo";
 import ChannelExperienceSection from "../../../components/home/ArenavsNexaCTA";
@@ -9,7 +10,21 @@ import NearestBranchesSection from "../../../components/home/NearestBranches";
 import EnquiryPopupModal from "../../../components/widgets/EnquiryPopupModal";
 
 export default function HomePage() {
-  const { cars, locations, selectedCity } = useKalyani();
+  const { cars, selectedCity } = useKalyani();
+  const { data: allOutlets = [] } = useOutlets();
+
+  const cityKey = selectedCity?.toLowerCase() || "bengaluru";
+  const cityLocations = allOutlets.filter((outlet) => {
+    const oCity = outlet.city?.toLowerCase() || "";
+    if (cityKey === "bengaluru" || cityKey === "bangalore") {
+      return oCity === "bengaluru" || oCity === "bangalore";
+    }
+    if (cityKey === "hyderabad" || cityKey === "hydrabad") {
+      return oCity === "hyderabad" || oCity === "hydrabad";
+    }
+    return oCity === cityKey;
+  });
+  const nearestBranches = cityLocations.slice(0, 3);
   const [showEnquiryModal, setShowEnquiryModal] = useState(false);
 
   useEffect(() => {
@@ -44,7 +59,7 @@ export default function HomePage() {
       <WhyChooseKalyaniSection />
 
       {/* 6. City Outlets Spotlight */}
-      <NearestBranchesSection locations={locations} selectedCity={selectedCity} />
+      <NearestBranchesSection locations={nearestBranches} selectedCity={selectedCity} />
 
       {/* 7. Common Customer FAQs Accordion */}
       <FaqSection />

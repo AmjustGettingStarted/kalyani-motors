@@ -18,6 +18,7 @@ import {
   Calendar,
 } from "lucide-react";
 import useHeader from "../hooks/useHeader";
+import useIconLocations from "../hooks/useIconLocations";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -27,6 +28,11 @@ export default function Header() {
     selectedCity,
     openTestDrive,
   } = useKalyani();
+  const { data: iconLocations = [] } = useIconLocations();
+  const cityContact = iconLocations?.find(
+    (loc) => loc?.city?.toLowerCase() === selectedCity?.toLowerCase()
+  );
+  const activePhone = cityContact?.phone || "+919590990011";
   const location = useLocation();
 
   const isHomePage = location.pathname === "/";
@@ -385,14 +391,14 @@ export default function Header() {
                 )}
 
                 <a
-                  href="tel:+919590990011"
+                  href={`tel:${activePhone.replace(/[^\d+]/g, '')}`}
                   className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all ${isSolid
                     ? "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800"
                     : "bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-neutral-200"
                     }`}
                 >
                   <PhoneCall className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Call Dealership</span>
+                  <span>Call Dealership: {activePhone}</span>
                 </a>
 
                 {/* Trust Footer */}

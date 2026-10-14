@@ -1,183 +1,149 @@
-/**
- * Kalyani Motors API Service Layer
- * Toggled with USE_MOCK to serve static mock datasets today,
- * but seamlessly switches to live backend endpoints tomorrow.
- */
+import { apiClient } from './api.js';
+import {
+  normalizeBanner,
+  normalizeOutlet,
+  normalizeIconLocation,
+  normalizeModel,
+  normalizeModelCars,
+  normalizeCarVariant,
+  normalizeService,
+  normalizeCommonFaq,
+  partitionByCity,
+  normalizeCity,
+  slugToApiName,
+} from './normalizers.js';
 
-import { apiClient } from './api';
-import { mockBanners } from '../data/mockBanners';
-import { mockCars } from '../data/mockCars';
-import { mockLocations } from '../data/mockLocations';
-import { mockServices } from '../data/mockServices';
-import { mockFaqs } from '../data/mockFaqs';
-
-export const USE_MOCK = true;
-
-/**
- * Fetch home page aggregation data (banners, featured cars, testimonials, metrics)
- */
-export async function getHomeData() {
-  if (USE_MOCK) {
-    return {
-      banners: mockBanners,
-      featuredCars: mockCars.filter((c) => c.isFeatured),
-      metrics: {
-        customersServed: '20+ Lakh',
-        touchpoints: '100+',
-        serviceBays: '450+',
-        googleRating: '4.8/5',
-        yearsOfTrust: '18+ Years',
-      },
-    };
-  }
-  return apiClient('home');
+export async function fetchAllModels() {
+  const data = await apiClient('model');
+  return data.map(normalizeModel);
 }
 
-/**
- * Fetch car catalog with optional filtering
- */
-export async function getModelCars(filters = {}) {
-  if (USE_MOCK) {
-    let result = [...mockCars];
+export async function fetchModelCars() {
+  const data = await apiClient('modelcars');
+  return normalizeModelCars(data);
+}
 
-    if (filters.channel && filters.channel !== 'All') {
-      result = result.filter((c) => c.channel.toLowerCase() === filters.channel.toLowerCase());
-    }
-    if (filters.bodyType && filters.bodyType !== 'All') {
-      result = result.filter((c) => c.bodyType.toLowerCase() === filters.bodyType.toLowerCase());
-    }
-    if (filters.fuel && filters.fuel !== 'All') {
-      result = result.filter((c) => c.fuelTypes.includes(filters.fuel));
-    }
-    if (filters.transmission && filters.transmission !== 'All') {
-      result = result.filter((c) => c.transmissionTypes.includes(filters.transmission));
-    }
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.tagline.toLowerCase().includes(q) ||
-          c.channel.toLowerCase().includes(q) ||
-          c.bodyType.toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }
+export async function fetchAllModelList() {
+  return apiClient('allmodellist');
+}
 
-  const queryParams = new URLSearchParams();
-  Object.entries(filters).forEach(([k, v]) => {
-    if (v && v !== 'All') queryParams.append(k, v);
+/** Fetch variants for a given URL slug — handles slug-to-API name conversion */
+export async function fetchCarBySlug(slug) {
+  const apiName = slugToApiName(slug);
+  const encoded = encodeURIComponent(apiName);
+  const data = await apiClient(`varientbike?name=${encoded}`);
+  if (!data || data.length === 0) throw new Error(`No car data for slug: ${slug}`);
+  return data.map(normalizeCarVariant);
+}
+
+export async function fetchBanners(isMobile = false) {
+  const endpoint = isMobile ? 'mobilebanner' : 'banner';
+  const data = await apiClient(endpoint);
+  return partitionByCity(data.map(normalizeBanner), (b) => b.city);
+}
+
+export async function fetchIconLocations() {
+  const data = await apiClient('iconlocation');
+  return data.map(normalizeIconLocation);
+}
+
+export async function fetchOutlets() {
+  const data = await apiClient('location');
+  return data.map(normalizeOutlet);
+}
+
+export async function fetchServices() {
+  const data = await apiClient('service');
+  return data.map((s, idx) => normalizeService(s, idx));
+}
+
+export async function fetchServiceBanners() {
+  const data = await apiClient('servicebanner');
+  return partitionByCity(
+    data.map((b) => ({
+      id: String(b.id),
+      imageUrl: `https://kalyanimotorsadmin.kalyanimotors.com/storage/${b.service_banner}`,
+      image: `https://kalyanimotorsadmin.kalyanimotors.com/storage/${b.service_banner}`,
+      city: normalizeCity(b.city),
+    })),
+    (b) => b.city
+  );
+}
+
+export async function fetchServiceVideo() {
+  const data = await apiClient('servicevideo');
+  return data[0]?.youtube_link ?? '';
+}
+
+export async function fetchServiceFaq() {
+  const data = await apiClient('servicefaq');
+  return data.map(normalizeCommonFaq);
+}
+
+export async function fetchSeasonalServices() {
+  const data = await apiClient('attachseasonservice');
+  return data[0]?.services ?? [];
+}
+
+export async function fetchCommonFaq() {
+  const data = await apiClient('commonfaq');
+  return data.map(normalizeCommonFaq);
+}
+
+export async function fetchBlogPages() {
+  return apiClient('blogpage');
+}
+
+export async function submitEnquiry(body) {
+  return apiClient('enquiry', {
+    method: 'POST',
+    body: JSON.stringify(body),
   });
-  return apiClient(`cars?${queryParams.toString()}`);
 }
 
-/**
- * Fetch single car by URL slug
- */
-export async function getCarBySlug(slug) {
-  if (USE_MOCK) {
-    const car = mockCars.find((c) => c.slug.toLowerCase() === slug.toLowerCase());
-    if (!car) throw new Error(`Car not found for slug: ${slug}`);
-    return car;
-  }
-  return apiClient(`cars/${slug}`);
-}
+// ─── Form Submission Adapters ─────────────────────────────────────────────────
 
-/**
- * Fetch dealership and workshop locations for a selected city
- */
-export async function getLocations(city = 'bengaluru') {
-  if (USE_MOCK) {
-    const key = city.toLowerCase();
-    return mockLocations[key] || mockLocations.bengaluru;
-  }
-  return apiClient(`locations?city=${city}`);
-}
-
-/**
- * Fetch all locations across all cities
- */
-export async function getAllLocations() {
-  if (USE_MOCK) {
-    return mockLocations;
-  }
-  return apiClient('locations/all');
-}
-
-/**
- * Fetch service packages & periodic maintenance details
- */
-export async function getServices() {
-  if (USE_MOCK) {
-    return mockServices;
-  }
-  return apiClient('services');
-}
-
-/**
- * Fetch customer FAQs
- */
-export async function getFaqs() {
-  if (USE_MOCK) {
-    return mockFaqs;
-  }
-  return apiClient('faqs');
-}
-
-/**
- * Submit test drive inquiry
- */
 export async function submitTestDrive(data) {
-  if (USE_MOCK) {
-    console.log('[Mock API] Test Drive submitted:', data);
-    return {
-      success: true,
-      message: 'Test drive scheduled successfully! Our relationship manager will contact you shortly.',
-      bookingId: `KL-TD-${Math.floor(100000 + Math.random() * 900000)}`,
-      data,
-    };
-  }
-  return apiClient('test-drive', {
-    method: 'POST',
-    body: JSON.stringify(data),
+  return submitEnquiry({
+    name: data.fullName || data.name,
+    phone: data.phone,
+    email: data.email || '',
+    city: data.city || 'Bengaluru',
+    location: data.branch || data.location || data.city || 'Bengaluru',
+    vehicle: data.carModel || data.vehicle || '',
+    purpose: 'Book Test Drive',
   });
 }
 
-/**
- * Submit service appointment booking
- */
 export async function submitServiceBooking(data) {
-  if (USE_MOCK) {
-    console.log('[Mock API] Service Booking submitted:', data);
-    return {
-      success: true,
-      message: 'Service appointment confirmed! A service advisor will inspect your vehicle.',
-      appointmentId: `KL-SRV-${Math.floor(100000 + Math.random() * 900000)}`,
-      data,
-    };
-  }
-  return apiClient('service-bookings', {
-    method: 'POST',
-    body: JSON.stringify(data),
+  return submitEnquiry({
+    name: data.fullName || data.name,
+    phone: data.phone,
+    email: data.email || '',
+    city: data.city || 'Bengaluru',
+    location: data.workshop || data.location || data.city || 'Bengaluru',
+    vehicle: data.carModel || data.vehicle || '',
+    purpose: 'Book Service',
   });
 }
 
-/**
- * Submit general inquiry / contact message
- */
 export async function submitContactEnquiry(data) {
-  if (USE_MOCK) {
-    console.log('[Mock API] Contact Inquiry submitted:', data);
-    return {
-      success: true,
-      message: 'Thank you for reaching out. We will get in touch with you within 2 business hours.',
-      ticketId: `KL-ENQ-${Math.floor(100000 + Math.random() * 900000)}`,
-      data,
-    };
-  }
-  return apiClient('contact', {
-    method: 'POST',
-    body: JSON.stringify(data),
+  return submitEnquiry({
+    name: data.fullName || data.name,
+    phone: data.phone,
+    email: data.email || '',
+    city: data.city || 'Bengaluru',
+    location: data.city || 'Bengaluru',
+    vehicle: data.model || data.vehicle || '',
+    purpose: data.purpose || data.category || 'Vehicle Purchase Enquiry',
   });
 }
+
+// Legacy aliases
+export const getHomeData = fetchAllModels;
+export const getModelCars = fetchModelCars;
+export const getCarBySlug = fetchCarBySlug;
+export const getLocations = fetchOutlets;
+export const getAllLocations = fetchOutlets;
+export const getServices = fetchServices;
+export const getFaqs = fetchCommonFaq;

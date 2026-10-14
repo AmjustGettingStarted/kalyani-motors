@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { mockLocations } from "../../../data/mockLocations";
+import useOutlets from "../../../components/hooks/useOutlets";
 import useHeader from "../../../components/hooks/useHeader";
 import {
   Car,
@@ -45,17 +45,27 @@ export default function AnimatedOutlets() {
   // Header state
   const { isHidden } = useHeader();
 
-  // Pull the current city from your context (e.g., 'bengaluru', 'hyderabad')
+  // Pull the current city from context and live outlets from useOutlets hook
   const { selectedCity } = useKalyani();
+  const { data: allOutlets = [] } = useOutlets();
 
   const cityKey = selectedCity?.toLowerCase() || "bengaluru";
-  const locationsForCity = mockLocations[cityKey] || [];
+  const locationsForCity = allOutlets.filter((outlet) => {
+    const oCity = outlet.city?.toLowerCase() || "";
+    if (cityKey === "bengaluru" || cityKey === "bangalore") {
+      return oCity === "bengaluru" || oCity === "bangalore";
+    }
+    if (cityKey === "hyderabad" || cityKey === "hydrabad") {
+      return oCity === "hyderabad" || oCity === "hydrabad";
+    }
+    return oCity === cityKey;
+  });
 
   const currentTabInfo = TABS.find((t) => t.name === activeTab);
   const hasSub = !!currentTabInfo?.subOptions;
 
   const filteredOutlets = locationsForCity.filter((outlet) => {
-    if (outlet.category !== currentTabInfo.category) return false;
+    if (outlet.category !== currentTabInfo?.category) return false;
     if (hasSub && outlet.type !== activeSubType) return false;
     return true;
   });

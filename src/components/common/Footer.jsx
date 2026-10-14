@@ -2,6 +2,9 @@ import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Mail, MapPin, ArrowUpRight, ChevronDown } from "lucide-react";
+import { useKalyani } from "../../context/KalyaniContext";
+import useBlogPages from "../hooks/useBlogPages";
+import useIconLocations from "../hooks/useIconLocations";
 
 const POPULAR_MODELS = [
   { name: "Maruti Suzuki Swift", path: "/cars/swift" },
@@ -132,13 +135,26 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
   const footerRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
+  const { selectedCity } = useKalyani();
+  const { data: iconLocations = [] } = useIconLocations();
+  const { data: blogPages = [] } = useBlogPages();
+  const validBlogPages = blogPages?.filter((p) => p && p.title) || [];
 
-  // Accordion state for tab & mobile screens (tab has its own, mobile has its own)
+  const cityContact = iconLocations?.find(
+    (loc) => loc?.city?.toLowerCase() === selectedCity?.toLowerCase()
+  );
+
+  const activePhone = cityContact?.phone || "+91 98450 12345";
+  const activeAddress = cityContact?.address || "Nayandahalli, Mysore Road, Bengaluru - 560039";
+  const activeEmail = cityContact?.email || "support@kalyanimotors.com";
+
+  // Accordion state for tab & mobile screens
   const [tabOpen, setTabOpen] = useState({
     brand: true,
     models: false,
     service: false,
     hubs: false,
+    quickLinks: false,
   });
 
   const [mobileOpen, setMobileOpen] = useState({
@@ -146,6 +162,7 @@ export default function Footer() {
     models: false,
     service: false,
     hubs: false,
+    quickLinks: false,
   });
 
   const toggleTab = (key) =>
@@ -203,24 +220,24 @@ export default function Footer() {
       <div className="pt-1 space-y-2.5">
         <div className="flex items-center gap-2.5 text-slate-700">
           <MapPin className="w-4 h-4 text-red-600 shrink-0" />
-          <span>Nayandahalli, Mysore Road, Bengaluru - 560039</span>
+          <span>{activeAddress}</span>
         </div>
         <div className="flex items-center gap-2.5 text-slate-700">
           <Phone className="w-4 h-4 text-blue-600 shrink-0" />
           <a
-            href="tel:+919845012345"
+            href={`tel:${activePhone.replace(/[^\d+]/g, '')}`}
             className="hover:text-blue-600 transition-colors"
           >
-            +91 98450 12345 / +91 98450 12346
+            {activePhone}
           </a>
         </div>
         <div className="flex items-center gap-2.5 text-slate-700">
           <Mail className="w-4 h-4 text-emerald-600 shrink-0" />
           <a
-            href="mailto:support@kalyanimotors.com"
+            href={`mailto:${activeEmail}`}
             className="hover:text-blue-600 transition-colors"
           >
-            support@kalyanimotors.com
+            {activeEmail}
           </a>
         </div>
       </div>
@@ -273,15 +290,32 @@ export default function Footer() {
     </ul>
   );
 
+  const QuickLinksContent = (
+    <ul className="space-y-2.5">
+      {validBlogPages.map((page) => (
+        <li key={page.id || page.title}>
+          <a
+            href={page.blogpage_link || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-blue-600 transition-colors block"
+          >
+            {page.title}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <footer
       ref={footerRef}
       className="w-full bg-slate-50 text-slate-600 text-xs border-t border-slate-200 overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 lg:py-14">
-        {/* 1) DESKTOP UI (>= 1024px): 60% Left : 40% Right                */}
+        {/* 1) DESKTOP UI (>= 1024px): 40% Left : 60% Right */}
         <div className="hidden lg:grid lg:grid-cols-[40%_60%] gap-12 items-start">
-          {/* Left Column (60%): 2 rows (80% Up & 20% Down) */}
+          {/* Left Column (40%): 2 rows (80% Up & 20% Down) */}
           <motion.div
             variants={columnVariants}
             initial="hidden"
@@ -311,13 +345,15 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Right Column (40%): Rest keep the same as it is (3 columns) */}
+          {/* Right Column (60%): 3 or 4 columns depending on CMS quick links */}
           <motion.div
             variants={columnVariants}
             initial="hidden"
             animate={isVisible ? "visible" : "hidden"}
             custom={0.2}
-            className="grid grid-cols-3 gap-6 will-change-transform"
+            className={`grid ${
+              validBlogPages.length > 0 ? "grid-cols-4" : "grid-cols-3"
+            } gap-6 will-change-transform`}
           >
             {/* Popular Models */}
             <div>
@@ -342,14 +378,23 @@ export default function Footer() {
               </h4>
               {DealershipContent}
             </div>
+
+            {/* Optional CMS Quick Links */}
+            {validBlogPages.length > 0 && (
+              <div>
+                <h4 className="text-slate-900 font-display font-bold text-xs uppercase tracking-wider mb-4">
+                  Quick Links
+                </h4>
+                {QuickLinksContent}
+              </div>
+            )}
           </motion.div>
         </div>
 
-        {/* 2) TAB UI (768px - 1023px):                                     */}
+        {/* 2) TAB UI (768px - 1023px) */}
         <div className="hidden md:grid lg:hidden grid-cols-2 gap-10 items-start">
           {/* Left Side: Brand (Logo dropdown) + App/Play Store badges */}
           <div className="space-y-6">
-            {/* Left Item 1: Dropdown with Logo as dropdown heading */}
             <DropdownItem
               isLogoHeading
               isOpen={tabOpen.brand}
@@ -358,7 +403,6 @@ export default function Footer() {
               {BrandBioContent}
             </DropdownItem>
 
-            {/* Left Item 2: App Store & Play Store logos */}
             <div className="pt-2">
               <span className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-2.5">
                 Download Kalyani Motors App
@@ -367,9 +411,8 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Right Side: Popular Models, Service & Care, Dealership Hubs */}
+          {/* Right Side: Popular Models, Service & Care, Dealership Hubs, Quick Links */}
           <div className="space-y-1">
-            {/* Right Item 1: Popular Models */}
             <DropdownItem
               title="Popular Models"
               isOpen={tabOpen.models}
@@ -378,7 +421,6 @@ export default function Footer() {
               {ModelsContent}
             </DropdownItem>
 
-            {/* Right Item 2: Service & Care */}
             <DropdownItem
               title="Service & Care"
               isOpen={tabOpen.service}
@@ -387,7 +429,6 @@ export default function Footer() {
               {ServiceContent}
             </DropdownItem>
 
-            {/* Right Item 3: Dealership Hubs */}
             <DropdownItem
               title="Dealership Hubs"
               isOpen={tabOpen.hubs}
@@ -395,12 +436,21 @@ export default function Footer() {
             >
               {DealershipContent}
             </DropdownItem>
+
+            {validBlogPages.length > 0 && (
+              <DropdownItem
+                title="Quick Links"
+                isOpen={tabOpen.quickLinks}
+                onToggle={() => toggleTab("quickLinks")}
+              >
+                {QuickLinksContent}
+              </DropdownItem>
+            )}
           </div>
         </div>
 
-        {/* 3) MOBILE UI - All in rows - dropdown structure       */}
+        {/* 3) MOBILE UI - All in rows - dropdown structure */}
         <div className="block md:hidden space-y-1">
-          {/* 1st section: Logo as dropdown heading */}
           <DropdownItem
             isLogoHeading
             isOpen={mobileOpen.brand}
@@ -409,7 +459,6 @@ export default function Footer() {
             {BrandBioContent}
           </DropdownItem>
 
-          {/* Popular Models Dropdown */}
           <DropdownItem
             title="Popular Models"
             isOpen={mobileOpen.models}
@@ -418,7 +467,6 @@ export default function Footer() {
             {ModelsContent}
           </DropdownItem>
 
-          {/* Service & Care Dropdown */}
           <DropdownItem
             title="Service & Care"
             isOpen={mobileOpen.service}
@@ -427,7 +475,6 @@ export default function Footer() {
             {ServiceContent}
           </DropdownItem>
 
-          {/* Dealership Hubs Dropdown */}
           <DropdownItem
             title="Dealership Hubs"
             isOpen={mobileOpen.hubs}
@@ -436,7 +483,16 @@ export default function Footer() {
             {DealershipContent}
           </DropdownItem>
 
-          {/* Bottom Store Badges */}
+          {validBlogPages.length > 0 && (
+            <DropdownItem
+              title="Quick Links"
+              isOpen={mobileOpen.quickLinks}
+              onToggle={() => toggleMobile("quickLinks")}
+            >
+              {QuickLinksContent}
+            </DropdownItem>
+          )}
+
           <div className="pt-6 pb-2">
             <span className="block text-xs font-bold uppercase tracking-wider text-slate-800 mb-2.5">
               Download Kalyani Motors App
@@ -445,7 +501,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* 4) Rights and price  */}
+        {/* 4) Bottom Bar */}
         <motion.div
           variants={columnVariants}
           initial="hidden"

@@ -1,9 +1,4 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
-import { mockCars } from '../data/mockCars';
-import { mockBanners } from '../data/mockBanners';
-import { mockLocations } from '../data/mockLocations';
-import { mockServices } from '../data/mockServices';
-import { mockFaqs } from '../data/mockFaqs';
+import React, { createContext, useContext, useState } from 'react';
 
 export const CITIES = ['Bengaluru', 'Hyderabad', 'Mysore', 'Chennai'];
 
@@ -40,7 +35,7 @@ export function KalyaniProvider({ children }) {
   const openTestDrive = (car = null) => {
     setTestDriveModal({
       isOpen: true,
-      selectedCar: car || mockCars[0],
+      selectedCar: car || null,
     });
   };
 
@@ -48,22 +43,10 @@ export function KalyaniProvider({ children }) {
     setTestDriveModal((prev) => ({ ...prev, isOpen: false }));
   };
 
-  // Filtered locations for current active city
-  const cityLocations = useMemo(() => {
-    const key = selectedCity.toLowerCase();
-    return mockLocations[key] || mockLocations.bengaluru;
-  }, [selectedCity]);
-
   const value = {
     selectedCity,
     setSelectedCity,
     cities: CITIES,
-    cars: mockCars,
-    banners: mockBanners,
-    locations: cityLocations,
-    allLocations: mockLocations,
-    services: mockServices,
-    faqs: mockFaqs,
     testDriveModal,
     openTestDrive,
     closeTestDrive,
@@ -77,5 +60,14 @@ export function useKalyani() {
   if (!context) {
     throw new Error('useKalyani must be used within a KalyaniProvider');
   }
-  return context;
+  // Safe empty fallbacks for legacy/unmigrated consumers (Steps 3-7 will replace with query hooks)
+  return {
+    cars: [],
+    banners: [],
+    locations: [],
+    allLocations: {},
+    services: {},
+    faqs: [],
+    ...context,
+  };
 }
