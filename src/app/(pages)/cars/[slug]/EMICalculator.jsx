@@ -215,25 +215,25 @@ function CapsuleStepper({ value, min, max, step, onChange, label }) {
 
   return (
     <div className="mt-1 flex w-full justify-center">
-      <div className="inline-flex items-center overflow-hidden rounded-full border border-slate-200/90 bg-slate-50/90 p-1 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="inline-flex items-center overflow-hidden rounded-full border border-slate-200/80 bg-slate-50/90 px-1 py-0.5 shadow-2xs">
         <motion.button
           type="button"
-          whileTap={{ scale: 0.92 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => onChange(snapToStep(value - step, min, max, step))}
           disabled={atMin}
           aria-label={`Decrease ${label}`}
-          className="flex h-8 w-10 items-center justify-center rounded-full text-lg font-medium text-slate-700 transition-colors hover:bg-white hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="flex h-5 w-7 items-center justify-center rounded-full text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-300"
         >
           −
         </motion.button>
-        <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden="true" />
+        <span className="mx-0.5 h-3 w-px bg-slate-200" aria-hidden="true" />
         <motion.button
           type="button"
-          whileTap={{ scale: 0.92 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => onChange(snapToStep(value + step, min, max, step))}
           disabled={atMax}
           aria-label={`Increase ${label}`}
-          className="flex h-8 w-10 items-center justify-center rounded-full text-lg font-medium text-slate-700 transition-colors hover:bg-white hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="flex h-5 w-7 items-center justify-center rounded-full text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-300"
         >
           +
         </motion.button>
@@ -504,6 +504,166 @@ const GaugeMeter = memo(function GaugeMeter({
   );
 });
 
+function EditableMobileValue({
+  title,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  currencyPrefix = "",
+  unit = "",
+  decimals = 0,
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const startEditing = () => {
+    setDraft(String(value));
+    setEditing(true);
+  };
+
+  const commit = () => {
+    const cleaned = draft.replace(/,/g, "").trim();
+    const parsed = Number(cleaned);
+    if (Number.isFinite(parsed)) {
+      onChange(snapToStep(parsed, min, max, step));
+    }
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1 font-bold text-slate-900">
+        {currencyPrefix && (
+          <span className="text-xs font-semibold text-slate-500">
+            {currencyPrefix}
+          </span>
+        )}
+        <input
+          autoFocus
+          type="text"
+          inputMode={decimals > 0 ? "decimal" : "numeric"}
+          aria-label={`Edit ${title}`}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit();
+            } else if (e.key === "Escape") {
+              setDraft(String(value));
+              setEditing(false);
+            }
+          }}
+          className="w-20 border-b border-blue-600 bg-transparent px-0.5 py-0 text-right text-sm font-bold text-slate-900 outline-none"
+        />
+        {unit && (
+          <span className="text-xs font-medium text-slate-500">{unit}</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={startEditing}
+      className="group inline-flex items-baseline gap-1 border-b border-dashed border-slate-300 pb-0.5 text-right font-bold transition-colors hover:border-blue-500"
+      title={`Click to edit ${title}`}
+      aria-label={`Selected ${title}: ${formatNumber(value, decimals)}. Click to edit.`}
+    >
+      {currencyPrefix && (
+        <span className="text-xs font-semibold text-slate-600">
+          {currencyPrefix}
+        </span>
+      )}
+      <span className="text-sm font-bold text-blue-700 tabular-nums">
+        <MemoRollingNumber value={value} decimals={decimals} />
+      </span>
+      {unit && (
+        <span className="text-xs font-medium text-slate-500">{unit}</span>
+      )}
+    </button>
+  );
+}
+
+function HorizontalLineSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  unit = "",
+  currencyPrefix = "",
+  minLabel,
+  maxLabel,
+  icons,
+  decimals = 0,
+}) {
+  const percentage = Math.min(
+    100,
+    Math.max(0, ((value - min) / (max - min)) * 100),
+  );
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            {label}
+          </span>
+          {icons && (
+            <div className="flex items-center gap-1.5 text-slate-400">
+              {icons}
+            </div>
+          )}
+        </div>
+
+        {/* Editable value: user can click and type */}
+        <EditableMobileValue
+          title={label}
+          value={value}
+          min={min}
+          max={max}
+          step={step}
+          onChange={onChange}
+          currencyPrefix={currencyPrefix}
+          unit={unit}
+          decimals={decimals}
+        />
+      </div>
+
+      {/* Slim Slider Track Line */}
+      <div className="relative flex items-center py-1">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) =>
+            onChange(snapToStep(Number(e.target.value), min, max, step))
+          }
+          aria-label={label}
+          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600 transition-all focus:outline-none"
+          style={{
+            background: `linear-gradient(to right, #2563eb 0%, #2563eb ${percentage}%, #e2e8f0 ${percentage}%, #e2e8f0 100%)`,
+          }}
+        />
+      </div>
+
+      {/* Smaller min/max markers, NO + / - capsule */}
+      <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+        <span>{minLabel || min}</span>
+        <span>{maxLabel || max}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function EMICalculator({ car, selectedVariant, currentPrice }) {
   const [downPayment, setDownPayment] = useState(() =>
     getInitialDownPayment(currentPrice),
@@ -581,16 +741,158 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
           );
   const totalInterest = Math.max(0, emi * totalMonths - loanPrincipal);
 
+  const handleOpenEmiOffers = () => {
+    window.dispatchEvent(
+      new CustomEvent("open-emi-offers", {
+        detail: {
+          car,
+          variant: selectedVariant,
+          carPrice: currentPrice,
+          downPayment: safeDownPayment,
+          loanAmount: loanPrincipal,
+          tenureYears: loanTenureYears,
+          interestRate,
+          estimatedEmi: emi,
+        },
+      }),
+    );
+  };
+
   return (
     <section
       ref={sectionRef}
-      className="mb-8 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_12px_35px_rgba(15,23,42,0.07)]"
+      className="mb-8 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-[0_12px_35px_rgba(15,23,42,0.07)]"
     >
-      <div className="grid grid-cols-[75%_25%]">
-        {/* 1) INPUT PART: Tenure, Interest Rate (along with icons), and Down Payment in 3 equal parts */}
-        <div className="grid grid-cols-1 md:grid-cols-3">
+      {/* ============================================================== */}
+      {/* 1) MOBILE UI (< 768px, 'block md:hidden'):                     */}
+      {/*    Simple horizontal line design & information below it        */}
+      {/*    Clean, unboxed modern layout with editable values           */}
+      {/* ============================================================== */}
+      <div className="block md:hidden space-y-5">
+        {/* Horizontal Line Controls - clean unboxed layout */}
+        <div className="space-y-3.5 divide-y divide-slate-100">
+          {/* Down Payment */}
+          <div className="pb-3.5">
+            <HorizontalLineSlider
+              label="Down Payment"
+              value={safeDownPayment}
+              min={MIN_DOWN_PAYMENT}
+              max={maxDownPayment}
+              step={DOWN_PAYMENT_STEP}
+              onChange={handleDownPaymentChange}
+              currencyPrefix="₹"
+              minLabel="₹50K"
+              maxLabel={`₹${formatDownPaymentTick(maxDownPayment)}`}
+            />
+          </div>
+
           {/* Tenure */}
-          <div className="flex min-w-0 flex-col items-center justify-end gap-8">
+          <div className="pt-3.5 pb-3.5">
+            <HorizontalLineSlider
+              label="Loan Tenure"
+              value={loanTenureYears}
+              min={1}
+              max={12}
+              step={1}
+              onChange={handleTenureChange}
+              unit="Years"
+              minLabel="1 Yr"
+              maxLabel="12 Yrs"
+            />
+          </div>
+
+          {/* Interest Rate */}
+          <div className="pt-3.5">
+            <HorizontalLineSlider
+              label="Interest Rate"
+              value={interestRate}
+              min={7.5}
+              max={30}
+              step={0.25}
+              onChange={handleInterestRateChange}
+              unit="% p.a."
+              decimals={2}
+              minLabel="7.5%"
+              maxLabel="30%"
+              icons={
+                <>
+                  <Fuel className="h-3 w-3" aria-label="Fuel" />
+                  <ShieldCheck className="h-3 w-3" aria-label="Safety" />
+                  <Zap className="h-3 w-3" aria-label="Engine" />
+                  <Gauge className="h-3 w-3" aria-label="Dashboard" />
+                </>
+              }
+            />
+          </div>
+        </div>
+
+        {/* Information Below It - Clean & Professional (no extra boxy borders) */}
+        <div className="space-y-4 pt-3 border-t border-slate-200/80">
+          {/* Estimated Monthly EMI */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Estimated Monthly EMI
+            </span>
+            <div className="flex items-baseline gap-1 text-slate-900">
+              <span className="text-lg font-bold text-blue-600">₹</span>
+              <span className="text-2xl font-black tracking-tight text-blue-700">
+                <MemoRollingNumber value={emi} />
+              </span>
+              <span className="text-xs font-medium text-slate-500">
+                / mo
+              </span>
+            </div>
+          </div>
+
+          {/* Loan Details (clean rows with subtle divider) */}
+          <div className="space-y-2 py-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-slate-500">
+                Loan Amount
+              </span>
+              <span className="font-semibold text-slate-800 tabular-nums">
+                ₹ <MemoRollingNumber value={loanPrincipal} />
+              </span>
+            </div>
+            <div className="h-px bg-slate-100" />
+            <div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-slate-500">
+                  Total Interest
+                </span>
+                <span className="font-semibold text-slate-800 tabular-nums">
+                  ₹ <MemoRollingNumber value={totalInterest} />
+                </span>
+              </div>
+              <p className="mt-0.5 text-right text-[10px] text-slate-400">
+                Calculated after down payment*
+              </p>
+            </div>
+          </div>
+
+          {/* Get EMI Offers Button */}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.98 }}
+            onClick={handleOpenEmiOffers}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-blue-700"
+          >
+            Get EMI Offers
+            <ChevronRight className="h-4 w-4" />
+          </motion.button>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* 2) TAB & DESKTOP UI ('hidden md:flex'):                         */}
+      {/*    Tab (768-1023px): Meters UP (3 cols), Information DOWN (3 cols)*/}
+      {/*    Desktop (>=1024px): Meters LEFT (72%), Info RIGHT (28%)       */}
+      {/* ============================================================== */}
+      <div className="hidden md:flex md:flex-col lg:grid lg:grid-cols-[72%_28%] lg:gap-6">
+        {/* METER SET-UP: UP on Tab, LEFT on Desktop */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end">
+          {/* Tenure */}
+          <div className="flex min-w-0 flex-col items-center justify-end gap-6 sm:gap-8">
             <div className="mb-1 hidden h-5 md:block" aria-hidden="true" />
             <GaugeMeter
               title="Tenure"
@@ -608,11 +910,11 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
           </div>
 
           {/* Rate of Interest (along with icons) */}
-          <div className="flex min-w-0 flex-col items-center justify-start gap-12 p-8">
+          <div className="flex min-w-0 flex-col items-center justify-start gap-8 sm:gap-12 p-2 sm:p-4 md:p-6 lg:p-8">
             {/* Icons */}
-            <div className="mb-1 flex h-5 items-start justify-center gap-6 text-slate-400">
+            <div className="mb-1 flex h-5 items-start justify-center gap-4 sm:gap-6 text-slate-400">
               <Fuel
-                className="h-6 w-6 sm:h-[18px] sm:w-[18px]"
+                className="h-5 w-5 sm:h-[18px] sm:w-[18px]"
                 aria-label="Fuel"
               />
               <ShieldCheck
@@ -667,13 +969,12 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
           </div>
         </div>
 
-        {/* 2) OUTPUT PART: 3 cols (1st: Monthly EMI, 2nd: Loan and Interest [2 rows], 3rd: Get Offers btn) */}
-        <div className="border-l border-slate-200/90 pt-6 lg:pt-7 px-6">
-          <div className="grid grid-cols-1 items-center gap-4 md:grid-rows-3">
-            {/* 1st col: Monthly EMI */}
-            <div className="flex min-w-0 flex-col justify-center border-b border-slate-200/90 pt-4 lg:pb-7 px-6">
+        {/* INFORMATION SECTION: DOWN on Tab, RIGHT on Desktop */}
+        <div className="border-t border-slate-200/90 pt-6 mt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:mt-0 lg:pl-6">
+          <div className="grid grid-cols-3 items-center gap-6 lg:grid-cols-1 lg:grid-rows-3 lg:gap-4 lg:h-full lg:justify-between">
+            {/* 1st: Monthly EMI */}
+            <div className="flex min-w-0 flex-col justify-center border-b-0 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:border-b lg:pb-7 lg:pt-4 lg:px-4">
               <div className="flex items-center gap-2 text-slate-500">
-                {/* <Calculator className="h-4 w-4 text-blue-600" /> */}
                 <span className="text-[11px] font-bold uppercase tracking-[0.11em] sm:text-xs">
                   Estimated Monthly EMI
                 </span>
@@ -690,8 +991,8 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
               </div>
             </div>
 
-            {/* 2nd col: Middle col into 2 rows (Loan Amount and Total Interest) */}
-            <div className="flex min-w-0 flex-col justify-center gap-2.5 md:px-6 lg:px-8">
+            {/* 2nd: Loan Amount and Total Interest (2 rows) */}
+            <div className="flex min-w-0 flex-col justify-center gap-2.5 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:px-4">
               {/* Row 1: Loan Amount */}
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 sm:text-xs">
@@ -726,29 +1027,14 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
               </div>
             </div>
 
-            {/* 3rd col: Get Offers Button */}
-            <div className="flex min-w-0 items-center justify-center md:justify-end">
+            {/* 3rd: Get Offers Button */}
+            <div className="flex min-w-0 items-center justify-center lg:justify-end">
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.98 }}
                 whileHover={{ y: -1 }}
-                onClick={() => {
-                  window.dispatchEvent(
-                    new CustomEvent("open-emi-offers", {
-                      detail: {
-                        car,
-                        variant: selectedVariant,
-                        carPrice: currentPrice,
-                        downPayment: safeDownPayment,
-                        loanAmount: loanPrincipal,
-                        tenureYears: loanTenureYears,
-                        interestRate,
-                        estimatedEmi: emi,
-                      },
-                    }),
-                  );
-                }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(37,99,235,0.2)] transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:max-w-xs"
+                onClick={handleOpenEmiOffers}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(37,99,235,0.2)] transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
               >
                 Get EMI Offers
                 <ChevronRight className="h-4 w-4" />
