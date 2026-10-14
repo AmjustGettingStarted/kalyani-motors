@@ -1,14 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useKalyani } from '../../context/KalyaniContext';
-import { submitTestDrive } from '../../services/kalyaniApi';
+import { submitLead } from '../../services/zuqoClient';
+import useAllModelList from '../hooks/useAllModelList';
+import useOutlets from '../hooks/useOutlets';
 import { X, Calendar, MapPin, CheckCircle, Car, Clock, Phone, User, Home, Building } from 'lucide-react';
 
 export default function TestDriveModal() {
   const { testDriveModal, closeTestDrive, cars, selectedCity, locations } = useKalyani();
   const { isOpen, selectedCar } = testDriveModal;
+  const { data: allModels = [] } = useAllModelList();
+  const { data: allOutlets = [] } = useOutlets();
+
+  const cityOutlets = useMemo(() => {
+    const city = (selectedCity || 'bengaluru').toLowerCase();
+    const list = allOutlets.filter((o) => (o.city || '').toLowerCase() === city);
+    return list.length > 0 ? list : (locations && locations.length > 0 ? locations : allOutlets);
+  }, [allOutlets, selectedCity, locations]);
 
   const [formData, setFormData] = useState({
-    carSlug: '',
+    carName: '',
     fullName: '',
     phone: '',
     email: '',
@@ -18,39 +29,55 @@ export default function TestDriveModal() {
     preferredTime: '10:00 AM - 12:00 PM',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null);
 
   useEffect(() => {
     if (selectedCar) {
       setFormData((prev) => ({
         ...prev,
-        carSlug: selectedCar.slug,
-        branchId: locations[0]?.id || '',
+        carName: selectedCar.name || selectedCar.title || '',
+        branchId: cityOutlets[0]?.id || '',
+      }));
+    } else if (allModels && allModels.length > 0 && !formData.carName) {
+      setFormData((prev) => ({
+        ...prev,
+        carName: allModels[0].title,
+        branchId: cityOutlets[0]?.id || '',
       }));
     }
-  }, [selectedCar, locations]);
+  }, [selectedCar, cityOutlets, allModels, formData.carName]);
+
+  const mutation = useMutation({
+    mutationFn: submitLead,
+    onSuccess: (res) => {
+      setSuccessInfo(res);
+    },
+    onError: () => {
+      alert('Could not schedule test drive. Please try again or call our hotline.');
+    },
+  });
 
   if (!isOpen) return null;
 
-  const activeCar = cars.find((c) => c.slug === formData.carSlug) || selectedCar || cars[0];
+  const activeCarName = formData.carName || selectedCar?.name || allModels[0]?.title || cars[0]?.name || 'Maruti Suzuki Fronx';
+  const activeCar = cars.find((c) => c.name === activeCarName || c.slug === activeCarName) || selectedCar || cars[0];
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        ...formData,
-        carName: activeCar?.name,
-        city: selectedCity,
-      };
-      const res = await submitTestDrive(payload);
-      setSuccessInfo(res);
-    } catch (err) {
-      alert('Could not schedule test drive. Please try again or call our hotline.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    const selectedBranch = cityOutlets.find((o) => String(o.id) === String(formData.branchId));
+    const purpose = selectedCar?.purpose || (formData.locationType === 'doorstep' ? 'Doorstep Test Drive' : 'Book Test Drive');
+
+    mutation.mutate({
+      name: formData.fullName,
+      phone: formData.phone,
+      email: formData.email,
+      city: selectedCity || 'Bengaluru',
+      location: selectedBranch?.title || selectedBranch?.name || selectedBranch?.address || selectedCity || 'Bengaluru',
+      vehicle: activeCarName,
+      purpose,
+      date: formData.preferredDate,
+      time: formData.preferredTime,
+    });
   };
 
   const handleClose = () => {
@@ -72,7 +99,9 @@ export default function TestDriveModal() {
               <Car className="w-5 h-5 text-blue-200" />
             </div>
             <div>
-              <h3 className="font-display font-bold text-lg leading-tight">Book a Test Drive</h3>
+              <h3 className="font-display font-bold text-lg leading-tight">
+                {selectedCar?.purpose === 'On Road Price' ? 'Get On-Road Price' : 'Book a Test Drive'}
+              </h3>
               <p className="text-xs text-blue-200">Kalyani Motors • {selectedCity}</p>
             </div>
           </div>
@@ -94,8 +123,8 @@ export default function TestDriveModal() {
               </div>
               <h4 className="text-xl font-bold font-display text-slate-900 mb-2">Test Drive Confirmed!</h4>
               <p className="text-sm text-slate-600 max-w-md mx-auto mb-4">
-                Thank you, <span className="font-semibold text-slate-900">{formData.fullName}</span>! Your test drive for the{' '}
-                <span className="font-semibold text-blue-800">{activeCar?.name}</span> is booked.
+                Thank you, <span className="font-semibold text-slate-900">{formData.fullName}</span>! Your request for the{' '}
+                <span className="font-semibold text-blue-800">{activeCarName}</span> has been received.
               </p>
               <div className="inline-block bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl text-xs text-slate-700 font-mono mb-6">
                 Booking ID: <span className="font-bold text-blue-700">{successInfo.bookingId}</span>
@@ -130,15 +159,21 @@ export default function TestDriveModal() {
 
                 <div className="w-40">
                   <select
-                    value={formData.carSlug}
-                    onChange={(e) => setFormData({ ...formData, carSlug: e.target.value })}
+                    value={formData.carName}
+                    onChange={(e) => setFormData({ ...formData, carName: e.target.value })}
                     className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-600 focus:outline-none"
                   >
-                    {cars.map((c) => (
-                      <option key={c.slug} value={c.slug}>
-                        {c.name}
-                      </option>
-                    ))}
+                    {allModels && allModels.length > 0
+                      ? allModels.map((m, idx) => (
+                          <option key={m.title || idx} value={m.title}>
+                            {m.title}
+                          </option>
+                        ))
+                      : cars.map((c) => (
+                          <option key={c.slug || c.id} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
                   </select>
                 </div>
               </div>
@@ -221,9 +256,9 @@ export default function TestDriveModal() {
                     onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
                     className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none bg-white"
                   >
-                    {locations.map((loc) => (
+                    {cityOutlets.map((loc) => (
                       <option key={loc.id} value={loc.id}>
-                        {loc.name} - {loc.type}
+                        {loc.title || loc.name} - {loc.type || 'Showroom'}
                       </option>
                     ))}
                   </select>
@@ -270,10 +305,14 @@ export default function TestDriveModal() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={mutation.isPending}
                   className="w-full py-3.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-red-600/25 transition-all transform active:scale-[0.99] disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Confirming Your Slot...' : 'Schedule My Free Test Drive'}
+                  {mutation.isPending
+                    ? 'Confirming Your Slot...'
+                    : selectedCar?.purpose === 'On Road Price'
+                    ? 'Get On-Road Price Breakdown'
+                    : 'Schedule My Free Test Drive'}
                 </button>
                 <p className="text-center text-[11px] text-slate-400 mt-2">
                   No purchase obligation. Valid driving license required at test drive.

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useKalyani } from "../../../context/KalyaniContext";
 import useOutlets from "../../../components/hooks/useOutlets";
+import useModels from "../../../components/hooks/useModels";
+import useEnquiryBanner from "../../../components/hooks/useEnquiryBanner";
+import usePolicyBanner from "../../../components/hooks/usePolicyBanner";
 import FeaturedCarsSection from "../../../components/home/FeaturedCarsSection";
 import HeroVideo from "../../../components/home/HeroVideo";
 import ChannelExperienceSection from "../../../components/home/ArenavsNexaCTA";
@@ -10,8 +13,11 @@ import NearestBranchesSection from "../../../components/home/NearestBranches";
 import EnquiryPopupModal from "../../../components/widgets/EnquiryPopupModal";
 
 export default function HomePage() {
-  const { cars, selectedCity } = useKalyani();
+  const { selectedCity } = useKalyani();
+  const { data: cars = [] } = useModels();
   const { data: allOutlets = [] } = useOutlets();
+  const { data: enquiryBanner } = useEnquiryBanner();
+  usePolicyBanner();
 
   const cityKey = selectedCity?.toLowerCase() || "bengaluru";
   const cityLocations = allOutlets.filter((outlet) => {
@@ -68,6 +74,7 @@ export default function HomePage() {
       <EnquiryPopupModal
         isOpen={showEnquiryModal}
         onClose={handleCloseEnquiry}
+        bannerImage={enquiryBanner?.imageUrl}
       />
     </div>
   );

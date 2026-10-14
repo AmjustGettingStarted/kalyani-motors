@@ -36,3 +36,15 @@ export const mockFaqs = [
     answer: 'All new Maruti Suzuki cars from Kalyani Motors include a 2-year / 40,000 km standard manufacturer warranty, which can be extended up to 5 years / 1,00,000 km with the Maruti Suzuki Extended Warranty plan covering mechanical and electrical breakdown.',
   },
 ];
+
+export const FALLBACK_FAQS = mockFaqs.map((f) => ({
+  id: f.id,
+  title: f.question,
+  content: f.answer,
+  question: f.question,
+  answer: f.answer,
+  subtitle: '',
+  icon: null,
+}));
+
+export default mockFaqs;

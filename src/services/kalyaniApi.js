@@ -5,17 +5,36 @@ import {
   normalizeIconLocation,
   normalizeModel,
   normalizeModelCars,
-  normalizeCarVariant,
+  normalizeCarDetails,
   normalizeService,
   normalizeCommonFaq,
   partitionByCity,
   normalizeCity,
   slugToApiName,
+  getStorageUrl,
 } from './normalizers.js';
 
 export async function fetchAllModels() {
-  const data = await apiClient('model');
-  return data.map(normalizeModel);
+  const [models, categories, modelCars] = await Promise.all([
+    apiClient('model'),
+    apiClient('category').catch(() => []),
+    apiClient('modelcars').catch(() => []),
+  ]);
+
+  const catMap = (categories || []).reduce((acc, cat) => {
+    acc[cat.id] = cat.title;
+    return acc;
+  }, {});
+
+  const modelCarsMap = (modelCars || []).reduce((acc, mc) => {
+    const key = mc.car_model_id || mc.model?.id;
+    if (key && !acc[key]) acc[key] = mc;
+    return acc;
+  }, {});
+
+  return models
+    .map((m) => normalizeModel(m, modelCarsMap, catMap))
+    .sort((a, b) => a.position - b.position);
 }
 
 export async function fetchModelCars() {
@@ -33,7 +52,7 @@ export async function fetchCarBySlug(slug) {
   const encoded = encodeURIComponent(apiName);
   const data = await apiClient(`varientbike?name=${encoded}`);
   if (!data || data.length === 0) throw new Error(`No car data for slug: ${slug}`);
-  return data.map(normalizeCarVariant);
+  return normalizeCarDetails(data[0], slug);
 }
 
 export async function fetchBanners(isMobile = false) {
@@ -85,6 +104,10 @@ export async function fetchSeasonalServices() {
   return data[0]?.services ?? [];
 }
 
+export async function fetchSeasons() {
+  return apiClient('seasons');
+}
+
 export async function fetchCommonFaq() {
   const data = await apiClient('commonfaq');
   return data.map(normalizeCommonFaq);
@@ -92,6 +115,22 @@ export async function fetchCommonFaq() {
 
 export async function fetchBlogPages() {
   return apiClient('blogpage');
+}
+
+export async function fetchEnquiryBannerImg() {
+  const data = await apiClient('enquirybannerimg');
+  return {
+    id: data[0]?.id ? String(data[0].id) : '1',
+    imageUrl: data[0]?.banner_img ? getStorageUrl(data[0].banner_img) : '',
+  };
+}
+
+export async function fetchPolicyBannerImg() {
+  const data = await apiClient('policybannerimg');
+  return {
+    id: data[0]?.id ? String(data[0].id) : '1',
+    imageUrl: data[0]?.policy_img ? getStorageUrl(data[0].policy_img) : '',
+  };
 }
 
 export async function submitEnquiry(body) {

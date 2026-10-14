@@ -1,5 +1,5 @@
 import React from 'react';
-import { Filter, RotateCcw, Building2, Check, Sparkles } from 'lucide-react';
+import { Building2, Check, Sparkles } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -15,10 +15,13 @@ const TRANSMISSION_OPTIONS = ['Manual', 'Automatic'];
 export default function FilterSidebar({
   channel,
   setChannel,
+  bodyOptions = BODY_OPTIONS,
   bodyTypesSelected = [],
   toggleBodyType,
+  fuelOptions = FUEL_OPTIONS,
   fuelTypesSelected = [],
   toggleFuel,
+  transmissionOptions = TRANSMISSION_OPTIONS,
   transmissionSelected = [],
   toggleTransmission,
   maxPrice,
@@ -131,7 +134,7 @@ export default function FilterSidebar({
           </div>
 
           <div className="space-y-1.5">
-            {BODY_OPTIONS.map((type) => {
+            {bodyOptions.map((type) => {
               const isChecked = bodyTypesSelected.includes(type);
               const count = availableCounts.bodyType ? availableCounts.bodyType[type] : 0;
               return (
@@ -184,7 +187,7 @@ export default function FilterSidebar({
           </div>
 
           <div className="space-y-1.5">
-            {FUEL_OPTIONS.map((f) => {
+            {fuelOptions.map((f) => {
               const isChecked = fuelTypesSelected.includes(f);
               const count = availableCounts.fuel ? availableCounts.fuel[f] : 0;
               return (
@@ -237,7 +240,7 @@ export default function FilterSidebar({
           </div>
 
           <div className="space-y-1.5">
-            {TRANSMISSION_OPTIONS.map((t) => {
+            {transmissionOptions.map((t) => {
               const isChecked = transmissionSelected.includes(t);
               const count = availableCounts.transmission ? availableCounts.transmission[t] : 0;
               return (

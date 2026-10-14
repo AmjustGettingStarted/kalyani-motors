@@ -15,18 +15,17 @@ import {
 // import Car360Viewer from "../../../../components/widgets/Car360Viewer";
 // import get360Frames from "../../../../app/images/fronx/360/frames";
 import {
-  Star,
   Gauge,
   Fuel,
-  Zap,
   ShieldCheck,
   Calendar,
   CheckCircle,
-  Calculator,
-  ChevronRight,
   Sparkles,
   Award,
+  Download,
 } from "lucide-react";
+import useCarBySlug from "../../../../components/hooks/useCarBySlug";
+import useModels from "../../../../components/hooks/useModels";
 
 const CarDetailPage = () => {
   const { slug } = useParams();
@@ -40,11 +39,11 @@ const CarDetailPage = () => {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  const { cars, openTestDrive, selectedCity } = useKalyani();
+  const { openTestDrive, selectedCity } = useKalyani();
+  const { data: allModels = [] } = useModels();
+  const { data: variants, isLoading, isError } = useCarBySlug(slug);
 
-  const car = useMemo(() => {
-    return cars.find((c) => c.slug.toLowerCase() === slug?.toLowerCase());
-  }, [cars, slug]);
+  const car = variants?.[0];
 
   const [activeImage, setActiveImage] = useState("");
   const [selectedColor, setSelectedColor] = useState(null);
@@ -62,14 +61,34 @@ const CarDetailPage = () => {
 
   useEffect(() => {
     if (car) {
-      if (!selectedVariant && car.variants?.[0]) {
+      if (car.variants?.length > 0) {
         setSelectedVariant(car.variants[0]);
       }
-      if (!selectedColor && car.colors?.[0]) {
+      if (car.colors?.length > 0) {
         setSelectedColor(car.colors[0]);
       }
+      if (car.gallery?.exterior?.length > 0) {
+        setActiveImage(car.gallery.exterior[0]);
+      } else if (car.heroImage) {
+        setActiveImage(car.heroImage);
+      }
     }
-  }, [car, selectedVariant, selectedColor]);
+  }, [car]);
+
+  // Listen to open-emi-offers custom event from EMICalculator
+  useEffect(() => {
+    const handleEmiOffers = () => {
+      if (car) {
+        openTestDrive({
+          ...car,
+          purpose: "On Road Price",
+          selectedVariant,
+        });
+      }
+    };
+    window.addEventListener("open-emi-offers", handleEmiOffers);
+    return () => window.removeEventListener("open-emi-offers", handleEmiOffers);
+  }, [car, selectedVariant, openTestDrive]);
 
   const carFaqs = useMemo(() => {
     if (!car) return [];
@@ -116,7 +135,16 @@ const CarDetailPage = () => {
     ];
   }, [car]);
 
-  if (!car) {
+  if (isLoading && !car) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm font-medium text-slate-500">Loading vehicle details...</p>
+      </div>
+    );
+  }
+
+  if (!car || isError) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold font-display text-slate-900">
@@ -135,23 +163,11 @@ const CarDetailPage = () => {
     );
   }
 
-  const currentPrice = selectedVariant
-    ? selectedVariant.price
-    : car.startingPrice;
-  // const loanPrincipal = Math.max(0, currentPrice - downPayment);
-  // const monthlyRate = interestRate / 12 / 100;
-  // const totalMonths = loanTenureYears * 12;
-  // const emi =
-  //   loanPrincipal > 0
-  //     ? Math.round(
-  //         (loanPrincipal *
-  //           monthlyRate *
-  //           Math.pow(1 + monthlyRate, totalMonths)) /
-  //           (Math.pow(1 + monthlyRate, totalMonths) - 1),
-  //       )
-  //     : 0;
+  const currentPrice = selectedVariant?.price || car.startingPrice || 650000;
 
-  const otherCars = cars.filter((c) => c.id !== car.id).slice(0, 5);
+  const otherCars = allModels
+    .filter((c) => c.slug?.toLowerCase() !== slug?.toLowerCase())
+    .slice(0, 5);
 
   // const rotationFrames = useMemo(() => {
   //   return get360Frames(car.slug, selectedColor?.key);
@@ -241,9 +257,18 @@ const CarDetailPage = () => {
                 }}
               >
                 <div className="flex-1 gap-1">
-                  <p className="text-xs text-black/70 uppercase tracking-wider font-semibold">
-                    Ex-showroom price ({selectedCity})
-                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-black/70 uppercase tracking-wider font-semibold">
+                      Ex-showroom price ({selectedCity})
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openTestDrive({ ...car, purpose: "On Road Price", selectedVariant })}
+                      className="text-[11px] font-bold text-blue-800 hover:text-blue-900 underline underline-offset-2 cursor-pointer"
+                    >
+                      Get On-Road Price
+                    </button>
+                  </div>
                   <h2 className="text-3xl font-bold text-black drop-shadow-md">
                     {currentPrice ? formatINR(currentPrice) : car.priceRange}
                   </h2>
@@ -316,6 +341,16 @@ const CarDetailPage = () => {
                 >
                   <Calendar className="w-4 h-4" /> Book Test Drive
                 </button>
+                {car.brochureUrl && (
+                  <a
+                    href={car.brochureUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Download className="w-4 h-4" /> Download Official Brochure
+                  </a>
+                )}
               </motion.div>
             </div>
           </div>
@@ -356,9 +391,18 @@ const CarDetailPage = () => {
           <div className="mt-5">
             <div className="grid grid-cols-[4fr_6fr] gap-3">
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
-                  Price
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+                    Price
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => openTestDrive({ ...car, purpose: "On Road Price", selectedVariant })}
+                    className="text-[10px] font-bold text-blue-700 underline"
+                  >
+                    On-Road?
+                  </button>
+                </div>
                 <p className="text-xl font-black text-slate-900 mt-1">
                   {currentPrice ? formatINR(currentPrice) : car.priceRange}
                 </p>
@@ -441,6 +485,17 @@ const CarDetailPage = () => {
               <Calendar className="w-4 h-4" />
               Book Test Drive
             </button>
+            {car.brochureUrl && (
+              <a
+                href={car.brochureUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full mt-2.5 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+              >
+                <Download className="w-4 h-4 text-slate-500" />
+                Download Brochure
+              </a>
+            )}
           </div>
         </section>
 

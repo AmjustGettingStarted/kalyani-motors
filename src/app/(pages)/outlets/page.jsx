@@ -9,7 +9,6 @@ import {
   MapPin,
   Phone,
   ArrowRight,
-  ArrowDown,
   ChevronDown,
   Building2,
 } from "lucide-react";

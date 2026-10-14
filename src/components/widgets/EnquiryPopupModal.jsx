@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation } from '@tanstack/react-query';
 import { useKalyani } from '../../context/KalyaniContext';
-import { submitContactEnquiry } from '../../services/kalyaniApi';
+import { submitLead } from '../../services/zuqoClient';
+import useAllModelList from '../hooks/useAllModelList';
 import {
   X,
   CheckCircle2,
@@ -11,8 +13,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '../ui/select';
 
-export default function EnquiryPopupModal({ isOpen, onClose }) {
+export default function EnquiryPopupModal({ isOpen, onClose, bannerImage }) {
   const { cars, selectedCity } = useKalyani();
+  const { data: allModels = [] } = useAllModelList();
 
   const [formData, setFormData] = useState({
     model: '',
@@ -21,9 +24,27 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
     city: selectedCity || 'Bengaluru',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const handleClose = useCallback(() => {
+    setSuccessInfo(null);
+    setErrorMsg('');
+    onClose?.();
+  }, [onClose]);
+
+  const mutation = useMutation({
+    mutationFn: submitLead,
+    onSuccess: (res) => {
+      setSuccessInfo(res);
+      setTimeout(() => {
+        handleClose();
+      }, 3500);
+    },
+    onError: () => {
+      setErrorMsg('Could not submit enquiry. Please try again or call our helpline.');
+    },
+  });
 
   // Sync city when selectedCity changes
   useEffect(() => {
@@ -32,12 +53,16 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
     }
   }, [selectedCity]);
 
-  // Set default model once cars are loaded
+  // Set default model once models are loaded
   useEffect(() => {
-    if (cars && cars.length > 0 && !formData.model) {
-      setFormData((prev) => ({ ...prev, model: cars[0].name }));
+    if (!formData.model) {
+      if (allModels && allModels.length > 0) {
+        setFormData((prev) => ({ ...prev, model: allModels[0].title }));
+      } else if (cars && cars.length > 0) {
+        setFormData((prev) => ({ ...prev, model: cars[0].name }));
+      }
     }
-  }, [cars, formData.model]);
+  }, [allModels, cars, formData.model]);
 
   // Handle ESC key to close
   useEffect(() => {
@@ -48,11 +73,11 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -65,35 +90,15 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        name: formData.fullName,
-        phone: formData.phone,
-        model: formData.model,
-        city: formData.city,
-        enquiryType: 'Vehicle Purchase Enquiry',
-        timestamp: new Date().toISOString(),
-      };
-
-      const res = await submitContactEnquiry(payload);
-      setSuccessInfo(res);
-
-      // Auto close after 3.5 seconds on success
-      setTimeout(() => {
-        handleClose();
-      }, 3500);
-    } catch (err) {
-      setErrorMsg('Could not submit enquiry. Please try again or call our helpline.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleClose = () => {
-    setSuccessInfo(null);
-    setErrorMsg('');
-    onClose?.();
+    mutation.mutate({
+      name: formData.fullName,
+      phone: formData.phone,
+      model: formData.model,
+      vehicle: formData.model,
+      city: formData.city,
+      location: formData.city,
+      purpose: 'Vehicle Purchase Enquiry',
+    });
   };
 
   return (
@@ -192,7 +197,17 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
                         className="w-[var(--radix-select-trigger-width)] max-h-60 sm:max-h-72 rounded-xl border border-slate-200 bg-white shadow-xl overflow-y-auto scrollbar-none overscroll-contain"
                         data-lenis-prevent="true"
                       >
-                        {cars && cars.length > 0 ? (
+                        {allModels && allModels.length > 0 ? (
+                          allModels.map((m, idx) => (
+                            <SelectItem
+                              key={m.title || idx}
+                              value={m.title}
+                              className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100"
+                            >
+                              <span className="truncate block">{m.title}</span>
+                            </SelectItem>
+                          ))
+                        ) : cars && cars.length > 0 ? (
                           cars.map((car) => (
                             <SelectItem
                               key={car.id}
@@ -217,15 +232,6 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
                             </SelectItem>
                             <SelectItem value="Brezza" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
                               <span className="truncate block">Brezza (Arena)</span>
-                            </SelectItem>
-                            <SelectItem value="Invicto" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
-                              <span className="truncate block">Invicto (Nexa)</span>
-                            </SelectItem>
-                            <SelectItem value="Baleno" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
-                              <span className="truncate block">Baleno (Nexa)</span>
-                            </SelectItem>
-                            <SelectItem value="Dzire" className="text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer py-2.5 rounded-lg focus:bg-slate-100">
-                              <span className="truncate block">Dzire (Arena)</span>
                             </SelectItem>
                           </>
                         )}
@@ -285,10 +291,10 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
                   <div className="pt-2">
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={mutation.isPending}
                       className="px-8 py-3 rounded-full bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-400/20 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-50"
                     >
-                      <span>{isSubmitting ? 'Requesting...' : 'Request an Enquiry'}</span>
+                      <span>{mutation.isPending ? 'Requesting...' : 'Request an Enquiry'}</span>
                     </button>
                   </div>
                 </form>
@@ -306,7 +312,7 @@ export default function EnquiryPopupModal({ isOpen, onClose }) {
           <div className="w-full md:w-1/2 relative min-h-[220px] md:min-h-[460px] bg-slate-950 flex flex-col justify-between overflow-hidden">
             {/* Background Image */}
             <img
-              src="/assets/maruti_fleet_enquiry_banner.jpg"
+              src={bannerImage || "/assets/maruti_fleet_enquiry_banner.jpg"}
               alt="Maruti Suzuki Lineup at Kalyani Motors"
               className="absolute inset-0 w-full h-full object-cover object-center transform scale-105 transition-transform duration-700 hover:scale-100"
             />

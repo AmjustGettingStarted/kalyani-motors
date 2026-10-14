@@ -53,13 +53,16 @@ export const SLUG_TO_API_NAME = {
   'alto': 'Maruti Suzuki Alto',
   'alto-k10': 'Maruti Suzuki Alto K10',
   'celerio': 'Maruti Suzuki Celerio',
-  'swift': 'Maruti Suzuki Swift',
-  'wagon-r': 'Maruti Suzuki WagonR',
-  'dzire': 'Maruti Suzuki Dzire',
+  'swift': 'New Epic Swift 2024',
+  'new-epic-swift-2024': 'New Epic Swift 2024',
+  'wagon-r': 'Maruti Suzuki Wagon R',
+  'dzire': 'Maruti Suzuki Dzire 2024',
+  'dzire-2024': 'Maruti Suzuki Dzire 2024',
   'ertiga': 'Maruti Suzuki Ertiga',
   'brezza': 'Maruti Suzuki Brezza 2022',
   'eeco': 'Maruti Suzuki Eeco',
-  's-presso': 'Maruti Suzuki S-Presso',
+  's-presso': 'Maruti Suzuki Spresso',
+  'spresso': 'Maruti Suzuki Spresso',
   'fronx': 'Maruti Suzuki Fronx',
   'baleno': 'Maruti Suzuki Baleno',
   'ignis': 'Maruti Suzuki Ignis',
@@ -187,17 +190,47 @@ export function normalizeBanner(raw) {
   };
 }
 
-export function normalizeModel(raw) {
+export function normalizeModel(raw, modelCarsMap = {}, catMap = {}) {
   if (!raw) return null;
+  const mc = modelCarsMap[raw.id] || modelCarsMap[String(raw.id)];
   const position = typeof raw.position === 'number' ? raw.position : parseInt(raw.position, 10) || 999;
+  const fuels = splitSlashSpec(mc?.fuel || 'Petrol');
+  const transmissions = splitSlashSpec(mc?.transmission || 'Manual');
+  const bodyTypes = splitSlashSpec(mc?.body || 'Hatchback');
+  const channel = catMap[raw.category_id] || (raw.category_id === 1 ? 'Nexa' : raw.category_id === 3 ? 'Commercial' : 'Arena');
+  const price = mc?.price ? parseFloat(mc.price) : (raw.starting_price ? parseFloat(raw.starting_price) : null);
+  const slug = apiNameToSlug(raw.title);
+
   return {
     id: String(raw.id),
     name: raw.title || '',
-    slug: apiNameToSlug(raw.title),
+    slug,
+    channel,
+    bodyType: bodyTypes[0] || 'Hatchback',
+    bodyTypes,
+    fuelTypes: fuels,
+    transmissionTypes: transmissions,
+    startingPrice: price || 500000,
+    priceRange: price ? `From ₹ ${(price / 100000).toFixed(2)} Lakh*` : 'Contact for Price',
+    heroImage: getStorageUrl(raw.image || mc?.image || mc?.images?.[0]?.images),
     image: getStorageUrl(raw.image),
+    images: (mc?.images ?? []).map((img) => getStorageUrl(img.images)),
     categoryId: raw.category_id,
     position,
     isFeatured: position <= 8,
+    tagline: raw.seo_desc || raw.description || '',
+    mileage: '25.2 km/l*',
+    engine: '1.2L K-Series',
+    seatingCapacity: 5,
+    bootSpace: '378 Litres',
+    cardSpecs: [
+      { label: 'Transmission', value: transmissions[0] || 'Manual' },
+      { label: 'Fuel', value: fuels[0] || 'Petrol' },
+      { label: 'Body', value: bodyTypes[0] || 'Hatchback' },
+    ],
+    rating: 4.5,
+    reviewsCount: 0,
+    description: raw.description || '',
   };
 }
 
@@ -213,7 +246,7 @@ export function normalizeModelCars(rawArray) {
         id: String(item.id),
         name: item.name || '',
         slug: apiNameToSlug(item.name),
-        channel: item.model?.category_id === 2 ? 'Nexa' : item.model?.category_id === 3 ? 'Commercial' : 'Arena',
+        channel: item.model?.category_id === 1 || item.category_id === 1 ? 'Nexa' : item.model?.category_id === 3 || item.category_id === 3 ? 'Commercial' : 'Arena',
         bodyType: bodyTypes[0] || 'Hatchback',
         bodyTypes,
         fuelTypes: fuels,
@@ -241,8 +274,138 @@ export function normalizeModelCars(rawArray) {
     .sort((a, b) => a.position - b.position);
 }
 
-export function normalizeCarVariant(raw) {
+export function normalizeCarDetails(model, slug) {
+  if (!model) return [];
+  const modelTitle = model.title || '';
+  const channel = model.category_id === 1 ? 'Nexa' : model.category_id === 3 ? 'Commercial' : 'Arena';
+  const brochureUrl = model.file ? getFileUrl(model.file) : null;
+  const rawHero = getStorageUrl(model.image);
+
+  // Extract all unique colors & gallery images
+  const colorMap = new Map();
+  const extImages = new Set();
+  const intImages = new Set();
+
+  if (rawHero) extImages.add(rawHero);
+
+  (model.varients || []).forEach((v) => {
+    (v.products || []).forEach((p) => {
+      const cName = p.color_name || p.color_name2;
+      let cHex = p.colour_code || p.colour_code2 || '#4a5568';
+      if (!cHex.startsWith('#')) cHex = '#' + cHex;
+      if (!/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(cHex)) {
+        if (/grey|gray|z7q/i.test(cName || cHex)) cHex = '#808285';
+        else if (/silver|z2s/i.test(cName || cHex)) cHex = '#c0c0c0';
+        else if (/red/i.test(cName || cHex)) cHex = '#d32f2f';
+        else if (/blue/i.test(cName || cHex)) cHex = '#1976d2';
+        else if (/white/i.test(cName || cHex)) cHex = '#f5f5f5';
+        else if (/black/i.test(cName || cHex)) cHex = '#212121';
+        else cHex = '#718096';
+      }
+
+      const img = p.images?.[0]?.images || p.image;
+      if (cName && !colorMap.has(cName)) {
+        colorMap.set(cName, {
+          name: cName,
+          hex: cHex,
+          image: getStorageUrl(img) || rawHero,
+        });
+      }
+      (p.images || []).forEach((i) => {
+        if (i.images) extImages.add(getStorageUrl(i.images));
+      });
+    });
+
+    (v.interior_images || []).forEach((intImg) => {
+      if (intImg.interior_images) intImages.add(getStorageUrl(intImg.interior_images));
+    });
+  });
+
+  const colors = Array.from(colorMap.values());
+  const exteriorList = Array.from(extImages);
+  const interiorList = Array.from(intImages);
+
+  const rawVarients = model.varients || [];
+  let minPrice = Infinity;
+  const allFuels = new Set();
+  const allTransmissions = new Set();
+
+  const variants = rawVarients.map((v) => {
+    const specs = (v.specifications || []).reduce((acc, s) => {
+      if (s.specname && s.value) acc[s.specname.toLowerCase().trim()] = s.value;
+      return acc;
+    }, {});
+
+    const firstProduct = (v.products || [])[0];
+    const price = firstProduct?.tn_price || firstProduct?.tg_price || parseFloat(v.price) || null;
+    if (price && price < minPrice) minPrice = price;
+
+    const fuel = specs['fuel type'] || (v.var_title?.includes('CNG') ? 'CNG' : 'Petrol');
+    const transmission = specs['transmission type'] || (v.var_title?.includes('AT') || v.var_title?.includes('AMT') ? 'Automatic' : 'Manual');
+
+    allFuels.add(fuel);
+    allTransmissions.add(transmission);
+
+    let cleanName = v.var_title || '';
+    if (cleanName.toLowerCase().startsWith(modelTitle.toLowerCase())) {
+      cleanName = cleanName.slice(modelTitle.length).trim();
+    }
+
+    return {
+      id: String(v.id),
+      name: cleanName || v.var_title,
+      fullName: v.var_title,
+      price,
+      exShowroomPrice: price,
+      fuel,
+      transmission,
+      engine: specs['engine type'] || (specs['engine capacity'] ? `${specs['engine capacity']} cc` : '1.2L K-Series'),
+      maxPower: specs['maximum power'] || '89.73 PS @ 6000 rpm',
+      maxTorque: specs['maximum torque'] || '113 Nm @ 4400 rpm',
+      mileage: specs['mileage'] || '22.89 km/l*',
+      bootSpace: specs['boot space'] || specs['luggage capacity'] || '308 Litres',
+      fuelTank: specs['fuel tank capacity'] ? `${specs['fuel tank capacity']} Litres` : '37 Litres',
+      seatingCapacity: parseInt(specs['seating capacity'], 10) || 5,
+      specs,
+    };
+  });
+
+  const startingPrice = minPrice !== Infinity ? minPrice : (parseFloat(model.starting_price) || 650000);
+  const priceRange = `From ₹ ${(startingPrice / 100000).toFixed(2)} Lakh*`;
+  const firstV = variants[0] || {};
+  const heroImage = colors[0]?.image || rawHero;
+
+  const car = {
+    ...firstV,
+    id: String(model.id),
+    name: modelTitle,
+    slug: slug || apiNameToSlug(modelTitle),
+    channel,
+    tagline: model.seo_desc || model.description || 'Driven by Innovation',
+    description: model.description || '',
+    heroImage,
+    startingPrice,
+    priceRange,
+    brochureUrl,
+    colors: colors.length > 0 ? colors : [{ name: 'Standard', hex: '#163472', image: heroImage }],
+    gallery: {
+      exterior: exteriorList.length > 0 ? exteriorList : [heroImage],
+      interior: interiorList,
+    },
+    images: exteriorList.length > 0 ? exteriorList : [heroImage],
+    fuelTypes: Array.from(allFuels),
+    transmissionTypes: Array.from(allTransmissions),
+    variants,
+  };
+
+  return [car, ...variants.slice(1)];
+}
+
+export function normalizeCarVariant(raw, slug) {
   if (!raw) return null;
+  if (raw.varients) {
+    return normalizeCarDetails(raw, slug);
+  }
   const fuels = splitSlashSpec(raw.fuel);
   const transmissions = splitSlashSpec(raw.transmission);
   const bodyTypes = splitSlashSpec(raw.body);
@@ -298,12 +461,14 @@ export function normalizeService(raw, index = 0) {
 
 export function normalizeCommonFaq(raw) {
   if (!raw) return null;
+  const q = raw.question || raw.title || '';
+  const a = raw.answer || raw.description || '';
   return {
     id: String(raw.id),
-    title: raw.question || '',
-    content: raw.answer || '',
-    question: raw.question || '',
-    answer: raw.answer || '',
+    title: q,
+    content: a,
+    question: q,
+    answer: a,
     subtitle: '',
     icon: null,
   };

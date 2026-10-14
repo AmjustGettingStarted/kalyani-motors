@@ -1,28 +1,62 @@
-//src\app\(pages)\service\page.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 
+import { useMutation } from "@tanstack/react-query";
 import { useKalyani } from "../../../context/KalyaniContext";
-import { submitServiceBooking } from "../../../services/kalyaniApi";
+import { submitLead } from "../../../services/zuqoClient";
+import useServices from "../../../components/hooks/useServices";
+import useServiceBanners from "../../../components/hooks/useServiceBanners";
+import useServiceFaq from "../../../components/hooks/useServiceFaq";
+import useServiceVideo from "../../../components/hooks/useServiceVideo";
+import useOutlets from "../../../components/hooks/useOutlets";
+import FAQsection from "../../../components/home/FAQsection";
+import { mockServices } from "../../../data/fallbacks/fallbackServices";
 
 export default function ServicePage() {
-  const { selectedCity, locations, cars, services } = useKalyani();
+  const { selectedCity } = useKalyani();
+  const { data: allOutlets = [] } = useOutlets();
+  const { data: servicesData } = useServices();
+  const { data: serviceBanners = {} } = useServiceBanners();
+  const { data: serviceFaqs = [] } = useServiceFaq();
+  const { data: videoData } = useServiceVideo();
 
   const heroRef = useRef(null);
   const serviceSectionRef = useRef(null);
   const serviceRefs = useRef({});
   const [activeService, setActiveService] = useState("maintenance");
-  const [isServiceNavSticky, setIsServiceNavSticky] = useState(false);
   const isProgrammaticScroll = useRef(false);
 
-  // const HERO_WORDS = ["SERVICE", "AND", "DRIVE"];
+  const currentCity = selectedCity || "Bengaluru";
+
+  const heroImages = useMemo(() => {
+    const banners = serviceBanners[currentCity] || serviceBanners["Bengaluru"] || [];
+    return banners.length >= 7
+      ? banners.slice(0, 7)
+      : [...banners, ...mockServices.heroImages].slice(0, 7);
+  }, [serviceBanners, currentCity]);
+
+  const serviceCategories = useMemo(() => {
+    return servicesData && servicesData.length > 0
+      ? servicesData
+      : mockServices.serviceCategories;
+  }, [servicesData]);
+
+  const youtubeEmbedUrl = useMemo(() => {
+    if (!videoData) return null;
+    const v = String(videoData).trim();
+    if (!v) return null;
+    if (v.includes("embed")) return v;
+    if (v.includes("watch?v=")) return v.replace("watch?v=", "embed/");
+    if (v.includes("youtu.be/")) return v.replace("youtu.be/", "www.youtube.com/embed/");
+    return `https://www.youtube-nocookie.com/embed/${v}`;
+  }, [videoData]);
 
   const [bookingForm, setBookingForm] = useState({
     carModel: "Swift",
     regNumber: "",
     serviceType: "10,000 km / 1 Year Periodic Service",
-    workshopId: locations[0]?.id || "",
+    workshopId: allOutlets[0]?.id || "",
     pickupRequired: false,
     date: "",
     timeSlot: "Morning (09:00 AM - 12:00 PM)",
@@ -30,11 +64,10 @@ export default function ServicePage() {
     phone: "",
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  const [bookingConsent, setBookingConsent] = useState(null);
+  const [bookingConsent, setBookingConsent] = useState(false);
 
   /* HERO SCROLL */
   const { scrollYProgress } = useScroll({
@@ -42,10 +75,6 @@ export default function ServicePage() {
     offset: ["start start", "end start"],
   });
 
-  const heroImages = services?.heroImages || [];
-  const serviceCategories = services?.serviceCategories || [];
-
-  // In ServicePage:
   const visibleRatiosRef = useRef({});
   const activeServiceRef = useRef(activeService);
 
@@ -60,7 +89,6 @@ export default function ServicePage() {
       (entries) => {
         if (isProgrammaticScroll.current) return;
 
-        // Update the running visibility ratio for every reporting section
         entries.forEach((entry) => {
           const id = entry.target.dataset.serviceId;
           if (id) {
@@ -70,7 +98,6 @@ export default function ServicePage() {
           }
         });
 
-        // Find the section that currently has the HIGHEST visibility on screen
         let bestId = null;
         let highestRatio = 0;
 
@@ -85,9 +112,6 @@ export default function ServicePage() {
         const currentRatio =
           (currentId && visibleRatiosRef.current[currentId]) || 0;
 
-        // Switch only when the top section meets threshold and either:
-        // 1. beats the current active section by a solid margin (+0.15), or
-        // 2. the current active section has fallen below 0.10 visibility
         if (bestId && highestRatio > 0.15) {
           if (bestId !== currentId) {
             if (highestRatio > currentRatio + 0.15 || currentRatio < 0.1) {
@@ -97,7 +121,6 @@ export default function ServicePage() {
         }
       },
       {
-        // Balances mobile and desktop viewports
         rootMargin: "-20% 0px -30% 0px",
         threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
       },
@@ -140,24 +163,6 @@ export default function ServicePage() {
     { x: "38vw", y: "-13vh", rotate: 0 },
   ];
 
-  useEffect(() => {
-    const section = serviceSectionRef.current;
-
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsServiceNavSticky(entry.isIntersecting);
-      },
-      {
-        threshold: 0.05,
-      },
-    );
-    observer.observe(section);
-
-    return () => observer.disconnect();
-  }, []);
-
   const openBooking = (service) => {
     setSelectedService(service);
     setBookingConsent(false);
@@ -165,13 +170,23 @@ export default function ServicePage() {
 
     setBookingForm((prev) => ({
       ...prev,
-      serviceType: service.title,
+      serviceType: service.title || "General Service",
     }));
 
     setIsBookingOpen(true);
   };
 
-  const handleSubmit = async (e) => {
+  const mutation = useMutation({
+    mutationFn: submitLead,
+    onSuccess: (res) => {
+      setSuccessInfo(res);
+    },
+    onError: () => {
+      alert("Could not submit booking. Please try again or call our hotline.");
+    },
+  });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!bookingConsent) {
@@ -179,35 +194,22 @@ export default function ServicePage() {
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      const res = await submitServiceBooking({
-        ...bookingForm,
-        city: selectedCity,
-      });
-
-      setSuccessInfo(res);
-    } catch (err) {
-      alert("Could not submit booking. Please try again or call our hotline.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutation.mutate({
+      name: bookingForm.fullName,
+      phone: bookingForm.phone,
+      city: currentCity,
+      location: currentCity,
+      vehicle: bookingForm.serviceType || "Car Service",
+      purpose: "Book Service",
+    });
   };
 
   return (
     <main className="bg-[#f5f5f3] text-slate-950">
-      {/* HERO */}
-
+      {/* 1. HERO */}
       <section ref={heroRef} className="relative overflow-hidden">
         <div className="sticky top-0 h-screen overflow-hidden">
-          {/* subtle background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#edf7ff] via-[#f7fbff] to-[#eaf4ff]" />
-          {/* small top label */}
-          <div className="absolute top-8 left-6 md:left-12 z-40" />
-          <div className="absolute top-8 left-6 md:left-12 z-40" />
-
-          {/* center content */}
 
           <motion.div
             className="absolute z-30 inset-0 flex items-center justify-center text-center pointer-events-none"
@@ -227,27 +229,24 @@ export default function ServicePage() {
             </div>
           </motion.div>
 
-          {/* 7 orbiting images */}
-
           <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
             {heroImages.map((item, index) => (
               <OrbitImage
-                key={item.id}
+                key={item.id || index}
                 item={item}
                 index={index}
                 scrollYProgress={scrollYProgress}
-                position={positions[index]}
+                position={positions[index % positions.length]}
               />
             ))}
           </div>
         </div>
       </section>
 
-      {/* SERVICES SECTION */}
-
+      {/* 2. SERVICES SECTION */}
       <section
         ref={serviceSectionRef}
-        className="relative bg-[#f4f9ff] text-[#071936] "
+        className="relative bg-[#f4f9ff] text-[#071936]"
       >
         <ServiceNavigation
           services={serviceCategories}
@@ -265,10 +264,185 @@ export default function ServicePage() {
             }}
           />
         ))}
-        <div className="pb-20 md:pb-20" />
+        <div className="pb-12 md:pb-16" />
       </section>
 
-      {/* SERVICE BOOKING POPUP */}
+      {/* 3. PERIODIC MAINTENANCE MILESTONES (PRESERVED STATIC DATA) */}
+      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12">
+        <div className="mb-10 text-center sm:text-left">
+          <span className="text-xs font-bold tracking-widest text-blue-700 uppercase block mb-1">
+            Manufacturer Schedule
+          </span>
+          <h2 className="font-display font-black text-2xl sm:text-4xl text-[#071936] tracking-tight">
+            Periodic Maintenance Milestones
+          </h2>
+          <p className="text-slate-600 text-xs sm:text-sm mt-2 max-w-2xl leading-relaxed">
+            Keep your Maruti Suzuki performing at its prime while preserving complete warranty coverage across South India.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {mockServices.periodicMaintenance.map((pm) => (
+            <div
+              key={pm.id}
+              className="flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-lg transition-all duration-300"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 border border-blue-100">
+                    {pm.tag}
+                  </span>
+                  <span className="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                    {pm.duration}
+                  </span>
+                </div>
+
+                <h3 className="font-display font-black text-lg text-[#071936]">{pm.interval}</h3>
+                <p className="mt-1 text-xs font-bold text-red-600">{pm.mileage}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-800">{pm.price}</p>
+                <p className="mt-3 text-xs text-slate-500 leading-relaxed">{pm.description}</p>
+
+                <div className="mt-5 border-t border-slate-100 pt-4 space-y-2">
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Key Checklist:
+                  </span>
+                  {pm.checks.map((c, i) => (
+                    <div key={i} className="flex items-start gap-2 text-[11px] text-slate-600">
+                      <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 mt-0.5" />
+                      <span>{c}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => openBooking({ title: pm.interval })}
+                  className="w-full rounded-xl bg-slate-50 py-2.5 text-xs font-bold text-slate-800 border border-slate-200/80 transition hover:bg-blue-700 hover:text-white hover:border-blue-700 cursor-pointer"
+                >
+                  Book This Interval
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. SPECIALIZED WORKSHOP CAPABILITIES (PRESERVED STATIC DATA) */}
+      <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-12">
+        <div className="mb-10 text-center sm:text-left">
+          <span className="text-xs font-bold tracking-widest text-red-600 uppercase block mb-1">
+            Specialized Solutions
+          </span>
+          <h2 className="font-display font-black text-2xl sm:text-4xl text-[#071936] tracking-tight">
+            Kalyani Premium Workshop Capabilities
+          </h2>
+          <p className="text-slate-600 text-xs sm:text-sm mt-2 max-w-2xl leading-relaxed">
+            Express quick bays, mobile doorstep service vans, and computerized paint-booth body repairs.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {mockServices.specializedPackages.map((pkg) => (
+            <div
+              key={pkg.id}
+              className="flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm hover:shadow-lg transition-all duration-300"
+            >
+              <div>
+                <span className="inline-block rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 border border-emerald-200 mb-3">
+                  {pkg.badge}
+                </span>
+                <h3 className="font-display font-black text-base text-[#071936] leading-snug">{pkg.title}</h3>
+                <p className="mt-1 text-xs font-semibold text-blue-700">{pkg.subtitle}</p>
+                <p className="mt-3 text-xs text-slate-500 leading-relaxed">{pkg.description}</p>
+
+                <div className="mt-4 border-t border-slate-100 pt-3 space-y-1.5">
+                  {pkg.highlights.map((h, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[11px] font-medium text-slate-600">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-600 shrink-0" />
+                      <span>{h}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800">{pkg.price}</span>
+                <button
+                  type="button"
+                  onClick={() => openBooking({ title: pkg.title })}
+                  className="rounded-full bg-blue-50 px-3 py-1.5 text-[11px] font-bold text-blue-700 hover:bg-blue-700 hover:text-white transition cursor-pointer"
+                >
+                  Book
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. WORKSHOP WALKTHROUGH VIDEO EMBED (LIVE API) */}
+      {youtubeEmbedUrl && (
+        <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
+          <div className="text-center mb-10">
+            <span className="text-xs font-bold tracking-widest text-blue-700 uppercase block mb-1">
+              Workshop Walkthrough
+            </span>
+            <h2 className="font-display font-black text-2xl sm:text-4xl text-[#071936] tracking-tight">
+              See Our Service Center in Action
+            </h2>
+            <p className="text-slate-600 text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed">
+              State-of-the-art bays, OEM diagnostic instruments, and certified technicians dedicated to your Maruti Suzuki.
+            </p>
+          </div>
+          <div className="relative aspect-video w-full max-w-4xl mx-auto overflow-hidden rounded-3xl border border-slate-200/90 shadow-2xl bg-slate-900">
+            <iframe
+              src={youtubeEmbedUrl}
+              title="Kalyani Motors Workshop Experience"
+              className="w-full h-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        </section>
+      )}
+
+      {/* 6. CASHLESS INSURANCE CLAIM PARTNERS (PRESERVED STATIC DATA) */}
+      <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-12">
+        <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-slate-50 via-white to-blue-50/40 p-8 sm:p-12 text-center shadow-sm">
+          <span className="text-xs font-bold tracking-widest text-blue-700 uppercase block mb-1">
+            Hassle-Free Repairs
+          </span>
+          <h3 className="font-display font-black text-2xl sm:text-3xl text-[#071936] tracking-tight">
+            Cashless Insurance Claim Settlement
+          </h3>
+          <p className="mx-auto mt-2 max-w-xl text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Direct survey, paperless settlement, and authorized body shop repairs with top national insurers.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {mockServices.insurancePartners.map((partner) => (
+              <div
+                key={partner}
+                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm"
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                <span>{partner}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. SERVICE FAQS (LIVE API) */}
+      {serviceFaqs && serviceFaqs.length > 0 && (
+        <section className="border-t border-slate-200/80 bg-slate-50/50 py-16 sm:py-20">
+          <FAQsection faqs={serviceFaqs} />
+        </section>
+      )}
+
+      {/* 8. SERVICE BOOKING POPUP */}
       {isBookingOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
           <motion.div
@@ -277,11 +451,9 @@ export default function ServicePage() {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/70 bg-white shadow-2xl"
           >
-            {/* top blue accent */}
             <div className="h-1.5 w-full bg-blue-700" />
 
             <div className="p-6 md:p-8">
-              {/* HEADER */}
               <div className="mb-7">
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-blue-700">
                   Kalyani Motors
@@ -298,7 +470,6 @@ export default function ServicePage() {
                 )}
               </div>
 
-              {/* SUCCESS */}
               {successInfo ? (
                 <div className="py-6 text-center">
                   <motion.div
@@ -335,14 +506,13 @@ export default function ServicePage() {
                       setIsBookingOpen(false);
                       setSuccessInfo(null);
                     }}
-                    className="mt-6 rounded-full bg-blue-700 px-6 py-3 text-xs font-bold text-white transition hover:bg-blue-800"
+                    className="mt-6 rounded-full bg-blue-700 px-6 py-3 text-xs font-bold text-white transition hover:bg-blue-800 cursor-pointer"
                   >
                     Close
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* NAME */}
                   <div>
                     <label className="mb-2 block text-xs font-bold text-slate-700">
                       Name
@@ -363,7 +533,6 @@ export default function ServicePage() {
                     />
                   </div>
 
-                  {/* PHONE */}
                   <div>
                     <label className="mb-2 block text-xs font-bold text-slate-700">
                       Phone Number
@@ -385,7 +554,6 @@ export default function ServicePage() {
                     />
                   </div>
 
-                  {/* CONSENT */}
                   <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <input
                       type="checkbox"
@@ -401,22 +569,21 @@ export default function ServicePage() {
                     </span>
                   </label>
 
-                  {/* BUTTONS */}
                   <div className="flex justify-end gap-3 pt-2">
                     <button
                       type="button"
                       onClick={() => setIsBookingOpen(false)}
-                      className="rounded-full border border-slate-200 px-6 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
+                      className="rounded-full border border-slate-200 px-6 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 cursor-pointer"
                     >
                       Close
                     </button>
 
                     <button
                       type="submit"
-                      disabled={isSubmitting}
-                      className="rounded-full bg-blue-700 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-blue-700/20 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={mutation.isPending}
+                      className="rounded-full bg-blue-700 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-blue-700/20 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                     >
-                      {isSubmitting ? "Booking..." : "Book Service"}
+                      {mutation.isPending ? "Booking..." : "Book Service"}
                     </button>
                   </div>
                 </form>
@@ -430,7 +597,6 @@ export default function ServicePage() {
 }
 
 /* Mobile Check */
-
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -445,7 +611,6 @@ function useIsMobile(breakpoint = 768) {
 }
 
 /* SERVICE NAVIGATION */
-
 function ServiceNavigation({ services = [], activeService, onSelect }) {
   const navRef = useRef(null);
   const itemRefs = useRef({});
@@ -470,7 +635,7 @@ function ServiceNavigation({ services = [], activeService, onSelect }) {
 
   return (
     <div className="sticky top-[calc(100vh-6rem)] z-40 flex justify-center px-4 py-3 pointer-events-none">
-      {/* Mobile Navigation - center - slide */}
+      {/* Mobile Navigation */}
       <nav
         ref={navRef}
         className="pointer-events-auto flex max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-white/80 bg-white/95 p-1.5 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden"
@@ -497,7 +662,7 @@ function ServiceNavigation({ services = [], activeService, onSelect }) {
         })}
       </nav>
 
-      {/* Desktop Navigation - slide */}
+      {/* Desktop Navigation */}
       <nav className="pointer-events-auto hidden max-w-full items-center gap-1 rounded-full border border-white/80 bg-white/95 p-1.5 shadow-[0_10px_40px_rgba(20,70,140,0.15)] backdrop-blur-xl md:flex">
         {services.map((service) => {
           const isActive = activeService === service.id;
@@ -533,7 +698,6 @@ function ServiceNavigation({ services = [], activeService, onSelect }) {
 }
 
 /* SERVICE CARD */
-
 function ServiceSection({ service, index, sectionRef, onBook }) {
   const isReversed = index % 2 === 1;
   const isMobile = useIsMobile();
@@ -567,8 +731,6 @@ function ServiceSection({ service, index, sectionRef, onBook }) {
       }}
       className="relative h-[70vh] md:h-screen overflow-hidden"
     >
-      {/* image */}
-
       <div
         className={`absolute inset-y-0 w-full ${
           isReversed ? "left-0" : "right-0"
@@ -584,14 +746,12 @@ function ServiceSection({ service, index, sectionRef, onBook }) {
             isReversed
               ? "right-0 bg-gradient-to-l from-white to-white"
               : "left-0 bg-gradient-to-r from-white to-white"
-          }   `}
+          }`}
           style={{
             x: smokeX,
           }}
         />
       </div>
-
-      {/* content */}
 
       <div className="relative z-10 mx-auto flex h-[70vh] md:h-screen items-center px-6 md:px-12 lg:px-16">
         <div className={`w-[50%] md:w-[30%] ${isReversed ? "ml-auto" : ""}`}>
@@ -610,7 +770,7 @@ function ServiceSection({ service, index, sectionRef, onBook }) {
           <button
             type="button"
             onClick={() => onBook(service)}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-700 px-6 py-3 text-xs md:text-sm font-bold text-white transition-colors hover:bg-blue-800"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-700 px-6 py-3 text-xs md:text-sm font-bold text-white transition-colors hover:bg-blue-800 cursor-pointer"
           >
             Book Your Service
             <ArrowRight className="h-4 w-4" />
@@ -618,21 +778,6 @@ function ServiceSection({ service, index, sectionRef, onBook }) {
         </div>
       </div>
     </section>
-  );
-}
-/* FORM FIELD */
-
-function Field({ label, children }) {
-  return (
-    <label className="block">
-      <span className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">
-        {label}
-      </span>
-
-      {React.cloneElement(children, {
-        className: `${children.props.className} w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-red-500 transition-colors`,
-      })}
-    </label>
   );
 }
 
@@ -660,7 +805,6 @@ function OrbitImage({ item, index, scrollYProgress, position }) {
   );
 
   const scale = useTransform(scrollYProgress, [0, 0.7, 1], [1, 0.72, 0.52]);
-
   const opacity = useTransform(scrollYProgress, [0, 0.82, 1], [1, 1, 0.85]);
 
   return (
@@ -676,8 +820,8 @@ function OrbitImage({ item, index, scrollYProgress, position }) {
       }}
     >
       <img
-        src={item.image}
-        alt={item.alt || item.title}
+        src={item.image || item.imageUrl}
+        alt={item.alt || item.title || "Kalyani Service"}
         className="w-full h-full object-cover"
         draggable="false"
       />
@@ -686,384 +830,3 @@ function OrbitImage({ item, index, scrollYProgress, position }) {
     </motion.div>
   );
 }
-
-//  OLD CODE
-
-// import React, { useState } from 'react';
-// import { useKalyani } from '../../../context/KalyaniContext';
-// import { submitServiceBooking } from '../../../services/kalyaniApi';
-// import {
-//   Clock,
-//   ShieldCheck,
-//   CheckCircle,
-//   Calendar,
-//   CheckCircle2,
-// } from 'lucide-react';
-
-// export default function ServicePage() {
-//   const { services, selectedCity, locations, cars } = useKalyani();
-
-//   const [bookingForm, setBookingForm] = useState({
-//     carModel: 'Swift',
-//     regNumber: '',
-//     serviceType: '10,000 km / 1 Year Periodic Service',
-//     workshopId: locations[0]?.id || '',
-//     pickupRequired: false,
-//     date: '',
-//     timeSlot: 'Morning (09:00 AM - 12:00 PM)',
-//     fullName: '',
-//     phone: '',
-//   });
-
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [successInfo, setSuccessInfo] = useState(null);
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setIsSubmitting(true);
-//     try {
-//       const res = await submitServiceBooking({ ...bookingForm, city: selectedCity });
-//       setSuccessInfo(res);
-//     } catch (err) {
-//       alert('Could not submit booking. Please try again or call our hotline.');
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   return (
-//     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-16">
-//       {/* 1. Header Banner */}
-//       <div className="bg-gradient-to-r from-slate-950 via-blue-950 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
-//         <div className="relative z-10 max-w-2xl space-y-3">
-//           <span className="px-3 py-1 bg-red-600 text-white text-xs font-black uppercase tracking-wider rounded-full inline-block">
-//             Authorized Maruti Suzuki Service
-//           </span>
-//           <h1 className="font-display font-black text-3xl sm:text-5xl text-white tracking-tight">
-//             Certified Periodic Maintenance & Repairs
-//           </h1>
-//           <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-//             Experience dealer-grade care with genuine Maruti Suzuki Ecstar oils, computerized diagnostics, 60-minute express bays, and doorstep mobile service across {selectedCity}.
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* 2. Interactive Service Appointment Booking Wizard */}
-//       <section className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xl" id="book-service">
-//         <div className="max-w-3xl mx-auto">
-//           <div className="text-center mb-8">
-//             <span className="text-xs font-bold tracking-widest text-red-600 uppercase flex items-center justify-center gap-1.5">
-//               <Calendar className="w-4 h-4" /> Seamless Online Booking
-//             </span>
-//             <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 mt-1">
-//               Book Your Service Appointment
-//             </h2>
-//             <p className="text-slate-500 text-xs sm:text-sm mt-1">
-//               Instant appointment confirmation at your nearest Kalyani Motors workshop in {selectedCity}.
-//             </p>
-//           </div>
-
-//           {successInfo ? (
-//             <div className="text-center py-8 bg-emerald-50 rounded-2xl border border-emerald-200 p-6">
-//               <div className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-4">
-//                 <CheckCircle2 className="w-9 h-9" />
-//               </div>
-//               <h3 className="font-display font-bold text-xl text-slate-900 mb-2">
-//                 Service Appointment Confirmed!
-//               </h3>
-//               <p className="text-sm text-slate-700 max-w-md mx-auto mb-4">
-//                 Thank you, <span className="font-bold">{bookingForm.fullName}</span>! Your service booking for{' '}
-//                 <span className="font-bold text-blue-800">{bookingForm.carModel}</span> (Reg:{' '}
-//                 {bookingForm.regNumber.toUpperCase()}) is confirmed.
-//               </p>
-//               <div className="inline-block bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs text-slate-800 font-mono mb-6 shadow-sm">
-//                 Appointment ID: <span className="font-bold text-blue-700">{successInfo.appointmentId}</span>
-//               </div>
-//               <div>
-//                 <button
-//                   type="button"
-//                   onClick={() => setSuccessInfo(null)}
-//                   className="px-6 py-2.5 bg-blue-800 text-white text-xs font-bold rounded-xl hover:bg-blue-900"
-//                 >
-//                   Book Another Vehicle
-//                 </button>
-//               </div>
-//             </div>
-//           ) : (
-//             <form onSubmit={handleSubmit} className="space-y-4">
-//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-xs font-semibold text-slate-700 mb-1">Car Model *</label>
-//                   <select
-//                     value={bookingForm.carModel}
-//                     onChange={(e) => setBookingForm({ ...bookingForm, carModel: e.target.value })}
-//                     className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-//                   >
-//                     {cars.map((c) => (
-//                       <option key={c.slug} value={c.name}>
-//                         {c.name} ({c.channel})
-//                       </option>
-//                     ))}
-//                     <option value="Other Maruti Suzuki Model">Other Maruti Suzuki Model</option>
-//                   </select>
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-xs font-semibold text-slate-700 mb-1">Car Registration Number *</label>
-//                   <input
-//                     type="text"
-//                     required
-//                     placeholder="e.g. KA 05 MN 1234"
-//                     value={bookingForm.regNumber}
-//                     onChange={(e) => setBookingForm({ ...bookingForm, regNumber: e.target.value })}
-//                     className="w-full text-xs uppercase bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-//                   />
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-xs font-semibold text-slate-700 mb-1">Service Type *</label>
-//                   <select
-//                     value={bookingForm.serviceType}
-//                     onChange={(e) => setBookingForm({ ...bookingForm, serviceType: e.target.value })}
-//                     className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-//                   >
-//                     <option>1,000 km / 1st Free Service</option>
-//                     <option>5,000 km / 2nd Free Service</option>
-//                     <option>10,000 km / 1 Year Periodic Service</option>
-//                     <option>20,000 km / 2 Year Major Maintenance</option>
-//                     <option>60-Minute Express Service</option>
-//                     <option>General Checkup & Diagnostics</option>
-//                     <option>Accidental Body Repair & Paint</option>
-//                     <option>Deep Interior Spa & Anti-Rust</option>
-//                   </select>
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-//                     Preferred Workshop ({selectedCity}) *
-//                   </label>
-//                   <select
-//                     value={bookingForm.workshopId}
-//                     onChange={(e) => setBookingForm({ ...bookingForm, workshopId: e.target.value })}
-//                     className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-//                   >
-//                     {locations.map((loc) => (
-//                       <option key={loc.id} value={loc.id}>
-//                         {loc.name}
-//                       </option>
-//                     ))}
-//                   </select>
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-xs font-semibold text-slate-700 mb-1">Appointment Date *</label>
-//                   <input
-//                     type="date"
-//                     required
-//                     min={new Date().toISOString().split('T')[0]}
-//                     value={bookingForm.date}
-//                     onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
-//                     className="w-full text-xs bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-//                   />
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-xs font-semibold text-slate-700 mb-1">Time Window *</label>
-//                   <select
-//                     value={bookingForm.timeSlot}
-//                     onChange={(e) => setBookingForm({ ...bookingForm, timeSlot: e.target.value })}
-//                     className="w-full text-xs font-semibold bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-//                   >
-//                     <option>Morning (08:30 AM - 11:30 AM)</option>
-//                     <option>Afternoon (11:30 AM - 02:30 PM)</option>
-//                     <option>Evening (02:30 PM - 05:30 PM)</option>
-//                   </select>
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-xs font-semibold text-slate-700 mb-1">Owner Name *</label>
-//                   <input
-//                     type="text"
-//                     required
-//                     placeholder="Full name"
-//                     value={bookingForm.fullName}
-//                     onChange={(e) => setBookingForm({ ...bookingForm, fullName: e.target.value })}
-//                     className="w-full text-xs bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-//                   />
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-xs font-semibold text-slate-700 mb-1">Mobile Number *</label>
-//                   <input
-//                     type="tel"
-//                     required
-//                     pattern="[0-9]{10}"
-//                     placeholder="10-digit mobile"
-//                     value={bookingForm.phone}
-//                     onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
-//                     className="w-full text-xs bg-white border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-//                   />
-//                 </div>
-//               </div>
-
-//               {/* Pickup checkbox */}
-//               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
-//                 <input
-//                   type="checkbox"
-//                   id="pickup"
-//                   checked={bookingForm.pickupRequired}
-//                   onChange={(e) => setBookingForm({ ...bookingForm, pickupRequired: e.target.checked })}
-//                   className="w-4 h-4 rounded text-blue-800 focus:ring-blue-500 accent-blue-800"
-//                 />
-//                 <label htmlFor="pickup" className="text-xs font-semibold text-slate-700 cursor-pointer">
-//                   Require Doorstep Vehicle Pickup & Drop (Available across {selectedCity})
-//                 </label>
-//               </div>
-
-//               <div className="pt-2">
-//                 <button
-//                   type="submit"
-//                   disabled={isSubmitting}
-//                   className="w-full py-3.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-red-600/30 transition-all disabled:opacity-50"
-//                 >
-//                   {isSubmitting ? 'Booking Your Slot...' : 'Confirm Service Booking'}
-//                 </button>
-//               </div>
-//             </form>
-//           )}
-//         </div>
-//       </section>
-
-//       {/* 3. Periodic Maintenance Milestones */}
-//       <section className="space-y-6">
-//         <div>
-//           <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">Manufacturer Schedule</span>
-//           <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 mt-1">
-//             Periodic Maintenance Milestones
-//           </h2>
-//           <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
-//             Keep your Maruti Suzuki running like new while preserving complete warranty coverage.
-//           </p>
-//         </div>
-
-//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-//           {services.periodicMaintenance.map((pm) => (
-//             <div
-//               key={pm.id}
-//               className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
-//             >
-//               <div>
-//                 <div className="flex items-center justify-between mb-2">
-//                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-//                     {pm.tag}
-//                   </span>
-//                   <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-//                     <Clock className="w-3 h-3" /> {pm.duration}
-//                   </span>
-//                 </div>
-
-//                 <h3 className="font-display font-black text-lg text-slate-900">{pm.interval}</h3>
-//                 <p className="text-xs font-bold text-red-600 mt-0.5">{pm.mileage}</p>
-//                 <p className="text-xs font-semibold text-slate-700 mt-1">{pm.price}</p>
-//                 <p className="text-xs text-slate-500 mt-2 leading-relaxed">{pm.description}</p>
-
-//                 <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5">
-//                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-//                     Key Checklist:
-//                   </span>
-//                   {pm.checks.map((c, i) => (
-//                     <div key={i} className="flex items-start gap-1.5 text-[11px] text-slate-600">
-//                       <CheckCircle className="w-3 h-3 text-emerald-600 shrink-0 mt-0.5" />
-//                       <span>{c}</span>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </div>
-
-//               <div className="mt-6 pt-4 border-t border-slate-100">
-//                 <a
-//                   href="#book-service"
-//                   className="w-full py-2 bg-slate-100 hover:bg-blue-800 hover:text-white rounded-xl text-xs font-bold text-slate-800 text-center block transition-colors"
-//                 >
-//                   Book This Interval
-//                 </a>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </section>
-
-//       {/* 4. Specialized Care Packages */}
-//       <section className="space-y-6">
-//         <div>
-//           <span className="text-xs font-bold tracking-widest text-red-600 uppercase">Specialized Solutions</span>
-//           <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 mt-1">
-//             Kalyani Premium Workshop Capabilities
-//           </h2>
-//         </div>
-
-//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-//           {services.specializedPackages.map((pkg) => (
-//             <div
-//               key={pkg.id}
-//               className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
-//             >
-//               <div>
-//                 <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 inline-block mb-3">
-//                   {pkg.badge}
-//                 </span>
-//                 <h3 className="font-display font-black text-base text-slate-900 leading-snug">{pkg.title}</h3>
-//                 <p className="text-xs font-semibold text-blue-800 mt-0.5">{pkg.subtitle}</p>
-//                 <p className="text-xs text-slate-500 mt-2.5 leading-relaxed">{pkg.description}</p>
-
-//                 <div className="mt-4 pt-3 border-t border-slate-100 space-y-1">
-//                   {pkg.highlights.map((h, i) => (
-//                     <div key={i} className="flex items-center gap-1.5 text-[11px] text-slate-600 font-medium">
-//                       <span className="w-1.5 h-1.5 rounded-full bg-blue-700"></span>
-//                       <span>{h}</span>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </div>
-
-//               <div className="mt-6 pt-4 border-t border-slate-100">
-//                 <span className="text-xs font-bold text-slate-800 block">{pkg.price}</span>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </section>
-
-//       {/* 5. Cashless Insurance Claim Partners */}
-//       <section className="bg-slate-100 rounded-3xl p-6 sm:p-8 border border-slate-200">
-//         <div className="text-center max-w-xl mx-auto mb-6">
-//           <span className="text-xs font-bold tracking-widest text-blue-800 uppercase">Hassle-Free Repairs</span>
-//           <h3 className="font-display font-black text-xl text-slate-900 mt-1">
-//             Cashless Insurance Claim Settlement
-//           </h3>
-//           <p className="text-xs text-slate-600 mt-1">
-//             Direct survey, paperless settlement, and authorized body shop repairs with top national insurers.
-//           </p>
-//         </div>
-
-//         <div className="flex flex-wrap items-center justify-center gap-3">
-//           {services.insurancePartners.map((partner) => (
-//             <div
-//               key={partner}
-//               className="bg-white px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 shadow-sm flex items-center gap-2"
-//             >
-//               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-//               <span>{partner}</span>
-//             </div>
-//           ))}
-//         </div>
-//       </section>
-//     </div>
-//   );
-// }

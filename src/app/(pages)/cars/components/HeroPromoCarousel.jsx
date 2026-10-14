@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useKalyani } from '../../../../context/KalyaniContext';
 
-export default function HeroPromoCarousel() {
-  const { banners, openTestDrive } = useKalyani();
+export default function HeroPromoCarousel({ banners: propBanners }) {
+  const { openTestDrive } = useKalyani();
+  const banners = propBanners || [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -56,7 +57,8 @@ export default function HeroPromoCarousel() {
 
           <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center pointer-events-none">
             {/* Panel: tinted, NO backdrop blur so the car stays sharp */}
-            <div className="pointer-events-auto w-full max-w-[22rem] sm:max-w-sm md:max-w-[24rem]
+            {(currentBanner.title || currentBanner.subtitle || currentBanner.description) && (
+              <div className="pointer-events-auto w-full max-w-[22rem] sm:max-w-sm md:max-w-[24rem]
                             rounded-2xl p-5 md:p-6
                             bg-slate-950/55 border border-white/15
                             shadow-xl shadow-black/20">
@@ -105,8 +107,9 @@ export default function HeroPromoCarousel() {
                 </button>
               </div>
             </div>
-          </div>
-        </motion.div>
+          )}
+        </div>
+      </motion.div>
       </AnimatePresence>
 
       {/* Dots */}

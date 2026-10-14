@@ -1,13 +1,13 @@
-import fronxHero from "../app/images/fronx/gallery/Fronx_HeroBanner.png";
-import fronx_blue from "../app/images/fronx/gallery/Fronx_HB_blue.png";
-import fronx_white from "../app/images/fronx/gallery/Fronx_HB_white.png";
-import fronx_red from "../app/images/fronx/gallery/Fronx_HB_red.png";
-import fronxTopView from "../app/images/fronx/gallery/Fronx_TopView.png";
-import fronxEx1 from "../app/images/fronx/gallery/Fronx_Ex1.png";
-import fronxEx2 from "../app/images/fronx/gallery/Fronx_Ex2.png";
-import fronxIn1 from "../app/images/fronx/gallery/Fronx_In1.png";
-import fronxIn2 from "../app/images/fronx/gallery/Fronx_In2.png";
-import fronxVideo from "../components/videos/Fronx_fold_desktop.mp4";
+import fronxHero from "../../app/images/fronx/gallery/Fronx_HeroBanner.png";
+import fronx_blue from "../../app/images/fronx/gallery/Fronx_HB_blue.png";
+import fronx_white from "../../app/images/fronx/gallery/Fronx_HB_white.png";
+import fronx_red from "../../app/images/fronx/gallery/Fronx_HB_red.png";
+import fronxTopView from "../../app/images/fronx/gallery/Fronx_TopView.png";
+import fronxEx1 from "../../app/images/fronx/gallery/Fronx_Ex1.png";
+import fronxEx2 from "../../app/images/fronx/gallery/Fronx_Ex2.png";
+import fronxIn1 from "../../app/images/fronx/gallery/Fronx_In1.png";
+import fronxIn2 from "../../app/images/fronx/gallery/Fronx_In2.png";
+import fronxVideo from "../../components/videos/Fronx_fold_desktop.mp4";
 
 export const mockCars = [
   {

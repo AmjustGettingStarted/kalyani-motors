@@ -2,6 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useKalyani } from '../../../context/KalyaniContext';
+import useModels from '../../../components/hooks/useModels';
+import useModelCars from '../../../components/hooks/useModelCars';
+import useBanners from '../../../components/hooks/useBanners';
+import useOutlets from '../../../components/hooks/useOutlets';
 import CarCard from '../../../components/widgets/CarCard';
 import HeroPromoCarousel from './components/HeroPromoCarousel';
 import FilterSidebar from './components/FilterSidebar';
@@ -12,9 +16,40 @@ import useHeader from '../../../components/hooks/useHeader';
 const ITEMS_PER_PAGE = 9;
 
 export default function CarsPage() {
-  const { cars, selectedCity, locations } = useKalyani();
+  const { selectedCity } = useKalyani();
+  const { data: cars = [] } = useModels();
+  const { data: modelCars = [] } = useModelCars();
+  const { data: allBanners = {} } = useBanners();
+  const { data: allOutlets = [] } = useOutlets();
   const { isHidden } = useHeader();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const currentCity = selectedCity || 'Bengaluru';
+
+  const locations = useMemo(() => {
+    const city = currentCity.toLowerCase();
+    const filtered = allOutlets.filter((l) => (l.city || '').toLowerCase() === city);
+    return filtered.length > 0 ? filtered : allOutlets;
+  }, [allOutlets, currentCity]);
+
+  const cityBanners = useMemo(() => {
+    return allBanners[currentCity] || allBanners['Bengaluru'] || [];
+  }, [allBanners, currentCity]);
+
+  const bodyOptions = useMemo(() => {
+    const fromApi = [...new Set(modelCars.flatMap((m) => m.bodyTypes || []).filter(Boolean))];
+    return fromApi.length > 0 ? fromApi : ['Hatchback', 'Sedan', 'SUV', 'MPV'];
+  }, [modelCars]);
+
+  const fuelOptions = useMemo(() => {
+    const fromApi = [...new Set(modelCars.flatMap((m) => m.fuelTypes || []).filter(Boolean))];
+    return fromApi.length > 0 ? fromApi : ['Petrol', 'CNG', 'Strong Hybrid'];
+  }, [modelCars]);
+
+  const transmissionOptions = useMemo(() => {
+    const fromApi = [...new Set(modelCars.flatMap((m) => m.transmissionTypes || []).filter(Boolean))];
+    return fromApi.length > 0 ? fromApi : ['Manual', 'Automatic'];
+  }, [modelCars]);
 
   // Filters State
   const [channel, setChannel] = useState(searchParams.get('channel') || 'All');
@@ -106,27 +141,34 @@ export default function CarsPage() {
     const counts = {
       channel: {
         all: cars.length,
-        arena: cars.filter((c) => c.channel.toLowerCase() === 'arena').length,
-        nexa: cars.filter((c) => c.channel.toLowerCase() === 'nexa').length,
+        arena: cars.filter((c) => c.channel?.toLowerCase() === 'arena').length,
+        nexa: cars.filter((c) => c.channel?.toLowerCase() === 'nexa').length,
+        commercial: cars.filter((c) => c.channel?.toLowerCase() === 'commercial').length,
       },
-      bodyType: {
-        Hatchback: cars.filter((c) => c.bodyType.toLowerCase() === 'hatchback').length,
-        Sedan: cars.filter((c) => c.bodyType.toLowerCase() === 'sedan').length,
-        SUV: cars.filter((c) => c.bodyType.toLowerCase() === 'suv').length,
-        MPV: cars.filter((c) => ['mpv', 'muv'].includes(c.bodyType.toLowerCase())).length,
-      },
-      fuel: {
-        Petrol: cars.filter((c) => c.fuelTypes?.includes('Petrol')).length,
-        CNG: cars.filter((c) => c.fuelTypes?.includes('CNG')).length,
-        'Strong Hybrid': cars.filter((c) => c.fuelTypes?.includes('Strong Hybrid')).length,
-      },
-      transmission: {
-        Manual: cars.filter((c) => c.transmissionTypes?.includes('Manual')).length,
-        Automatic: cars.filter((c) => c.transmissionTypes?.includes('Automatic')).length,
-      },
+      bodyType: {},
+      fuel: {},
+      transmission: {},
     };
+
+    bodyOptions.forEach((b) => {
+      counts.bodyType[b] = cars.filter((c) => {
+        const cb = c.bodyType?.toLowerCase() || '';
+        const sb = b.toLowerCase();
+        if (sb === 'mpv' || sb === 'muv') return cb === 'mpv' || cb === 'muv';
+        return cb === sb;
+      }).length;
+    });
+
+    fuelOptions.forEach((f) => {
+      counts.fuel[f] = cars.filter((c) => c.fuelTypes?.includes(f)).length;
+    });
+
+    transmissionOptions.forEach((t) => {
+      counts.transmission[t] = cars.filter((c) => c.transmissionTypes?.includes(t)).length;
+    });
+
     return counts;
-  }, [cars]);
+  }, [cars, bodyOptions, fuelOptions, transmissionOptions]);
 
   // Active filters array for dismissible badges
   const activeFilters = useMemo(() => {
@@ -308,7 +350,7 @@ export default function CarsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
       >
-        <HeroPromoCarousel />
+        <HeroPromoCarousel banners={cityBanners} />
       </motion.div>
 
       {/* 2. Main Page Layout (Two-Column Split-View) */}
@@ -356,10 +398,13 @@ export default function CarsPage() {
             <FilterSidebar
               channel={channel}
               setChannel={setChannel}
+              bodyOptions={bodyOptions}
               bodyTypesSelected={bodyTypesSelected}
               toggleBodyType={toggleBodyType}
+              fuelOptions={fuelOptions}
               fuelTypesSelected={fuelTypesSelected}
               toggleFuel={toggleFuel}
+              transmissionOptions={transmissionOptions}
               transmissionSelected={transmissionSelected}
               toggleTransmission={toggleTransmission}
               maxPrice={maxPrice}
@@ -575,10 +620,13 @@ export default function CarsPage() {
                 <FilterSidebar
                   channel={channel}
                   setChannel={setChannel}
+                  bodyOptions={bodyOptions}
                   bodyTypesSelected={bodyTypesSelected}
                   toggleBodyType={toggleBodyType}
+                  fuelOptions={fuelOptions}
                   fuelTypesSelected={fuelTypesSelected}
                   toggleFuel={toggleFuel}
+                  transmissionOptions={transmissionOptions}
                   transmissionSelected={transmissionSelected}
                   toggleTransmission={toggleTransmission}
                   maxPrice={maxPrice}
