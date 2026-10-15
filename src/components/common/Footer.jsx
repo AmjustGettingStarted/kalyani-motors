@@ -359,7 +359,7 @@ export default function Footer() {
   return (
     <footer
       ref={footerRef}
-      className="w-full bg-slate-50 text-slate-600 text-xs border-t border-slate-200 overflow-hidden"
+      className="relative z-20 w-full bg-slate-50 text-slate-600 text-xs border-t border-slate-200 overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 lg:py-14">
         {/* 1) DESKTOP UI (>= 1024px): 40% Left : 60% Right */}

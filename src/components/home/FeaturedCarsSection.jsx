@@ -44,14 +44,20 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
   const [pillsScrollable, setPillsScrollable] = useState(false);
   const [carsScrollable, setCarsScrollable] = useState(false);
 
-  // Filter cars to featured list first, then by active body type category
+  // For 'All Types', display the curated featured showcase.
+  // For specific categories (SUV, Hatchback, Sedan, MUV), filter from the full catalog.
   const featuredCars = cars.some((c) => c.isFeatured)
     ? cars.filter((c) => c.isFeatured)
     : cars;
 
-  const filteredCars = featuredCars.filter((car) => {
+  const sourceCars = selectedBodyType === 'All Types' ? featuredCars : cars;
+
+  const filteredCars = sourceCars.filter((car) => {
     if (selectedBodyType === 'All Types') return true;
-    return car.bodyType?.toLowerCase() === selectedBodyType.toLowerCase();
+    const target = selectedBodyType.toLowerCase();
+    const primary = (car.bodyType || '').toLowerCase();
+    const inTypes = Array.isArray(car.bodyTypes) && car.bodyTypes.some((bt) => (bt || '').toLowerCase() === target);
+    return primary === target || inTypes;
   });
 
   const isCarouselDesktop = filteredCars.length > 3;

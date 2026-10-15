@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useKalyani } from '../../../context/KalyaniContext';
 import useModels from '../../../components/hooks/useModels';
 import useModelCars from '../../../components/hooks/useModelCars';
@@ -15,6 +15,15 @@ import useHeader from '../../../components/hooks/useHeader';
 
 const ITEMS_PER_PAGE = 9;
 
+const CITY_MONUMENT_BACKGROUNDS = {
+  bengaluru: '/assets/BengaluruBG.png',
+  bangalore: '/assets/BengaluruBG.png',
+  hyderabad: '/assets/HyderabadBG.png',
+  hydrabad: '/assets/HyderabadBG.png',
+  mysore: '/assets/MysoreBG.png',
+  chennai: '/assets/ChennaiBG.png',
+};
+
 export default function CarsPage() {
   const { selectedCity } = useKalyani();
   const { data: cars = [] } = useModels();
@@ -25,6 +34,17 @@ export default function CarsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const currentCity = selectedCity || 'Bengaluru';
+  const activeCityKey = currentCity.toLowerCase();
+  const activeCityBg = CITY_MONUMENT_BACKGROUNDS[activeCityKey] || CITY_MONUMENT_BACKGROUNDS.bengaluru;
+
+  // Scroll-to-reveal for background monument skyline
+  const carsSectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: carsSectionRef,
+    offset: ['start 0.85', 'end end'],
+  });
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.2, 0.85, 1], [0, 0.2, 0.75, 0.88]);
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '3%']);
 
   const locations = useMemo(() => {
     const city = currentCity.toLowerCase();
@@ -343,9 +363,30 @@ export default function CarsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pt-[68px] sm:pt-[72px]">
+    <div className="relative min-h-screen bg-[#f8fafc] flex flex-col pt-[68px] sm:pt-[72px]">
+      {/* Scroll-Revealed City Monument Background Layer */}
+      <motion.div
+        style={{ opacity: bgOpacity, y: bgY }}
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+        aria-hidden="true"
+      >
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={activeCityBg}
+            src={activeCityBg}
+            alt={`${currentCity} Monument Background`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            className="w-full h-full object-cover object-center select-none brightness-[1.05] contrast-[0.95]"
+          />
+        </AnimatePresence>
+      </motion.div>
+
       {/* 1. Hero Promotional Banner Carousel (Slow & Smooth Fade In) */}
       <motion.div
+        className="relative z-10"
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
@@ -354,7 +395,10 @@ export default function CarsPage() {
       </motion.div>
 
       {/* 2. Main Page Layout (Two-Column Split-View) */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
+      <div
+        ref={carsSectionRef}
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1"
+      >
         {/* Page Header / Breadcrumbs (Slow & Smooth Entrance) */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -506,8 +550,8 @@ export default function CarsPage() {
                           type="button"
                           onClick={() => handlePageChange(pageNum)}
                           className={`w-9 h-9 rounded-xl text-xs font-bold transition-all ${currentPage === pageNum
-                              ? 'bg-brand-blue text-white shadow-sm'
-                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                            ? 'bg-brand-blue text-white shadow-sm'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                             }`}
                         >
                           {pageNum}
