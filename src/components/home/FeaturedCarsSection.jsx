@@ -1,33 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import CarCard from '../widgets/CarCard';
 
 const FILTER_CATEGORIES = ['All Types', 'SUV', 'Hatchback', 'Sedan', 'MUV'];
-
-// Animated swipe indicator that only renders when scroll overflow is active
-function ScrollIndicator({ label = 'swipe' }) {
-  return (
-    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 select-none py-1">
-      <motion.span
-        animate={{ x: [-2, 2, -2] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="inline-flex items-center text-blue-600"
-      >
-        <ArrowLeft className="w-3 h-3" />
-      </motion.span>
-      <span className="uppercase tracking-wider text-[10px]">{label}</span>
-      <motion.span
-        animate={{ x: [2, -2, 2] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="inline-flex items-center text-blue-600"
-      >
-        <ArrowRight className="w-3 h-3" />
-      </motion.span>
-    </div>
-  );
-}
 
 export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengaluru' }) {
   const [selectedBodyType, setSelectedBodyType] = useState('All Types');
@@ -39,10 +16,6 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
   // Desktop side arrows state
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-
-  // Mobile-only active scroll indicators state
-  const [pillsScrollable, setPillsScrollable] = useState(false);
-  const [carsScrollable, setCarsScrollable] = useState(false);
 
   // For 'All Types', display the curated featured showcase.
   // For specific categories (SUV, Hatchback, Sedan, MUV), filter from the full catalog.
@@ -62,27 +35,62 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
 
   const isCarouselDesktop = filteredCars.length > 3;
 
-  // Check scroll boundary & whether containers actually overflow
+  // Check scroll boundary for desktop arrows
   const updateScrollStates = useCallback(() => {
-    // 1. Pills scroll check (Mobile only)
-    if (pillsContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = pillsContainerRef.current;
-      const hasOverflow = scrollWidth > clientWidth + 4;
-      const notScrolledToEnd = scrollLeft + clientWidth < scrollWidth - 10;
-      setPillsScrollable(hasOverflow && notScrolledToEnd);
-    }
-
-    // 2. Car cards scroll check (Mobile & Desktop arrows)
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       const hasOverflow = scrollWidth > clientWidth + 4;
       const notScrolledToEnd = scrollLeft + clientWidth < scrollWidth - 10;
 
-      setCarsScrollable(hasOverflow && notScrolledToEnd);
       setCanScrollLeft(scrollLeft > 4);
       setCanScrollRight(hasOverflow && notScrolledToEnd);
     }
   }, []);
+
+  // Auto-scroll on mobile and tablet screens (< 1024px)
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    let isInteracting = false;
+    let resumeTimeout = null;
+
+    const onTouchStart = () => {
+      isInteracting = true;
+      if (resumeTimeout) clearTimeout(resumeTimeout);
+    };
+
+    const onTouchEnd = () => {
+      resumeTimeout = setTimeout(() => {
+        isInteracting = false;
+      }, 3500);
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    const interval = setInterval(() => {
+      if (window.innerWidth >= 1024 || isInteracting || !scrollContainerRef.current) return;
+
+      const container = scrollContainerRef.current;
+      const maxScroll = container.scrollWidth - container.clientWidth - 15;
+      const firstCard = container.firstElementChild;
+      const cardWidth = firstCard ? firstCard.clientWidth + 24 : 360;
+
+      if (container.scrollLeft >= maxScroll) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    }, 4000);
+
+    return () => {
+      clearInterval(interval);
+      if (resumeTimeout) clearTimeout(resumeTimeout);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [filteredCars]);
 
   useEffect(() => {
     const carsEl = scrollContainerRef.current;
@@ -162,17 +170,10 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
 
         {/* Filter Pills Column */}
         <div className="flex flex-col items-start md:items-end gap-1.5 w-full md:w-auto">
-          {/* 1. Mobile Pill Indicator - ONLY renders if pills overflow on mobile */}
-          {pillsScrollable && (
-            <div className="flex md:hidden self-end">
-              <ScrollIndicator label="swipe categories" />
-            </div>
-          )}
-
-          {/* Responsive Filter Strip */}
+          {/* Responsive Filter Strip - reduced width on mobile to ensure all options are visible */}
           <div
             ref={pillsContainerRef}
-            className="w-full md:w-auto overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 py-1 flex items-center gap-2"
+            className="w-full md:w-auto overflow-x-auto overscroll-x-contain touch-pan-x scrollbar-none py-1 flex items-center justify-between sm:justify-start gap-1 sm:gap-2"
           >
             {FILTER_CATEGORIES.map((type) => {
               const isSelected = selectedBodyType === type;
@@ -181,7 +182,7 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
                   key={type}
                   type="button"
                   onClick={() => handleFilterChange(type)}
-                  className={`relative shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer active:scale-95 ${isSelected
+                  className={`relative shrink-0 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer active:scale-95 ${isSelected
                     ? 'text-white bg-blue-600 shadow-sm'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                     }`}
@@ -193,20 +194,20 @@ export default function FeaturedCarsSection({ cars = [], selectedCity = 'Bengalu
                       transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                     />
                   )}
-                  {type}
+                  {type === 'All Types' ? (
+                    <>
+                      <span>All</span>
+                      <span className="hidden sm:inline"> Types</span>
+                    </>
+                  ) : (
+                    type
+                  )}
                 </button>
               );
             })}
           </div>
         </div>
       </motion.div>
-
-      {/* 2. Mobile Car Cards Indicator - ONLY renders on mobile when cards overflow */}
-      {carsScrollable && (
-        <div className="flex lg:hidden justify-end mb-2 pr-1">
-          <ScrollIndicator label="swipe models" />
-        </div>
-      )}
 
       {/* Cars Container */}
       <div className="relative group">

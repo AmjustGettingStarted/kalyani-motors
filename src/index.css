@@ -85,3 +85,35 @@ html.lenis body {
   scrollbar-width: thin;
   scrollbar-color: #3b82f6 transparent;
 }
+
+/* Custom vertical line slider indicator tip (line instead of round dot) */
+.slider-line-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider-line-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 3.5px;
+  height: 18px;
+  border-radius: 9999px;
+  background-color: #0f172a;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.slider-line-thumb:active::-webkit-slider-thumb {
+  transform: scaleY(1.15);
+}
+
+.slider-line-thumb::-moz-range-thumb {
+  width: 3.5px;
+  height: 18px;
+  border-radius: 9999px;
+  background-color: #0f172a;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}

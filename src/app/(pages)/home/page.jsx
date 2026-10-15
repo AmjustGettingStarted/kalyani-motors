@@ -30,7 +30,7 @@ export default function HomePage() {
     }
     return oCity === cityKey;
   });
-  const nearestBranches = cityLocations.slice(0, 3);
+  const nearestBranches = cityLocations.slice(0, 6);
   const [showEnquiryModal, setShowEnquiryModal] = useState(false);
 
   useEffect(() => {

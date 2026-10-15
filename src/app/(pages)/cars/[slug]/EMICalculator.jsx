@@ -579,7 +579,7 @@ function EditableMobileValue({
           {currencyPrefix}
         </span>
       )}
-      <span className="text-sm font-bold text-blue-700 tabular-nums">
+      <span className="text-sm font-bold text-slate-900 tabular-nums">
         <MemoRollingNumber value={value} decimals={decimals} />
       </span>
       {unit && (
@@ -648,7 +648,7 @@ function HorizontalLineSlider({
             onChange(snapToStep(Number(e.target.value), min, max, step))
           }
           aria-label={label}
-          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600 transition-all focus:outline-none"
+          className="slider-line-thumb h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 transition-all focus:outline-none"
           style={{
             background: `linear-gradient(to right, #2563eb 0%, #2563eb ${percentage}%, #e2e8f0 ${percentage}%, #e2e8f0 100%)`,
           }}
@@ -834,8 +834,8 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
               Estimated Monthly EMI
             </span>
             <div className="flex items-baseline gap-1 text-slate-900">
-              <span className="text-lg font-bold text-blue-600">₹</span>
-              <span className="text-2xl font-black tracking-tight text-blue-700">
+              <span className="text-lg font-bold text-slate-900">₹</span>
+              <span className="text-2xl font-black tracking-tight text-slate-900">
                 <MemoRollingNumber value={emi} />
               </span>
               <span className="text-xs font-medium text-slate-500">
@@ -884,7 +884,7 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
       </div>
 
       {/* 2) TAB & DESKTOP UI ('hidden md:flex'):                         */}
-      <div className="hidden md:flex md:flex-col lg:grid lg:grid-cols-[66%_34%] xl:grid-cols-[68%_32%] lg:gap-8">
+      <div className="hidden md:flex md:flex-col lg:grid lg:grid-cols-[70%_30%] lg:gap-8">
         {/* METER SET-UP: UP on Tab, LEFT on Desktop */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end">
           {/* Tenure */}
