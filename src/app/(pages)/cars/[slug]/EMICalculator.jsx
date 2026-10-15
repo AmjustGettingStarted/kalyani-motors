@@ -395,21 +395,21 @@ const GaugeMeter = memo(function GaugeMeter({
             animate={
               playIntroSweep && !introDone
                 ? {
-                    strokeDashoffset: [
-                      GAUGE_ARC_LENGTH,
-                      0,
-                      GAUGE_ARC_LENGTH * (1 - ratio),
-                    ],
-                  }
+                  strokeDashoffset: [
+                    GAUGE_ARC_LENGTH,
+                    0,
+                    GAUGE_ARC_LENGTH * (1 - ratio),
+                  ],
+                }
                 : { strokeDashoffset: GAUGE_ARC_LENGTH * (1 - ratio) }
             }
             transition={
               playIntroSweep && !introDone
                 ? {
-                    duration: 1.3,
-                    times: [0, 0.45, 1],
-                    ease: [0.22, 1, 0.36, 1],
-                  }
+                  duration: 1.3,
+                  times: [0, 0.45, 1],
+                  ease: [0.22, 1, 0.36, 1],
+                }
                 : { type: "spring", stiffness: 180, damping: 25 }
             }
           />
@@ -734,11 +734,11 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
       : monthlyRate === 0
         ? Math.round(loanPrincipal / totalMonths)
         : Math.round(
-            (loanPrincipal *
-              monthlyRate *
-              Math.pow(1 + monthlyRate, totalMonths)) /
-              (Math.pow(1 + monthlyRate, totalMonths) - 1),
-          );
+          (loanPrincipal *
+            monthlyRate *
+            Math.pow(1 + monthlyRate, totalMonths)) /
+          (Math.pow(1 + monthlyRate, totalMonths) - 1),
+        );
   const totalInterest = Math.max(0, emi * totalMonths - loanPrincipal);
 
   const handleOpenEmiOffers = () => {
@@ -883,12 +883,8 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
         </div>
       </div>
 
-      {/* ============================================================== */}
       {/* 2) TAB & DESKTOP UI ('hidden md:flex'):                         */}
-      {/*    Tab (768-1023px): Meters UP (3 cols), Information DOWN (3 cols)*/}
-      {/*    Desktop (>=1024px): Meters LEFT (72%), Info RIGHT (28%)       */}
-      {/* ============================================================== */}
-      <div className="hidden md:flex md:flex-col lg:grid lg:grid-cols-[72%_28%] lg:gap-6">
+      <div className="hidden md:flex md:flex-col lg:grid lg:grid-cols-[66%_34%] xl:grid-cols-[68%_32%] lg:gap-8">
         {/* METER SET-UP: UP on Tab, LEFT on Desktop */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end">
           {/* Tenure */}
@@ -970,10 +966,10 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
         </div>
 
         {/* INFORMATION SECTION: DOWN on Tab, RIGHT on Desktop */}
-        <div className="border-t border-slate-200/90 pt-6 mt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:mt-0 lg:pl-6">
-          <div className="grid grid-cols-3 items-center gap-6 lg:grid-cols-1 lg:grid-rows-3 lg:gap-4 lg:h-full lg:justify-between">
+        <div className="border-t border-slate-200/90 pt-6 mt-4 lg:border-t-0 lg:border-l lg:border-slate-200/90 lg:pt-0 lg:mt-0 lg:pl-8 lg:pr-2">
+          <div className="grid grid-cols-3 lg:grid-cols-1 lg:grid-rows-3 items-center gap-6 lg:gap-4 lg:h-full lg:justify-center">
             {/* 1st: Monthly EMI */}
-            <div className="flex min-w-0 flex-col justify-center border-b-0 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:border-b lg:pb-7 lg:pt-4 lg:px-4">
+            <div className="flex min-w-0 flex-col justify-center border-b-0 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:border-b lg:border-slate-200/80 lg:pb-5 lg:pt-1">
               <div className="flex items-center gap-2 text-slate-500">
                 <span className="text-[11px] font-bold uppercase tracking-[0.11em] sm:text-xs">
                   Estimated Monthly EMI
@@ -981,8 +977,8 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
               </div>
 
               <div className="mt-2 flex items-baseline gap-1.5 whitespace-nowrap text-slate-900">
-                <span className="text-2xl font-semibold sm:text-3xl">₹</span>
-                <span className="text-3xl font-black leading-none tracking-tight tabular-nums sm:text-4xl lg:text-[2.6rem]">
+                <span className="text-xl font-semibold sm:text-2xl">₹</span>
+                <span className="text-3xl font-black leading-none tracking-tight tabular-nums sm:text-4xl lg:text-[2.2rem] xl:text-[2.5rem]">
                   <MemoRollingNumber value={emi} />
                 </span>
                 <span className="text-xs font-medium text-slate-500 sm:text-sm">
@@ -992,7 +988,7 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
             </div>
 
             {/* 2nd: Loan Amount and Total Interest (2 rows) */}
-            <div className="flex min-w-0 flex-col justify-center gap-2.5 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:px-4">
+            <div className="flex min-w-0 flex-col justify-center gap-2.5 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:py-2">
               {/* Row 1: Loan Amount */}
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 sm:text-xs">
@@ -1028,7 +1024,7 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
             </div>
 
             {/* 3rd: Get Offers Button */}
-            <div className="flex min-w-0 items-center justify-center lg:justify-end">
+            <div className="flex min-w-0 items-center justify-center pt-2 lg:pt-0">
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.98 }}

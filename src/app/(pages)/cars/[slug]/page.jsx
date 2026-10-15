@@ -12,17 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../../components/ui/select";
-// import Car360Viewer from "../../../../components/widgets/Car360Viewer";
+// import Car360Viewer from "../../../../components/widgets/Car360Viewer"; //Future idea 
 // import get360Frames from "../../../../app/images/fronx/360/frames";
 import {
-  Gauge,
-  Fuel,
-  ShieldCheck,
-  Calendar,
   CheckCircle,
   Sparkles,
-  Award,
   Download,
+  Plus,
 } from "lucide-react";
 import useCarBySlug from "../../../../components/hooks/useCarBySlug";
 import useModels from "../../../../components/hooks/useModels";
@@ -94,16 +90,14 @@ const CarDetailPage = () => {
     if (!car) return [];
     return [
       {
-        question: `What is the exact mileage of Maruti Suzuki ${car.name}?`,
+        question: `What is the exact mileage/range of ${car.name}?`,
         answer: `The Maruti Suzuki ${car.name} delivers an impressive ARAI-certified fuel efficiency of ${car.mileage || "22.89 km/l"}. Real-world mileage may vary based on driving style, traffic conditions, and maintenance.`,
         category: "Mileage & Efficiency",
-        icon: Fuel,
       },
       {
         question: `What are the available variants of ${car.name}?`,
         answer: `The ${car.name} is available in ${car.variants?.length || 4} variants: ${car.variants?.map((v) => v.name).join(", ") || "Sigma, Delta, Zeta, Alpha"}. You can choose between ${car.transmissionTypes?.join(" and ") || "Manual and Automatic"} transmissions.`,
         category: "Variants & Trims",
-        icon: Gauge,
       },
       {
         question: `Does the ${car.name} come with a sunroof option?`,
@@ -112,25 +106,21 @@ const CarDetailPage = () => {
           : `The ${car.name} emphasizes aerodynamic coupe styling and enhanced structural rigidity with UV-cut glass and modern cabin design.`
           } Visit Kalyani Motors for complete trim feature details.`,
         category: "Features & Comfort",
-        icon: Sparkles,
       },
       {
         question: `What is the boot space capacity of ${car.name}?`,
         answer: `The Maruti Suzuki ${car.name} features a practical ${car.bootSpace || "308 Litres"} luggage capacity with 60:40 split-folding rear seats, easily accommodating family road trip bags and daily shopping.`,
         category: "Storage & Utility",
-        icon: ShieldCheck,
       },
       {
         question: `What warranty and roadside assistance coverage is included?`,
         answer: `Every new car comes with a 2-year / 40,000 km standard manufacturer warranty, extendable up to 5 years / 1,00,000 km, plus 24/7 Roadside Assistance across South India.`,
         category: "Warranty & Support",
-        icon: Award,
       },
       {
         question: `How can I finance ${car.name} or book a doorstep test drive?`,
         answer: `You can schedule a complimentary doorstep test drive right from this page. Kalyani Motors also arranges instant bank financing approvals with low interest rates and low down payments.`,
         category: "Booking & Finance",
-        icon: Calendar,
       },
     ];
   }, [car]);
@@ -354,7 +344,7 @@ const CarDetailPage = () => {
             className="flex flex-col justify-center space-y-5 pr-2"
           >
             <div>
-              <span className="text-[11px] tracking-[0.2em] uppercase font-bold text-blue-700 block mb-1.5">
+              <span className="text-xs sm:text-sm tracking-[0.2em] uppercase font-extrabold text-blue-700 block mb-2">
                 {car.channel === "Nexa"
                   ? "Nexa by Maruti Suzuki"
                   : "Maruti Suzuki Arena"}
@@ -377,9 +367,6 @@ const CarDetailPage = () => {
             transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center justify-center relative min-h-[340px] px-2"
           >
-            {/* Ambient soft glow background */}
-            <div className="absolute inset-0 bg-slate-100/70 rounded-full -z-10" />
-
             <AnimatePresence mode="wait">
               <motion.img
                 key={selectedColor?.image || car.heroImage}
@@ -468,7 +455,7 @@ const CarDetailPage = () => {
                       key={i}
                       type="button"
                       onClick={() => setSelectedColor(c)}
-                      className={`w-5 h-7 rounded-full border-2 transition-all cursor-pointer ${selectedColor?.name === c.name
+                      className={`w-6 h-6 rounded-full border-2 transition-all cursor-pointer ${selectedColor?.name === c.name
                         ? "border-blue-600 scale-110 shadow-sm ring-2 ring-blue-600/30"
                         : "border-slate-300 opacity-80 hover:opacity-100 hover:scale-110"
                         }`}
@@ -520,7 +507,7 @@ const CarDetailPage = () => {
         <section className="lg:hidden pt-20 md:pt-0 mb-8">
           {/* Car name */}
           <motion.div className="text-center mb-4">
-            <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-slate-500">
+            <p className="text-xs sm:text-sm tracking-[0.2em] uppercase font-bold text-slate-500 mb-1">
               {car.channel === "Nexa"
                 ? "Nexa by Maruti Suzuki"
                 : "Maruti Suzuki Arena"}
@@ -1034,15 +1021,13 @@ const CarDetailPage = () => {
                       }}
                       whileHover={{ scale: 1.005 }}
                       whileTap={{ scale: 0.99 }}
-                      className="md:col-span-2 md:row-span-2 relative rounded-3xl overflow-hidden bg-slate-900 group shadow-md min-h-[300px] md:min-h-[460px] text-left cursor-zoom-in"
+                      className="md:col-span-2 md:row-span-2 relative rounded-3xl overflow-hidden bg-slate-900 group shadow-md min-h-[300px] md:min-h-[460px] text-left cursor-zoom-in border border-slate-200"
                     >
                       <img
                         src={displayImage}
                         alt={`${car.name} ${activeGalleryTab} view`}
                         className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.02]"
                       />
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
                       <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2">
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-slate-900 shadow-sm">
@@ -1077,7 +1062,7 @@ const CarDetailPage = () => {
                         }}
                         whileHover={{ scale: 1.025 }}
                         whileTap={{ scale: 0.98 }}
-                        className="relative rounded-2xl overflow-hidden bg-slate-100 group shadow-sm text-left cursor-zoom-in"
+                        className="relative rounded-2xl overflow-hidden bg-slate-100 group shadow-sm text-left cursor-zoom-in border border-slate-200"
                       >
                         <img
                           src={img}
@@ -1085,8 +1070,6 @@ const CarDetailPage = () => {
                           loading="lazy"
                           className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                         />
-
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </motion.button>
                     ))}
                   </motion.div>
@@ -1200,14 +1183,13 @@ const CarDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setPreviewImage(displayImage)}
-                  className="col-span-2 relative h-[210px] rounded-2xl overflow-hidden bg-slate-900 group shadow-sm text-left cursor-zoom-in"
+                  className="col-span-2 relative h-[210px] rounded-2xl overflow-hidden bg-slate-900 group shadow-sm text-left cursor-zoom-in border border-slate-200"
                 >
                   <img
                     src={displayImage}
                     alt={`${car.name} ${activeGalleryTab} view`}
                     className="w-full h-full object-cover object-center"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                   <div className="absolute bottom-3 left-3 z-10">
                     <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/95 text-slate-900 shadow-sm">
                       {activeGalleryTab} View
@@ -1221,7 +1203,7 @@ const CarDetailPage = () => {
                     key={img}
                     type="button"
                     onClick={() => setPreviewImage(img)}
-                    className="relative h-[110px] rounded-xl overflow-hidden bg-slate-100 group shadow-sm text-left cursor-zoom-in"
+                    className="relative h-[110px] rounded-xl overflow-hidden bg-slate-100 group shadow-sm text-left cursor-zoom-in border border-slate-200"
                   >
                     <img
                       src={img}
@@ -1229,7 +1211,6 @@ const CarDetailPage = () => {
                       loading="lazy"
                       className="w-full h-full object-cover object-center"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
               </div>
@@ -1339,11 +1320,11 @@ const CarDetailPage = () => {
             className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-2"
           >
             <div>
-              <span className="text-xs font-bold tracking-widest text-blue-600 uppercase flex items-center gap-1.5 mb-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> Frequently Asked Questions
+              <span className="text-xs font-bold tracking-widest text-blue-600 uppercase block mb-1.5">
+                Frequently Asked Questions
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Everything About Maruti Suzuki {car.name}
+                Everything About <span className="text-blue-600">{car.name}</span>
               </h2>
             </div>
             <p className="text-xs text-slate-500 font-medium">
@@ -1351,7 +1332,47 @@ const CarDetailPage = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+          {/* Desktop: 2 independent columns to prevent cross-column stretching */}
+          <div className="hidden md:grid md:grid-cols-2 gap-4 items-start mb-10">
+            {/* Left Column (Even FAQs) */}
+            <div className="flex flex-col gap-4 w-full">
+              {carFaqs
+                .filter((_, idx) => idx % 2 === 0)
+                .map((faq, idx) => {
+                  const actualIndex = idx * 2;
+                  return (
+                    <FaqCard
+                      key={actualIndex}
+                      index={actualIndex}
+                      faq={faq}
+                      isOpen={openFaqIndices.includes(actualIndex)}
+                      onToggle={() => toggleFaq(actualIndex)}
+                    />
+                  );
+                })}
+            </div>
+
+            {/* Right Column (Odd FAQs) */}
+            <div className="flex flex-col gap-4 w-full">
+              {carFaqs
+                .filter((_, idx) => idx % 2 !== 0)
+                .map((faq, idx) => {
+                  const actualIndex = idx * 2 + 1;
+                  return (
+                    <FaqCard
+                      key={actualIndex}
+                      index={actualIndex}
+                      faq={faq}
+                      isOpen={openFaqIndices.includes(actualIndex)}
+                      onToggle={() => toggleFaq(actualIndex)}
+                    />
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* Mobile: single sequential column */}
+          <div className="md:hidden flex flex-col gap-4 w-full mb-10">
             {carFaqs.map((faq, index) => (
               <FaqCard
                 key={index}
@@ -1433,8 +1454,6 @@ const StatItem = ({ title, value, desc, direction = "left", delay = 0 }) => {
 };
 
 const FaqCard = ({ faq, index, isOpen, onToggle }) => {
-  const Icon = faq.icon || Sparkles;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -1447,47 +1466,37 @@ const FaqCard = ({ faq, index, isOpen, onToggle }) => {
       }}
       whileHover={{ y: -3, transition: { duration: 0.2 } }}
       onClick={onToggle}
-      className={`group rounded-2xl border bg-white p-5 sm:p-6 shadow-sm transition-all duration-300 cursor-pointer overflow-hidden ${isOpen
-        ? "border-blue-500/50 shadow-md ring-1 ring-blue-500/20 bg-gradient-to-b from-white to-blue-50/20"
+      className={`group w-full rounded-2xl border bg-white p-5 sm:p-6 shadow-sm transition-all duration-300 cursor-pointer overflow-hidden ${isOpen
+        ? "shadow-md ring-1 ring-blue-500/20"
         : "border-slate-200/90 hover:border-slate-300 hover:shadow-md"
         }`}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3.5 min-w-0">
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200 ${isOpen
-              ? "bg-blue-600 text-white shadow-sm"
-              : "bg-slate-100 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600"
+        <div className="min-w-0 flex-1">
+          {faq.category && (
+            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
+              {faq.category}
+            </span>
+          )}
+          <h3
+            className={`text-sm sm:text-base font-bold transition-colors leading-snug ${isOpen
+              ? "text-blue-700"
+              : "text-slate-900 group-hover:text-blue-600"
               }`}
           >
-            <Icon className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            {faq.category && (
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
-                {faq.category}
-              </span>
-            )}
-            <h3
-              className={`text-sm sm:text-base font-bold transition-colors leading-snug ${isOpen
-                ? "text-blue-700"
-                : "text-slate-900 group-hover:text-blue-600"
-                }`}
-            >
-              {faq.question}
-            </h3>
-          </div>
+            {faq.question}
+          </h3>
         </div>
 
         <motion.div
           animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${isOpen
             ? "bg-blue-100 text-blue-700"
             : "border border-slate-200 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-700"
             }`}
         >
-          <span className="text-base font-semibold leading-none">+</span>
+          <Plus className="w-4 h-4 stroke-[2.5]" />
         </motion.div>
       </div>
 
@@ -1501,7 +1510,7 @@ const FaqCard = ({ faq, index, isOpen, onToggle }) => {
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="pl-12 pt-2 border-t border-slate-100">
+            <div className="pt-3 border-t border-slate-100">
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                 {faq.answer}
               </p>
