@@ -763,11 +763,7 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
       ref={sectionRef}
       className="mb-8 rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-[0_12px_35px_rgba(15,23,42,0.07)]"
     >
-      {/* ============================================================== */}
       {/* 1) MOBILE UI (< 768px, 'block md:hidden'):                     */}
-      {/*    Simple horizontal line design & information below it        */}
-      {/*    Clean, unboxed modern layout with editable values           */}
-      {/* ============================================================== */}
       <div className="block md:hidden space-y-5">
         {/* Horizontal Line Controls - clean unboxed layout */}
         <div className="space-y-3.5 divide-y divide-slate-100">
@@ -884,7 +880,7 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
       </div>
 
       {/* 2) TAB & DESKTOP UI ('hidden md:flex'):                         */}
-      <div className="hidden md:flex md:flex-col lg:grid lg:grid-cols-[70%_30%] lg:gap-8">
+      <div className="hidden md:flex md:flex-col lg:grid lg:grid-cols-[72%_28%] lg:gap-4">
         {/* METER SET-UP: UP on Tab, LEFT on Desktop */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4 items-end">
           {/* Tenure */}
@@ -966,10 +962,10 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
         </div>
 
         {/* INFORMATION SECTION: DOWN on Tab, RIGHT on Desktop */}
-        <div className="border-t border-slate-200/90 pt-6 mt-4 lg:border-t-0 lg:border-l lg:border-slate-200/90 lg:pt-0 lg:mt-0 lg:pl-8 lg:pr-2">
-          <div className="grid grid-cols-3 lg:grid-cols-1 lg:grid-rows-3 items-center gap-6 lg:gap-4 lg:h-full lg:justify-center">
+        <div className="flex w-full lg:border-t-0 lg:border-l lg:border-slate-200/90 lg:pt-0 lg:mt-0">
+          <div className="w-full grid grid-cols-3 lg:grid-cols-1 lg:grid-rows-3 items-center gap-6 lg:gap-4 lg:px-4 lg:h-full lg:justify-center">
             {/* 1st: Monthly EMI */}
-            <div className="flex min-w-0 flex-col justify-center border-b-0 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:border-b lg:border-slate-200/80 lg:pb-5 lg:pt-1">
+            <div className="flex flex-col justify-center border-b-0 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:border-b lg:border-slate-200/80 lg:pb-5 lg:pt-1">
               <div className="flex items-center gap-2 text-slate-500">
                 <span className="text-[11px] font-bold uppercase tracking-[0.11em] sm:text-xs">
                   Estimated Monthly EMI
@@ -988,7 +984,7 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
             </div>
 
             {/* 2nd: Loan Amount and Total Interest (2 rows) */}
-            <div className="flex min-w-0 flex-col justify-center gap-2.5 md:border-r md:border-slate-200/80 md:pr-4 lg:border-r-0 lg:py-2">
+            <div className="flex min-w-0 flex-col justify-between gap-2.5 md:border-r md:border-slate-200/80 lg:border-r-0 lg:py-2">
               {/* Row 1: Loan Amount */}
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 sm:text-xs">
@@ -1024,7 +1020,7 @@ export default function EMICalculator({ car, selectedVariant, currentPrice }) {
             </div>
 
             {/* 3rd: Get Offers Button */}
-            <div className="flex min-w-0 items-center justify-center pt-2 lg:pt-0">
+            <div className="flex w-full items-center justify-center pt-2 lg:pt-0">
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.98 }}

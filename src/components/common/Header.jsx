@@ -158,7 +158,7 @@ export default function Header() {
         ease: [0.25, 0.1, 0.25, 1.0],
       }}
       className={`fixed top-0 z-50 w-full transition-colors duration-300 ${isSolid
-        ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200"
+        ? "bg-white shadow-sm border-b border-slate-200"
         : "bg-gradient-to-b from-black/80 via-black/40 to-transparent border-transparent"
         }`}
     >
@@ -265,7 +265,7 @@ export default function Header() {
               style={{ touchAction: isMobileSearchActive ? "none" : "pan-y" }}
               className={`lg:hidden border-t px-4 sm:px-6 pt-3.5 pb-7 space-y-4 shadow-2xl transition-colors duration-300 max-h-[85vh] ${isMobileSearchActive ? "overflow-y-hidden" : "overflow-y-auto overscroll-contain"
                 } ${isSolid
-                  ? "bg-white/98 backdrop-blur-2xl border-slate-200 text-slate-800"
+                  ? "bg-white border-slate-200 text-slate-800"
                   : "bg-neutral-950/98 backdrop-blur-2xl border-white/10 text-white"
                 }`}
             >
