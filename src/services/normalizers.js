@@ -60,6 +60,7 @@ export const SLUG_TO_API_NAME = {
   'dzire-2024': 'Maruti Suzuki Dzire 2024',
   'ertiga': 'Maruti Suzuki Ertiga',
   'brezza': 'Maruti Suzuki Brezza 2022',
+  'brezza-2022': 'Maruti Suzuki Brezza 2022',
   'eeco': 'Maruti Suzuki Eeco',
   's-presso': 'Maruti Suzuki Spresso',
   'spresso': 'Maruti Suzuki Spresso',
@@ -74,23 +75,48 @@ export const SLUG_TO_API_NAME = {
   'super-carry': 'Maruti Suzuki Super Carry',
   'eeco-cargo': 'Maruti Suzuki Eeco Cargo',
   'tour-h1': 'Maruti Suzuki Tour H1',
+  'wagonr-tour-h3': 'Maruti Suzuki WagonR Tour H3',
   'tour-h3': 'Maruti Suzuki Tour H3',
   'tour-s': 'Maruti Suzuki Tour S',
+  'eeco-tour-v': 'Maruti Suzuki Eeco Tour V',
   'tour-v': 'Maruti Suzuki Tour V',
+  'ertiga-tour-m': 'Maruti Suzuki Ertiga Tour M',
   'tour-m': 'Maruti Suzuki Tour M',
+  'victoris': 'Maruti Suzuki Victoris',
+  'evitara': 'Maruti Suzuki Evitara',
+  'e-vitara': 'Maruti Suzuki Evitara',
 };
 
 export function slugToApiName(slug) {
-  return SLUG_TO_API_NAME[slug?.toLowerCase()] ?? slug?.replace(/-/g, ' ');
+  if (!slug) return '';
+  const clean = String(slug).toLowerCase().trim();
+  if (SLUG_TO_API_NAME[clean]) return SLUG_TO_API_NAME[clean];
+
+  // Dynamic resilient fallback:
+  // If slug is "evitara" or "victoris" or any future model
+  const withoutPrefix = clean.replace(/^(maruti-suzuki-|maruti-)/, '');
+  const titleCased = withoutPrefix
+    .split('-')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  return `Maruti Suzuki ${titleCased}`;
 }
 
 export function apiNameToSlug(name) {
   if (!name) return '';
+  const cleanName = String(name).trim();
   const match = Object.entries(SLUG_TO_API_NAME).find(
-    ([, v]) => v.toLowerCase() === name.toLowerCase()
+    ([, v]) => v.toLowerCase() === cleanName.toLowerCase()
   );
   if (match) return match[0];
-  return name.toLowerCase().replace(/^maruti suzuki\s+/i, '').replace(/\s+/g, '-');
+  return cleanName
+    .toLowerCase()
+    .replace(/^maruti suzuki\s+/i, '')
+    .replace(/^new\s+/i, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
 }
 
 // ─── Slash-Delimited Spec Splitter ────────────────────────────────────────────
@@ -300,6 +326,10 @@ export function normalizeCarDetails(model, slug) {
         else if (/blue/i.test(cName || cHex)) cHex = '#1976d2';
         else if (/white/i.test(cName || cHex)) cHex = '#f5f5f5';
         else if (/black/i.test(cName || cHex)) cHex = '#212121';
+        else if (/green|khaki/i.test(cName || cHex)) cHex = '#2e5a44';
+        else if (/orange/i.test(cName || cHex)) cHex = '#e65100';
+        else if (/yellow|gold/i.test(cName || cHex)) cHex = '#fbc02d';
+        else if (/brown|bronze/i.test(cName || cHex)) cHex = '#5d4037';
         else cHex = '#718096';
       }
 
@@ -327,6 +357,7 @@ export function normalizeCarDetails(model, slug) {
 
   const rawVarients = model.varients || [];
   let minPrice = Infinity;
+  let maxPrice = -Infinity;
   const allFuels = new Set();
   const allTransmissions = new Set();
 
@@ -336,12 +367,30 @@ export function normalizeCarDetails(model, slug) {
       return acc;
     }, {});
 
-    const firstProduct = (v.products || [])[0];
-    const price = firstProduct?.tn_price || firstProduct?.tg_price || parseFloat(v.price) || null;
-    if (price && price < minPrice) minPrice = price;
+    // Resilient price resolver across all products and variant fallback fields
+    let resolvedPrice = null;
+    for (const p of (v.products || [])) {
+      const candidate = p?.price ?? p?.tn_price ?? p?.tg_price;
+      if (candidate && !isNaN(Number(candidate)) && Number(candidate) > 0) {
+        resolvedPrice = parseFloat(candidate);
+        break;
+      }
+    }
+    if (!resolvedPrice && v.price && !isNaN(Number(v.price)) && Number(v.price) > 0) {
+      resolvedPrice = parseFloat(v.price);
+    }
+    if (!resolvedPrice && v.ex_showroom_price && !isNaN(Number(v.ex_showroom_price)) && Number(v.ex_showroom_price) > 0) {
+      resolvedPrice = parseFloat(v.ex_showroom_price);
+    }
 
-    const fuel = specs['fuel type'] || (v.var_title?.includes('CNG') ? 'CNG' : 'Petrol');
-    const transmission = specs['transmission type'] || (v.var_title?.includes('AT') || v.var_title?.includes('AMT') ? 'Automatic' : 'Manual');
+    const price = resolvedPrice || null;
+    if (price) {
+      if (price < minPrice) minPrice = price;
+      if (price > maxPrice) maxPrice = price;
+    }
+
+    const fuel = specs['fuel type'] || (v.var_title?.includes('CNG') ? 'CNG' : (v.var_title?.includes('Electric') || v.var_title?.includes('eVitara') ? 'Electric' : 'Petrol'));
+    const transmission = specs['transmission type'] || (v.var_title?.includes('AT') || v.var_title?.includes('AMT') || v.var_title?.includes('Automatic') ? 'Automatic' : 'Manual');
 
     allFuels.add(fuel);
     allTransmissions.add(transmission);
@@ -359,19 +408,22 @@ export function normalizeCarDetails(model, slug) {
       exShowroomPrice: price,
       fuel,
       transmission,
-      engine: specs['engine type'] || (specs['engine capacity'] ? `${specs['engine capacity']} cc` : '1.2L K-Series'),
-      maxPower: specs['maximum power'] || '89.73 PS @ 6000 rpm',
-      maxTorque: specs['maximum torque'] || '113 Nm @ 4400 rpm',
-      mileage: specs['mileage'] || '22.89 km/l*',
+      engine: specs['engine type'] || (specs['engine capacity'] ? `${specs['engine capacity']} cc` : (fuel === 'Electric' ? 'Permanent Magnet Synchronous Motor' : '1.2L K-Series')),
+      maxPower: specs['maximum power'] || (fuel === 'Electric' ? '144 PS / 174 PS' : '89.73 PS @ 6000 rpm'),
+      maxTorque: specs['maximum torque'] || (fuel === 'Electric' ? '189 Nm' : '113 Nm @ 4400 rpm'),
+      mileage: specs['mileage'] || (fuel === 'Electric' ? 'Up to 500 km range*' : '22.89 km/l*'),
       bootSpace: specs['boot space'] || specs['luggage capacity'] || '308 Litres',
-      fuelTank: specs['fuel tank capacity'] ? `${specs['fuel tank capacity']} Litres` : '37 Litres',
+      fuelTank: specs['fuel tank capacity'] ? `${specs['fuel tank capacity']} Litres` : (fuel === 'Electric' ? '49 kWh / 61 kWh Battery' : '37 Litres'),
       seatingCapacity: parseInt(specs['seating capacity'], 10) || 5,
       specs,
     };
   });
 
   const startingPrice = minPrice !== Infinity ? minPrice : (parseFloat(model.starting_price) || 650000);
-  const priceRange = `From ₹ ${(startingPrice / 100000).toFixed(2)} Lakh*`;
+  const priceRange =
+    minPrice !== Infinity && maxPrice !== -Infinity && maxPrice > minPrice
+      ? `₹ ${(minPrice / 100000).toFixed(2)} - ${(maxPrice / 100000).toFixed(2)} Lakh*`
+      : `From ₹ ${(startingPrice / 100000).toFixed(2)} Lakh*`;
   const firstV = variants[0] || {};
   const heroImage = colors[0]?.image || rawHero;
 

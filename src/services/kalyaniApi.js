@@ -49,8 +49,24 @@ export async function fetchAllModelList() {
 /** Fetch variants for a given URL slug — handles slug-to-API name conversion */
 export async function fetchCarBySlug(slug) {
   const apiName = slugToApiName(slug);
-  const encoded = encodeURIComponent(apiName);
-  const data = await apiClient(`varientbike?name=${encoded}`);
+  let data = await apiClient(`varientbike?name=${encodeURIComponent(apiName)}`).catch(() => []);
+
+  // Resilient fallback 1: try without "Maruti Suzuki " prefix if primary had it
+  if (!data || data.length === 0) {
+    const withoutPrefix = apiName.replace(/^Maruti Suzuki\s+/i, '');
+    if (withoutPrefix !== apiName) {
+      data = await apiClient(`varientbike?name=${encodeURIComponent(withoutPrefix)}`).catch(() => []);
+    }
+  }
+
+  // Resilient fallback 2: try space-separated slug
+  if (!data || data.length === 0) {
+    const rawFallback = slug.replace(/-/g, ' ');
+    if (rawFallback.toLowerCase() !== apiName.toLowerCase()) {
+      data = await apiClient(`varientbike?name=${encodeURIComponent(rawFallback)}`).catch(() => []);
+    }
+  }
+
   if (!data || data.length === 0) throw new Error(`No car data for slug: ${slug}`);
   return normalizeCarDetails(data[0], slug);
 }

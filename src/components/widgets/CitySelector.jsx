@@ -1,9 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useKalyani } from '../../context/KalyaniContext';
+import useOutlets from '../hooks/useOutlets';
 import { MapPin, ChevronDown, Check, Building2 } from 'lucide-react';
 
 export default function CitySelector({ variant = 'header', isScrolled = false, onSelect }) {
-  const { selectedCity, setSelectedCity, cities, allLocations } = useKalyani();
+  const { selectedCity, setSelectedCity, cities } = useKalyani();
+  const { data: allOutlets = [] } = useOutlets();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -22,9 +24,18 @@ export default function CitySelector({ variant = 'header', isScrolled = false, o
     };
   }, []);
 
+  // Compute live count of outlets per city
+  const outletCountsByCity = useMemo(() => {
+    const counts = {};
+    for (const o of allOutlets) {
+      const cityKey = (o.city || '').toLowerCase();
+      counts[cityKey] = (counts[cityKey] || 0) + 1;
+    }
+    return counts;
+  }, [allOutlets]);
+
   const getBranchCount = (cityName) => {
-    const list = allLocations?.[cityName.toLowerCase()] || [];
-    return list.length;
+    return outletCountsByCity[(cityName || '').toLowerCase()] || 0;
   };
 
   const handleCityChange = (city) => {
@@ -125,19 +136,7 @@ export default function CitySelector({ variant = 'header', isScrolled = false, o
         aria-haspopup="true"
         aria-expanded={isOpen}
       >
-        <span className="relative flex h-2 w-2">
-          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isScrolled ? 'bg-red-500' : 'bg-red-400'}`} />
-          <span className={`relative inline-flex rounded-full h-2 w-2 ${isScrolled ? 'bg-red-600' : 'bg-red-500'}`} />
-        </span>
         <span className="font-bold tracking-tight">{selectedCity}</span>
-        <span
-          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors ${isScrolled
-            ? 'bg-slate-200/80 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700'
-            : 'bg-white/15 text-white/90 group-hover:bg-white/25'
-            }`}
-        >
-          {getBranchCount(selectedCity)} Hubs
-        </span>
         <ChevronDown
           className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
             } ${isScrolled ? 'text-slate-500' : 'text-white/80'}`}
