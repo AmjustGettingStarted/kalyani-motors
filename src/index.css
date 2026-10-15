@@ -11,7 +11,12 @@
     font-weight: 500;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Cabinet Grotesk', system-ui, sans-serif;
     letter-spacing: -0.02em;
   }
@@ -62,6 +67,7 @@ html.lenis body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -71,16 +77,20 @@ html.lenis body {
 .custom-scrollbar-blue::-webkit-scrollbar {
   width: 5px;
 }
+
 .custom-scrollbar-blue::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar-blue::-webkit-scrollbar-thumb {
   background: #3b82f6;
   border-radius: 9999px;
 }
+
 .custom-scrollbar-blue::-webkit-scrollbar-thumb:hover {
   background: #2563eb;
 }
+
 .custom-scrollbar-blue {
   scrollbar-width: thin;
   scrollbar-color: #3b82f6 transparent;
@@ -98,7 +108,7 @@ html.lenis body {
   width: 3.5px;
   height: 18px;
   border-radius: 9999px;
-  background-color: #0f172a;
+  background-color: #3b82f6;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: transform 0.15s ease;
