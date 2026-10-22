@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -7,13 +7,6 @@ import {
   Building2,
   CalendarDays,
   Car,
-  ChevronRight,
-  Clock,
-  Headphones,
-  LifeBuoy,
-  Mail,
-  MapPin,
-  MessageCircle,
   MessageSquare,
   Phone,
   Send,
@@ -25,6 +18,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useKalyani } from "../../../context/KalyaniContext";
 import { submitLead } from "../../../services/zuqoClient";
 import useCommonFaq from "../../../components/hooks/useCommonFaq";
+import useOutlets from "../../../components/hooks/useOutlets";
 import FAQsection from "../../../components/home/FAQsection";
 
 const INQUIRY_CATEGORIES = [
@@ -41,11 +35,44 @@ const CUSTOMER_CARE_PHONE_DISPLAY = "+91 98450 12345";
 const CUSTOMER_CARE_EMAIL = "support@kalyanimotors.com";
 const ROADSIDE_ASSISTANCE_PHONE = "18001021800";
 const ROADSIDE_ASSISTANCE_DISPLAY = "1800 102 1800";
+const WHATSAPP_PHONE = "919590990011";
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent("Hi Kalyani Motors, I would like to chat with your support team.")}`;
 
 export default function ContactPage() {
   const { selectedCity, cities } = useKalyani();
   const { data: commonFaqs = [] } = useCommonFaq();
+  const { data: outletsData = [] } = useOutlets();
   const currentCity = selectedCity || "Bengaluru";
+
+  // Dynamically extract outlet names for the active region from API (no hardcoded names)
+  const activeRegionOutlets = useMemo(() => {
+    if (!outletsData || outletsData.length === 0) return [];
+    const matched = outletsData.filter(
+      (o) => o.city?.toLowerCase() === currentCity?.toLowerCase()
+    );
+    return matched.length > 0 ? matched : outletsData;
+  }, [outletsData, currentCity]);
+
+  const dynamicOutletNames = useMemo(() => {
+    const names = [
+      ...new Set(activeRegionOutlets.map((o) => o.name).filter(Boolean)),
+    ];
+    if (names.length === 0) return [];
+    // Ensure sufficient width for seamless infinite loop on wide monitors
+    let list = names;
+    while (list.length < 8) {
+      list = [...list, ...names];
+    }
+    return [...list, ...list];
+  }, [activeRegionOutlets]);
+
+  // Dynamic animation duration: keeps visual speed uniform regardless of how many outlets a region has
+  const marqueeDuration = useMemo(() => {
+    const singleCycleCount = dynamicOutletNames.length / 2;
+    if (singleCycleCount === 0) return 60;
+    const SECONDS_PER_OUTLET = 9;
+    return Math.max(20, Math.round(singleCycleCount * SECONDS_PER_OUTLET));
+  }, [dynamicOutletNames]);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -86,7 +113,7 @@ export default function ContactPage() {
     onError: (err) => {
       setErrorMsg(
         err?.message ||
-          "Could not submit your inquiry. Please call our customer care team.",
+        "Could not submit your inquiry. Please call our customer care team.",
       );
     },
   });
@@ -267,40 +294,53 @@ export default function ContactPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {/* Chat card */}
+          <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
+            {/* Chat card - WhatsApp */}
             <motion.article
               initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.45, delay: 0 }}
-              className="flex min-h-[320px] flex-col rounded-2xl border border-slate-200 bg-[#f9fafb] p-5 transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/5 sm:p-6"
+              className="flex min-h-[340px] flex-col rounded-lg border border-slate-200/90 bg-white p-6 sm:p-7 transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200/80 text-slate-700">
-                <MessageCircle className="h-6 w-6" />
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+                WhatsApp Support
               </div>
-              <div className="mt-5 flex items-center gap-2">
-                <h3 className="font-display text-xl font-extrabold text-[#071936]">
-                  Need to chat?
-                </h3>
-              </div>
-              <span className="mt-2 inline-flex w-fit items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-800">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                Service unavailable
-              </span>
-              <p className="mt-4 text-sm leading-6 text-slate-600">
-                Live chat is currently offline. You can still reach our team by
-                phone or email, and we&apos;ll be happy to help.
+              <h3 className="mt-3 font-display text-2xl font-bold tracking-tight text-[#071936]">
+                Need to chat?
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Connect directly with our team on WhatsApp for quick inquiries, service updates, test drives, and personalized help.
               </p>
-              <div className="mt-auto pt-6">
-                <button
-                  type="button"
-                  disabled
-                  aria-disabled="true"
-                  className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-400"
+
+              <div className="mt-6 border-t border-slate-100 pt-5 space-y-3">
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Response Time
+                  </span>
+                  <span className="text-sm font-medium text-slate-800">
+                    Usually within minutes
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Hours
+                  </span>
+                  <span className="text-sm font-medium text-slate-800">
+                    Monday – Sunday, 9:00 AM – 8:00 PM
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-auto pt-7">
+                <a
+                  href={WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-[#075e54] px-5 py-3 text-sm font-semibold tracking-wide text-white transition hover:bg-[#128c7e] focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                 >
-                  <MessageSquare className="h-4 w-4" /> Chat unavailable
-                </button>
+                  Chat on WhatsApp
+                </a>
               </div>
             </motion.article>
 
@@ -310,68 +350,73 @@ export default function ContactPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.45, delay: 0.06 }}
-              className="flex min-h-[320px] flex-col rounded-2xl border border-slate-200 bg-white p-5 transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-900/5 sm:p-6"
+              className="flex min-h-[340px] flex-col rounded-lg border border-slate-200/90 bg-white p-6 sm:p-7 transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
-                <Headphones className="h-6 w-6" />
-              </div>
-              <h3 className="mt-5 font-display text-xl font-extrabold text-[#071936]">
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">
                 Customer Care
+              </div>
+              <h3 className="mt-3 font-display text-2xl font-bold tracking-tight text-[#071936]">
+                Helpline & Support
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Our team is here to help with questions, feedback, and support.
+                Our customer relationship team is here to help with questions, bookings, service, and feedback.
               </p>
 
-              <div className="mt-5 space-y-4">
-                <a
-                  href={`tel:${CUSTOMER_CARE_PHONE}`}
-                  className="group flex items-start gap-3 text-sm text-slate-800 transition hover:text-blue-700"
-                >
-                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-slate-500 group-hover:text-blue-700" />
-                  <span className="font-semibold">
-                    {CUSTOMER_CARE_PHONE_DISPLAY}
+              <div className="mt-6 border-t border-slate-100 pt-5 space-y-3">
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Phone
                   </span>
-                </a>
-                <a
-                  href={`mailto:${CUSTOMER_CARE_EMAIL}`}
-                  className="group flex items-start gap-3 break-all text-sm text-slate-800 transition hover:text-blue-700"
-                >
-                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-500 group-hover:text-blue-700" />
-                  <span>{CUSTOMER_CARE_EMAIL}</span>
-                </a>
-                <div className="flex items-start gap-3 text-sm text-slate-700">
-                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                  <span>Monday – Sunday, 9:00 AM – 8:00 PM</span>
+                  <a
+                    href={`tel:${CUSTOMER_CARE_PHONE}`}
+                    className="text-sm font-semibold text-slate-900 hover:text-blue-700 transition"
+                  >
+                    {CUSTOMER_CARE_PHONE_DISPLAY}
+                  </a>
                 </div>
-                <div className="border-t border-slate-100 pt-4">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-800">
-                        {officeTitle}
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-                        {officeDescription}
-                      </p>
-                    </div>
-                  </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Email
+                  </span>
+                  <a
+                    href={`mailto:${CUSTOMER_CARE_EMAIL}`}
+                    className="text-sm font-semibold text-slate-900 hover:text-blue-700 transition break-all"
+                  >
+                    {CUSTOMER_CARE_EMAIL}
+                  </a>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Hours
+                  </span>
+                  <span className="text-sm text-slate-700">
+                    Monday – Sunday, 9:00 AM – 8:00 PM
+                  </span>
+                </div>
+                <div className="border-t border-slate-100 pt-3">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    {officeTitle}
+                  </span>
+                  <p className="mt-0.5 text-xs leading-5 text-slate-600">
+                    {officeDescription}
+                  </p>
                   {!isBengaluru && (
                     <Link
                       to="/outlets"
-                      className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:text-blue-800"
+                      className="mt-2 inline-block text-xs font-bold text-blue-700 hover:underline"
                     >
-                      Find a nearby outlet{" "}
-                      <ChevronRight className="h-3.5 w-3.5" />
+                      Find a nearby outlet →
                     </Link>
                   )}
                 </div>
               </div>
-              <div className="mt-auto pt-6">
+
+              <div className="mt-auto pt-7">
                 <a
                   href={`tel:${CUSTOMER_CARE_PHONE}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#071936] px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-900"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-[#071936] px-5 py-3 text-sm font-semibold tracking-wide text-white transition hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-slate-900/30"
                 >
-                  Contact Customer Care <ArrowRight className="h-4 w-4" />
+                  Call Customer Care
                 </a>
               </div>
             </motion.article>
@@ -382,74 +427,111 @@ export default function ContactPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.45, delay: 0.12 }}
-              className="relative flex min-h-[320px] flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-[#102e56] via-[#0b2342] to-[#061322] p-5 text-white shadow-lg shadow-blue-950/10 sm:p-6"
+              className="relative flex min-h-[340px] flex-col overflow-hidden rounded-lg bg-gradient-to-br from-[#102e56] via-[#0b2342] to-[#061322] p-6 sm:p-7 text-white shadow-md shadow-blue-950/15"
             >
-              <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-blue-400/15 blur-2xl" />
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-red-300">
-                <LifeBuoy className="h-6 w-6" />
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-red-400">
+                24x7 Emergency Support
               </div>
-              <span className="relative mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-100">
-                <ShieldCheck className="h-3.5 w-3.5" /> Roadside support
-              </span>
-              <h3 className="relative mt-3 font-display text-xl font-extrabold">
+              <h3 className="mt-3 font-display text-2xl font-bold tracking-tight text-white">
                 Roadside Assistance
               </h3>
-              <p className="relative mt-3 text-sm leading-6 text-blue-100/90">
-                Breakdown, flat tyre, or an unexpected stop? Call for assistance
-                and get help getting back on the road.
+              <p className="mt-2 text-sm leading-6 text-blue-100/90">
+                Breakdown, flat tyre, or an unexpected stop? Immediate dispatch and emergency towing across South India.
               </p>
-              <div className="relative mt-auto pt-7">
+
+              <div className="mt-6 border-t border-white/10 pt-5 space-y-3">
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-blue-200/70">
+                    Toll-Free Helpline
+                  </span>
+                  <a
+                    href={`tel:${ROADSIDE_ASSISTANCE_PHONE}`}
+                    className="text-sm font-semibold text-white hover:text-red-300 transition"
+                  >
+                    {ROADSIDE_ASSISTANCE_DISPLAY}
+                  </a>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-blue-200/70">
+                    Network Coverage
+                  </span>
+                  <span className="text-sm text-blue-100">
+                    24/7 South India Service Network
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-auto pt-7">
                 <a
                   href={`tel:${ROADSIDE_ASSISTANCE_PHONE}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-red-400/30"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-red-600 px-5 py-3 text-sm font-semibold tracking-wide text-white transition hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400/40"
                 >
-                  <Phone className="h-4 w-4" /> Call Now
-                  <ArrowRight className="ml-auto h-4 w-4" />
+                  Call Roadside Assistance
                 </a>
-                <p className="mt-3 text-center text-xs font-semibold tracking-wide text-blue-100">
-                  {ROADSIDE_ASSISTANCE_DISPLAY}
-                </p>
               </div>
             </motion.article>
+          </div>
 
-            {/* Outlets card */}
-            <motion.article
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15 }}
-              transition={{ duration: 0.45, delay: 0.18 }}
-              className="flex min-h-[320px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/5"
-            >
-              <div
-                role="img"
-                aria-label="Kalyani Motors showroom"
-                className="h-36 shrink-0 bg-cover bg-center"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(0deg, rgba(7,25,54,.25), rgba(7,25,54,.02)), url('https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1000&q=85')",
-                }}
-              />
-              <div className="flex flex-1 flex-col p-5 sm:p-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 font-display text-xl font-extrabold text-[#071936]">
-                  Our Outlets
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Prefer to meet in person? Find a showroom or service centre
-                  near you and plan your visit.
-                </p>
-                <div className="mt-auto pt-6">
-                  <Link
-                    to="/outlets"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-[#071936] transition hover:border-blue-700 hover:bg-blue-50 hover:text-blue-800"
-                  >
-                    View All Outlets <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
+          {/* INFINITE OUTLET BAND - DYNAMIC ACTIVE REGION OUTLETS */}
+          <div className="mt-14 sm:mt-16 lg:mt-20 border-t border-slate-100 pt-10 sm:pt-12">
+            {/* Centered Heading with Red Accent Line */}
+            <div className="relative flex items-center justify-center mb-6 sm:mb-8">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="h-[2px] w-full max-w-xl mx-auto bg-gradient-to-r from-transparent via-red-500 to-transparent" />
               </div>
-            </motion.article>
+              <div className="relative bg-white px-5 sm:px-6">
+                <span className="font-display text-xs sm:text-sm font-black uppercase tracking-[0.26em] text-[#071936]">
+                  OUR OUTLETS
+                </span>
+              </div>
+            </div>
+
+            {/* Dynamic Infinite Scrolling Marquee Band (No icons) */}
+            <div className="relative w-full overflow-hidden">
+              {/* Fade gradient masks on edges */}
+              <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-16 sm:w-32 bg-gradient-to-r from-white to-transparent" />
+              <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-16 sm:w-32 bg-gradient-to-l from-white to-transparent" />
+
+              {dynamicOutletNames.length > 0 ? (
+                <div
+                  key={`${currentCity}-${dynamicOutletNames.length}`}
+                  className="animate-marquee-infinite flex items-center"
+                  style={{
+                    "--marquee-duration": `${marqueeDuration}s`,
+                    animationDuration: `${marqueeDuration}s`,
+                  }}
+                >
+                  {dynamicOutletNames.map((name, idx) => (
+                    <React.Fragment key={`${name}-${idx}`}>
+                      <Link
+                        to="/outlets"
+                        className="whitespace-nowrap text-lg font-semibold text-slate-700 transition hover:text-blue-700"
+                      >
+                        {name}
+                      </Link>
+                      <span className="mx-4 sm:mx-6 select-none font-bold text-slate-300">
+                        •
+                      </span>
+                    </React.Fragment>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-2 text-center text-xs text-slate-400">
+                  Loading outlets...
+                </div>
+              )}
+            </div>
+
+            {/* View All Outlets Link */}
+            <div className="mt-6 sm:mt-8 flex justify-center">
+              <Link
+                to="/outlets"
+                className="group inline-flex items-center gap-2 text-xl font-extrabold text-[#071936] transition hover:text-blue-700"
+              >
+                <span>View All Outlets</span>
+                {/* <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5 text-[#071936] group-hover:text-blue-700" /> */}
+              </Link>
+            </div>
           </div>
         </div>
       </section>
