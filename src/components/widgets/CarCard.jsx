@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -23,6 +23,93 @@ export default function CarCard({ car }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
   const [displayBadge, setDisplayBadge] = useState(car?.channel || 'Arena');
+
+  // ── Desktop-only: Hover Color Cycling ──────────────────────────────────────
+  // Max images to cycle through on hover: first 6 if more exist, or all if less
+  const MAX_HOVER_IMAGES = 6;
+
+  // Build a deduplicated list of color variant image URLs for this car (capped at 6)
+  const colorImages = useMemo(() => {
+    if (!car) return [];
+    // 1. Prefer explicit colors array (from detail normalizer or fallback data)
+    if (Array.isArray(car.colors) && car.colors.length > 0) {
+      const urls = car.colors
+        .map((c) => (typeof c === 'string' ? c : c?.image || c?.images))
+        .filter(Boolean);
+      const unique = [...new Set(urls)];
+      if (unique.length > 1) return unique.slice(0, MAX_HOVER_IMAGES);
+    }
+    // 2. Fallback: use the images array (product images from API listing normalizer)
+    if (Array.isArray(car.images) && car.images.length > 1) {
+      const unique = [...new Set(car.images.filter(Boolean))];
+      if (unique.length > 1) return unique.slice(0, MAX_HOVER_IMAGES);
+    }
+    return [];
+  }, [car]);
+
+  const hasColorVariants = colorImages.length > 1;
+  const [colorIndex, setColorIndex] = useState(0);
+  const [isImageHovered, setIsImageHovered] = useState(false);
+  const cycleTimerRef = useRef(null);
+  const preloadedRef = useRef(new Set());
+
+  // Preload a single image URL (no-op if already cached)
+  const preloadImage = useCallback((url) => {
+    if (!url || preloadedRef.current.has(url)) return;
+    const img = new Image();
+    img.src = url;
+    preloadedRef.current.add(url);
+  }, []);
+
+  // Determine if the device supports hover (desktop)
+  const isDesktopPointer = useCallback(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  }, []);
+
+  // Start / stop the 2-second cycling interval based on hover state
+  useEffect(() => {
+    if (!isImageHovered || !hasColorVariants) {
+      if (cycleTimerRef.current) {
+        clearInterval(cycleTimerRef.current);
+        cycleTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Immediately preload all color images for this card on hover
+    colorImages.forEach(preloadImage);
+
+    cycleTimerRef.current = setInterval(() => {
+      setColorIndex((prev) => (prev + 1) % colorImages.length);
+    }, 2000);
+
+    return () => {
+      if (cycleTimerRef.current) {
+        clearInterval(cycleTimerRef.current);
+        cycleTimerRef.current = null;
+      }
+    };
+  }, [isImageHovered, hasColorVariants, colorImages, preloadImage]);
+
+  const handleImageMouseEnter = useCallback(() => {
+    if (!hasColorVariants || !isDesktopPointer()) return;
+    // Start smoothly from the hero image if present in the variant list
+    const startIndex = car?.heroImage ? colorImages.indexOf(car.heroImage) : 0;
+    setColorIndex(startIndex >= 0 ? startIndex : 0);
+    setIsImageHovered(true);
+  }, [hasColorVariants, isDesktopPointer, car?.heroImage, colorImages]);
+
+  const handleImageMouseLeave = useCallback(() => {
+    setIsImageHovered(false);
+    const startIndex = car?.heroImage ? colorImages.indexOf(car.heroImage) : 0;
+    setColorIndex(startIndex >= 0 ? startIndex : 0);
+  }, [car?.heroImage, colorImages]);
+
+  // The image to display: when hovering and color variants exist, use cycled color; otherwise hero
+  const displayedImage = isImageHovered && hasColorVariants
+    ? colorImages[colorIndex]
+    : car?.heroImage;
 
   // Alternating fade effect between car channel and body type (same as outlet page tab)
   useEffect(() => {
@@ -143,17 +230,60 @@ export default function CarCard({ car }) {
           </TooltipProvider>
         </div>
 
-        {/* Vehicle Image */}
+        {/* Vehicle Image — with desktop hover color cycling */}
         <Link
           to={`/cars/${car.slug}`}
-          className="block w-full h-full flex items-center justify-center"
+          className="block w-full h-full flex items-center justify-center relative"
+          onMouseEnter={handleImageMouseEnter}
+          onMouseLeave={handleImageMouseLeave}
         >
+          {/* Base hero image (always rendered underneath, zero blank flash) */}
           <img
             src={car.heroImage}
             alt={car.name}
             className="w-full h-full object-fill object-center transform scale-100 group-hover:scale-105 transition-transform duration-500 ease-out"
             loading="lazy"
           />
+
+          {/* Color variant image layer — smooth hardware-accelerated cross-fade */}
+          <AnimatePresence initial={false}>
+            {isImageHovered && hasColorVariants && (
+              <motion.img
+                key={displayedImage}
+                src={displayedImage}
+                alt={`${car.name} color variant`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.45, ease: 'easeInOut' }}
+                className="absolute inset-0 w-full h-full object-fill object-center transform scale-100 group-hover:scale-105 pointer-events-none"
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Subtle indicator dots — visible only while cycling (desktop hover) */}
+          <AnimatePresence>
+            {isImageHovered && hasColorVariants && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.25 }}
+                className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full pointer-events-none z-10 shadow-xs"
+              >
+                {colorImages.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === colorIndex
+                        ? 'w-3.5 bg-white shadow-xs'
+                        : 'w-1.5 bg-white/40'
+                    }`}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Link>
       </div>
 

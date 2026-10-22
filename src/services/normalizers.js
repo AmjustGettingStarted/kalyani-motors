@@ -238,9 +238,11 @@ export function normalizeModel(raw, modelCarsMap = {}, catMap = {}) {
     transmissionTypes: transmissions,
     startingPrice: price || 500000,
     priceRange: price ? `From ₹ ${(price / 100000).toFixed(2)} Lakh*` : 'Contact for Price',
-    heroImage: getStorageUrl(raw.image || mc?.image || mc?.images?.[0]?.images),
+    heroImage: getStorageUrl(raw.image || mc?.image || mc?.images?.[0]?.images || mc?.images?.[0]?.image),
     image: getStorageUrl(raw.image),
-    images: (mc?.images ?? []).map((img) => getStorageUrl(img.images)),
+    images: (mc?.images ?? [])
+      .map((img) => getStorageUrl(img?.images || img?.image || (typeof img === 'string' ? img : '')))
+      .filter(Boolean),
     categoryId: raw.category_id,
     position,
     isFeatured: position <= 8,
@@ -277,9 +279,10 @@ export function normalizeModelCars(rawArray) {
         bodyTypes,
         fuelTypes: fuels,
         transmissionTypes: transmissions,
-        startingPrice: null,
-        heroImage: getStorageUrl(item.images?.[0]?.images || item.image),
-        images: (item.images ?? []).map((img) => getStorageUrl(img.images)),
+        heroImage: getStorageUrl(item.images?.[0]?.images || item.images?.[0]?.image || item.image),
+        images: (item.images ?? [])
+          .map((img) => getStorageUrl(img?.images || img?.image || (typeof img === 'string' ? img : '')))
+          .filter(Boolean),
         isFeatured: position <= 8,
         tagline: '',
         priceRange: '',
