@@ -143,7 +143,7 @@ function SubCard({ car, isVisible, channel }) {
                 </div> */}
 
                 <div className="">
-                    <span className="inline-flex w-full justify-center gap-1.5 text-md font-bold text-white group-hover/child:bg-blue-800 transition-all duration-200 bg-black/10">
+                    <span className="inline-flex w-full justify-center gap-1.5 text-md font-bold text-white group-hover/child:tracking-wider transition-all duration-200">
                         <span>EXPLORE {car.name}</span>
                         {/* <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover/child:translate-x-0.5" /> */}
                     </span>
