@@ -140,6 +140,9 @@ function SubCard({ car, isVisible, channel }) {
                     <h4 className="font-display text-center font-black text-sm xl:text-base text-white tracking-wide uppercase group-hover/child:text-blue-800 drop-shadow-md">
                         {car.name}
                     </h4>
+                    <p className="text-white">
+                        {car.tagline}
+                    </p>
                 </div> */}
 
                 <div className="">

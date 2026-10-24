@@ -247,18 +247,16 @@ export default function CarCard({ car }) {
         <Link
           to={`/cars/${car.slug}`}
           className="block w-full h-full flex items-center justify-center relative"
-          onMouseEnter={handleImageMouseEnter}
-          onMouseLeave={handleImageMouseLeave}
         >
           {/* Base hero image (always rendered underneath, zero blank flash) */}
           <img
             src={car.heroImage}
             alt={car.name}
-            className="w-full h-full object-fill object-center transform scale-100 group-hover:scale-105 transition-transform duration-500 ease-out"
+            className="w-full h-full object-fill object-center transform transition-transform duration-500 ease-out"
             loading="lazy"
           />
 
-          {/* Color variant image layer — smooth hardware-accelerated cross-fade */}
+          {/* variant image layer — smooth hardware-accelerated cross-fade */}
           <AnimatePresence initial={false}>
             {isImageHovered && hasColorVariants && (
               <motion.img
@@ -269,7 +267,7 @@ export default function CarCard({ car }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.45, ease: 'easeInOut' }}
-                className="absolute inset-0 w-full h-full object-fill object-center transform scale-100 group-hover:scale-105 pointer-events-none"
+                className="absolute inset-0 w-full h-full object-fill object-center transform pointer-events-none"
               />
             )}
           </AnimatePresence>
@@ -282,14 +280,14 @@ export default function CarCard({ car }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 4 }}
                 transition={{ duration: 0.25 }}
-                className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-32 sm:w-40 h-1.5 rounded-full bg-slate-900/10 backdrop-blur-md overflow-hidden pointer-events-none z-10 border border-slate-300/40 shadow-xs"
+                className="absolute bottom-0 -translate-x-1/2 w-full h-1 bg-slate-900/10 overflow-hidden pointer-events-none z-10 "
               >
                 <motion.div
                   key={cycleKey}
                   initial={{ width: `${(colorIndex / colorImages.length) * 100}%` }}
                   animate={{ width: `${((colorIndex + 1) / colorImages.length) * 100}%` }}
                   transition={{ duration: 2, ease: 'linear' }}
-                  className="h-full rounded-full bg-gradient-to-r from-transparent via-slate-600 to-slate-900"
+                  className="h-full rounded-full bg-blue-600"
                 />
               </motion.div>
             )}
