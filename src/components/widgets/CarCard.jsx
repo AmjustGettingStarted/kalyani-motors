@@ -49,6 +49,7 @@ export default function CarCard({ car }) {
 
   const hasColorVariants = colorImages.length > 1;
   const [colorIndex, setColorIndex] = useState(0);
+  const [cycleKey, setCycleKey] = useState(0);
   const [isImageHovered, setIsImageHovered] = useState(false);
   const cycleTimerRef = useRef(null);
   const preloadedRef = useRef(new Set());
@@ -81,7 +82,13 @@ export default function CarCard({ car }) {
     colorImages.forEach(preloadImage);
 
     cycleTimerRef.current = setInterval(() => {
-      setColorIndex((prev) => (prev + 1) % colorImages.length);
+      setColorIndex((prev) => {
+        const next = (prev + 1) % colorImages.length;
+        if (next === 0) {
+          setCycleKey((k) => k + 1);
+        }
+        return next;
+      });
     }, 2000);
 
     return () => {
@@ -97,6 +104,7 @@ export default function CarCard({ car }) {
     // Start smoothly from the hero image if present in the variant list
     const startIndex = car?.heroImage ? colorImages.indexOf(car.heroImage) : 0;
     setColorIndex(startIndex >= 0 ? startIndex : 0);
+    setCycleKey((k) => k + 1);
     setIsImageHovered(true);
   }, [hasColorVariants, isDesktopPointer, car?.heroImage, colorImages]);
 
@@ -104,6 +112,7 @@ export default function CarCard({ car }) {
     setIsImageHovered(false);
     const startIndex = car?.heroImage ? colorImages.indexOf(car.heroImage) : 0;
     setColorIndex(startIndex >= 0 ? startIndex : 0);
+    setCycleKey(0);
   }, [car?.heroImage, colorImages]);
 
   // The image to display: when hovering and color variants exist, use cycled color; otherwise hero
@@ -163,7 +172,11 @@ export default function CarCard({ car }) {
   };
 
   return (
-    <Card className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden min-h-[455px]">
+    <Card
+      onMouseEnter={handleImageMouseEnter}
+      onMouseLeave={handleImageMouseLeave}
+      className="group relative bg-white rounded-2xl border border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden min-h-[455px]"
+    >
       {/* Top Image Container */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-50 border-b border-slate-100">
         {/* Top Badges Bar: Channel & Body Type with alternating fade effect */}
@@ -261,7 +274,7 @@ export default function CarCard({ car }) {
             )}
           </AnimatePresence>
 
-          {/* Subtle indicator dots — visible only while cycling (desktop hover) */}
+          {/* Smile visual indicator — progress bar on hover (replaces dots style) */}
           <AnimatePresence>
             {isImageHovered && hasColorVariants && (
               <motion.div
@@ -269,18 +282,15 @@ export default function CarCard({ car }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 4 }}
                 transition={{ duration: 0.25 }}
-                className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full pointer-events-none z-10 shadow-xs"
+                className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-32 sm:w-40 h-1.5 rounded-full bg-slate-900/10 backdrop-blur-md overflow-hidden pointer-events-none z-10 border border-slate-300/40 shadow-xs"
               >
-                {colorImages.map((_, idx) => (
-                  <span
-                    key={idx}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      idx === colorIndex
-                        ? 'w-3.5 bg-white shadow-xs'
-                        : 'w-1.5 bg-white/40'
-                    }`}
-                  />
-                ))}
+                <motion.div
+                  key={cycleKey}
+                  initial={{ width: `${(colorIndex / colorImages.length) * 100}%` }}
+                  animate={{ width: `${((colorIndex + 1) / colorImages.length) * 100}%` }}
+                  transition={{ duration: 2, ease: 'linear' }}
+                  className="h-full rounded-full bg-gradient-to-r from-transparent via-slate-600 to-slate-900"
+                />
               </motion.div>
             )}
           </AnimatePresence>
